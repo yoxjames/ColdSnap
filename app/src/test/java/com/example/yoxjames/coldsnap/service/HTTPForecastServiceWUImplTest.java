@@ -195,7 +195,7 @@ public class HTTPForecastServiceWUImplTest
 
     /**
      * Test that a zipcode that does not contain 5 chars throws an exception.
-     * @throws IllegalArgumentException
+     * @throws IllegalArgumentException If the zipCode inputted is not a size five string.
      */
     @Test
     public void testInvalidZipCode() throws IllegalArgumentException
