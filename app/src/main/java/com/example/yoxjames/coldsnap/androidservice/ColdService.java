@@ -27,12 +27,7 @@ public class ColdService extends Service
 {
 
     // TODO: Inject this and make it better.
-    ColdAlarm alarm = new ColdAlarm();
-
-    public void onCreate()
-    {
-        super.onCreate();
-    }
+    private final ColdAlarm alarm = new ColdAlarm();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)

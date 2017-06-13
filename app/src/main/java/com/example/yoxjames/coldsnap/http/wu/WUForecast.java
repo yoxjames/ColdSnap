@@ -36,7 +36,7 @@ class WUForecast
 {
     private final List<Day> days;
 
-    public static WUForecast parseJSON(JSONObject forecast) throws JSONException
+    static WUForecast parseJSON(JSONObject forecast) throws JSONException
     {
         final List<Day> forecastDays = new ArrayList<>();
         final JSONArray jsonDays = forecast
@@ -68,11 +68,9 @@ class WUForecast
                         dayJSON.getJSONObject("date").getInt("day") + " " +
                         dayJSON.getJSONObject("date").getInt("year");
         final int lowTempF = dayJSON.getJSONObject("low").getInt("fahrenheit");
-        final int lowTempC = dayJSON.getJSONObject("low").getInt("celsius");
         final int highTempF = dayJSON.getJSONObject("high").getInt("fahrenheit");
-        final int highTempC = dayJSON.getJSONObject("high").getInt("celsius");
 
-        return new Day(highTempF, highTempC, lowTempF, lowTempC, dateString);
+        return new Day(highTempF, lowTempF, dateString);
     }
 
     private WUForecast(List<Day> days)
@@ -91,20 +89,16 @@ class WUForecast
     static class Day
     {
         private final int highTempF;
-        private final int highTempC;
 
         private final int lowTempF;
-        private final int lowTempC;
 
         private final String dateString;
 
 
-        Day(int highTempF, int highTempC, int lowTempF, int lowTempC, String dateString)
+        Day(int highTempF, int lowTempF, String dateString)
         {
             this.highTempF = highTempF;
-            this.highTempC = highTempC;
             this.lowTempF = lowTempF;
-            this.lowTempC = lowTempC;
             this.dateString = dateString;
         }
 

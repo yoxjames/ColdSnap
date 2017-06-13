@@ -59,7 +59,7 @@ public class PlantServiceImpl implements PlantService
     @Override
     public List<Plant> getMyPlants()
     {
-        return new ArrayList<Plant>(cachedPlants.values());
+        return new ArrayList<>(cachedPlants.values());
     }
 
     @Override

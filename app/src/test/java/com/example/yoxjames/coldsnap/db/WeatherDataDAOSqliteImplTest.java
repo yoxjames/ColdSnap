@@ -176,6 +176,6 @@ public class WeatherDataDAOSqliteImplTest
         });
         WeatherDataDAOSQLiteImpl weatherDataDAOSQLite = new WeatherDataDAOSQLiteImpl(lazyProvider, cursorWrapperFactory, sharedPreferences);
 
-        WeatherData weatherData = weatherDataDAOSQLite.getWeatherData(database);
+        weatherDataDAOSQLite.getWeatherData(database);
     }
 }

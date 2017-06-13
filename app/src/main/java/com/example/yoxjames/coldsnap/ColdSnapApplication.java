@@ -35,12 +35,14 @@ public class ColdSnapApplication extends Application
 
     ColdSnapInjector injector;
 
+    /*
     @Override
     public void onCreate()
     {
         super.onCreate();
         //DaggerColdSnapApplicationComponent.create().inject(this);
     }
+    */
 
     /**
      * Gets the ColdSnapInjector which can then return submodules to inject each fragment or other

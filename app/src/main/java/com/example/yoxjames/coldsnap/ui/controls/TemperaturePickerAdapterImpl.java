@@ -33,8 +33,8 @@ public class TemperaturePickerAdapterImpl implements NumberPicker.Formatter, Tem
     private final SharedPreferences sharedPreferences;
     private final TemperatureFormatter temperatureFormatter;
 
-    private static Temperature MINIMUM_TEMPERATURE = Temperature.newTemperatureFromC(-70);
-    private static Temperature MAXIMUM_TEMPERATURE = Temperature.newTemperatureFromC(100);
+    private static final Temperature MINIMUM_TEMPERATURE = Temperature.newTemperatureFromC(-70);
+    private static final Temperature MAXIMUM_TEMPERATURE = Temperature.newTemperatureFromC(100);
 
     @Inject
     public TemperaturePickerAdapterImpl(SharedPreferences sharedPreferences, TemperatureFormatter temperatureFormatter)

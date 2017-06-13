@@ -30,7 +30,7 @@ import android.content.Intent;
 public class AutoStart extends BroadcastReceiver {
 
     // TODO: Inject this and make this better
-    ColdAlarm alarm = new ColdAlarm();
+    private final ColdAlarm alarm = new ColdAlarm();
 
     @Override
     public void onReceive(Context context, Intent intent)

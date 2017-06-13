@@ -41,7 +41,7 @@ import dagger.Provides;
 @Module
 public class WeatherPreviewBarViewModule
 {
-    private WeatherPreviewBarView view;
+    private final WeatherPreviewBarView view;
 
     public WeatherPreviewBarViewModule(WeatherPreviewBarView view)
     {
@@ -55,7 +55,7 @@ public class WeatherPreviewBarViewModule
     }
 
     @Provides
-    static WeatherPreviewBarPresenter provideWeatherPreviewBarPresenter(WeatherPreviewBarView view, WeatherService weatherService, TemperatureFormatter temperatureFormatter, WeatherServiceCall weatherServiceCall)
+    static WeatherPreviewBarPresenter provideWeatherPreviewBarPresenter(WeatherPreviewBarView view, TemperatureFormatter temperatureFormatter, WeatherServiceCall weatherServiceCall)
     {
         return new WeatherPreviewBarPresenterImpl(view, temperatureFormatter, weatherServiceCall);
     }
