@@ -45,4 +45,7 @@
         android:title="Location String"
         android:maxLength="30"
         android:inputType="textNoSuggestions" />
+    <com.example.yoxjames.coldsnap.ui.controls.TimePickerDialogPreference
+        android:key="com.example.yoxjames.coldsnap.COLD_ALARM_TIME"
+        android:title="Cold Alarm Time" />
 </PreferenceScreen>

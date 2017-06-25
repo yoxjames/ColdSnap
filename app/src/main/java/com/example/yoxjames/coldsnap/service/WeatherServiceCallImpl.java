@@ -21,6 +21,7 @@ package com.example.yoxjames.coldsnap.service;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import dagger.Lazy;
 import dagger.internal.Preconditions;
@@ -35,6 +36,7 @@ import dagger.internal.Preconditions;
  *
  */
 
+@Singleton
 public class WeatherServiceCallImpl implements WeatherServiceCall
 {
     private Exception e;

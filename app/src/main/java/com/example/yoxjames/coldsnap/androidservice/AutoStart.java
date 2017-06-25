@@ -27,17 +27,14 @@ import android.content.Intent;
  * Class designed to start the ColdAlarm at boot time. This will allow ColdSnap to warn
  * the user of hazards even if the app is never launched.
  */
-public class AutoStart extends BroadcastReceiver {
-
-    // TODO: Inject this and make this better
-    private final ColdAlarm alarm = new ColdAlarm();
-
+public class AutoStart extends BroadcastReceiver
+{
     @Override
     public void onReceive(Context context, Intent intent)
     {
         if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED))
         {
-            alarm.setAlarm(context);
+            ColdAlarm.setAlarm(context);
         }
     }
 }

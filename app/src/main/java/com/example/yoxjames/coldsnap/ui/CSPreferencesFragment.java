@@ -27,11 +27,15 @@ import android.preference.PreferenceFragment;
 
 import com.example.yoxjames.coldsnap.ColdSnapApplication;
 import com.example.yoxjames.coldsnap.R;
+import com.example.yoxjames.coldsnap.androidservice.ColdAlarm;
 import com.example.yoxjames.coldsnap.dagger.CSPreferencesFragmentModule;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.example.yoxjames.coldsnap.ui.controls.TemperatureEditTextPreference;
 import com.example.yoxjames.coldsnap.ui.controls.TemperatureValueEditTextPreference;
+import com.example.yoxjames.coldsnap.ui.controls.TimePickerDialogPreference;
+
+import java.util.Calendar;
 
 import javax.inject.Inject;
 
@@ -43,12 +47,14 @@ public class CSPreferencesFragment extends PreferenceFragment
     public static final String TEMPERATURE_SCALE = "com.example.yoxjames.coldsnap.TEMPFORMAT";
     public static final String WEATHER_DATA_FUZZ = "com.example.yoxjames.coldsnap.WEATHER_DATA_FUZZ";
     public static final String LOCATION_STRING = "com.example.yoxjames.coldsnap.LOCATION_STRING";
+    public static final String COLD_ALARM_TIME = "com.example.yoxjames.coldsnap.COLD_ALARM_TIME";
 
     private TemperatureEditTextPreference eThreshold;
     private TemperatureValueEditTextPreference fuzz;
     private EditTextPreference zipcode;
     private ListPreference temperatureScale;
     private EditTextPreference locationString;
+    private TimePickerDialogPreference coldAlarmTimePicker;
     private SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
     @Inject SharedPreferences sharedPreferences;
     @Inject TemperatureFormatter temperatureFormatter;
@@ -72,6 +78,9 @@ public class CSPreferencesFragment extends PreferenceFragment
         zipcode = (EditTextPreference) findPreference(ZIPCODE);
         temperatureScale = (ListPreference) findPreference(TEMPERATURE_SCALE);
         locationString = (EditTextPreference) findPreference(LOCATION_STRING);
+        // TODO: This is a placeholder.Plan to make application smarter here.
+        coldAlarmTimePicker = (TimePickerDialogPreference) findPreference(COLD_ALARM_TIME);
+
 
         preferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
         {
@@ -79,24 +88,18 @@ public class CSPreferencesFragment extends PreferenceFragment
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
             {
                 refreshActivity();
+
+                // Reset alarm for the new alarm aime inputted
+                if (s.equals(COLD_ALARM_TIME))
+                {
+                    ColdAlarm.cancelAlarm(getActivity().getApplicationContext());
+                    ColdAlarm.setAlarm(getActivity().getApplicationContext());
+                }
             }
         };
 
         refreshActivity();
 
-
-        /*
-         * Anon listener that will be triggered when any preference is altered. This allows the UI
-         * to update when a preference changes.
-         */
-        sharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener()
-        {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
-            {
-                refreshActivity();
-            }
-        });
     }
 
     @Override
@@ -117,7 +120,6 @@ public class CSPreferencesFragment extends PreferenceFragment
     public void onPause()
     {
         super.onPause();
-
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener);
     }
 
@@ -128,5 +130,6 @@ public class CSPreferencesFragment extends PreferenceFragment
         zipcode.setSummary(sharedPreferences.getString(ZIPCODE, ""));
         temperatureScale.setSummary(sharedPreferences.getString(TEMPERATURE_SCALE, "F"));
         locationString.setSummary(sharedPreferences.getString(LOCATION_STRING, "Location"));
+        coldAlarmTimePicker.setSummary(TimePickerDialogPreference.formatTime(sharedPreferences.getString(COLD_ALARM_TIME, "7:00")));
     }
 }

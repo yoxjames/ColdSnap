@@ -25,7 +25,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.example.yoxjames.coldsnap.R;
-import com.example.yoxjames.coldsnap.androidservice.ColdAlarm;
 
 public class PlantListActivity extends AppCompatActivity
 {
@@ -37,10 +36,6 @@ public class PlantListActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        final ColdAlarm coldAlarm = new ColdAlarm();
-
-        coldAlarm.setAlarm(this);
-        coldAlarm.onReceive(this, this.getIntent());
 
         setContentView(R.layout.content_main);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

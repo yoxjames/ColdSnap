@@ -25,21 +25,11 @@ import android.os.IBinder;
 
 public class ColdService extends Service
 {
-
-    // TODO: Inject this and make it better.
-    private final ColdAlarm alarm = new ColdAlarm();
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        alarm.setAlarm(this);
+        ColdAlarm.setAlarm(this.getApplicationContext());
         return START_STICKY;
-    }
-
-    @Override
-    public void onStart(Intent intent, int startId)
-    {
-        alarm.setAlarm(this);
     }
 
     @Override

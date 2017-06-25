@@ -19,9 +19,40 @@
 
 package com.example.yoxjames.coldsnap.dagger;
 
+import android.content.SharedPreferences;
+
+import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
+import com.example.yoxjames.coldsnap.model.TemperatureFormatterImpl;
+import com.example.yoxjames.coldsnap.service.WeatherService;
+import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessor;
+import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessorImpl;
+import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
+import com.example.yoxjames.coldsnap.service.WeatherServiceCallImpl;
+
+import javax.inject.Provider;
+
+import dagger.Lazy;
 import dagger.Module;
+import dagger.Provides;
 
 @Module
 public class ColdAlarmModule
 {
+    @Provides
+    static WeatherServiceCall provideWeatherServiceCall(Provider<Lazy<WeatherServiceAsyncProcessor>> weatherServiceAsyncProcessor)
+    {
+        return new WeatherServiceCallImpl(weatherServiceAsyncProcessor);
+    }
+
+    @Provides
+    static WeatherServiceAsyncProcessor provideWeatherServiceAsyncProcessor(WeatherService weatherService)
+    {
+        return new WeatherServiceAsyncProcessorImpl(weatherService);
+    }
+
+    @Provides
+    static TemperatureFormatter provideTemperatureFormatter(SharedPreferences sharedPreferences)
+    {
+        return new TemperatureFormatterImpl(sharedPreferences);
+    }
 }
