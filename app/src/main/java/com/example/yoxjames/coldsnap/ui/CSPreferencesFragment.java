@@ -130,6 +130,6 @@ public class CSPreferencesFragment extends PreferenceFragment
         zipcode.setSummary(sharedPreferences.getString(ZIPCODE, ""));
         temperatureScale.setSummary(sharedPreferences.getString(TEMPERATURE_SCALE, "F"));
         locationString.setSummary(sharedPreferences.getString(LOCATION_STRING, "Location"));
-        coldAlarmTimePicker.setSummary(TimePickerDialogPreference.formatTime(sharedPreferences.getString(COLD_ALARM_TIME, "7:00")));
+        coldAlarmTimePicker.setSummary(TimePickerDialogPreference.formatTime(sharedPreferences.getString(COLD_ALARM_TIME, "19:00")));
     }
 }

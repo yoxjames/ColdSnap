@@ -71,7 +71,7 @@ public class PlantDetailPresenterImplTest
         verify(plantDetailView,times(1)).setMinBound(0);
         verify(plantDetailView,times(1)).setMaxBound(100);
         verify(plantDetailView,times(1)).setMinimumTemperatureFormatter(pickerFormatter);
-        verify(plantDetailView,times(1)).setSaveButtonText("Update");
+        verify(plantDetailView,times(0)).setAddMode();
         verify(plantDetailView,times(1)).setPlantName(plant.getName());
         verify(plantDetailView,times(1)).setPlantScientificName(plant.getScientificName());
         verify(plantDetailView,times(1)).setMinTemperature(20);
@@ -90,7 +90,7 @@ public class PlantDetailPresenterImplTest
         verify(plantDetailView,times(1)).setMinBound(0);
         verify(plantDetailView,times(1)).setMaxBound(100);
         verify(plantDetailView,times(1)).setMinimumTemperatureFormatter(pickerFormatter);
-        verify(plantDetailView,times(1)).setSaveButtonText("Add");
+        verify(plantDetailView,times(1)).setAddMode();
         verify(plantDetailView,times(1)).setPlantName(plant.getName());
         verify(plantDetailView,times(1)).setPlantScientificName(plant.getScientificName());
         verify(plantDetailView,times(1)).setMinTemperature(20);
@@ -105,7 +105,7 @@ public class PlantDetailPresenterImplTest
 
         plantDetailPresenter.deletePlant(plant.getUuid());
         verify(plantService,times(1)).deletePlant(plant.getUuid());
-        verify(plantDetailView,times(1)).displayMessage("Plant Removed");
+        verify(plantDetailView,times(1)).displayDeleteMessage();
     }
 
     @Test
@@ -130,7 +130,7 @@ public class PlantDetailPresenterImplTest
         assertEquals("Junitus testus", capturedPlant.getScientificName());
         assertEquals(newMinTemp, capturedPlant.getMinimumTolerance());
         assertEquals(plant.getUuid(), capturedPlant.getUuid());
-        verify(plantDetailView,times(1)).displayMessage("Plant Saved");
+        verify(plantDetailView,times(1)).displaySaveMessage(false);
     }
 
     @Test
@@ -155,6 +155,6 @@ public class PlantDetailPresenterImplTest
         assertEquals("Junitus testus", capturedPlant.getScientificName());
         assertEquals(newMinTemp, capturedPlant.getMinimumTolerance());
         assertEquals(plant.getUuid(), capturedPlant.getUuid());
-        verify(plantDetailView,times(1)).displayMessage("Plant Added");
+        verify(plantDetailView,times(1)).displaySaveMessage(true);
     }
 }

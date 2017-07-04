@@ -86,25 +86,29 @@ public interface PlantDetailView
     void setMinBound(int minTemperature);
 
     /**
-     * Sets the text on the "Save Button" implementation.
-     *
-     * @param saveButtonText The text to be shown on the "Save Button."
+     * Called when the responsible view is being used to add a completely new plant vs updating an
+     * existing plant.
      */
-    void setSaveButtonText(String saveButtonText);
+    void setAddMode();
 
     /**
-     * Broadcasts a message to the GUI.
+     * Broadcasts a message to the GUI for when either a plant is saved or updated.
      *
-     * @param message Message to broadcast.
+     * @param isNewPlant TRUE if a new plant is being added
+     *                   FALSE if an existing plant is being updated
      */
-    void displayMessage(String message);
+    void displaySaveMessage(boolean isNewPlant);
+
+    /**
+     * Displays message when deleting the plant alerting the user the plant was successfully deleted.
+     */
+    void displayDeleteMessage();
 
     /**
      * Sets the formatter for the Number Picker for the cold tolerance temperature.
      *
      * @param formatter Formatter object to use.
      */
-    //TODO: This contains Android specific implementation details. Should be refactored to be generic.
     void setMinimumTemperatureFormatter(NumberPicker.Formatter formatter);
 
     /**

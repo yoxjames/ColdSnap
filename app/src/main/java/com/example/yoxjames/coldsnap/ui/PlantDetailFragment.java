@@ -224,15 +224,24 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
     }
 
     @Override
-    public void setSaveButtonText(String saveButtonText)
+    public void setAddMode()
     {
-        saveButton.setText(saveButtonText);
+        saveButton.setText(getString(R.string.add));
     }
 
     @Override
-    public void displayMessage(String message)
+    public void displayDeleteMessage()
     {
-        Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(), getString(R.string.plant_deleted), Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void displaySaveMessage(boolean isNewPlant)
+    {
+        if (isNewPlant)
+            Toast.makeText(getActivity(), getString(R.string.plant_added), Toast.LENGTH_LONG).show();
+        else
+            Toast.makeText(getActivity(), getString(R.string.plant_updated), Toast.LENGTH_LONG).show();
     }
 
     @Override

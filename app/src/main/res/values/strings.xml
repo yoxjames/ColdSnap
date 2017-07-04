@@ -30,6 +30,10 @@
     <string name="low_temp">Low:</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
+    <string name="add">Add</string>
+    <string name="plant_added">Plant Added</string>
+    <string name="plant_updated">Plant Updated</string>
+    <string name="plant_deleted">Plant Deleted</string>
 
     <string-array name="temperature_formats">
         <item>"°F"</item>

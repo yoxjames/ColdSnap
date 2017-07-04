@@ -54,9 +54,7 @@ public class PlantDetailPresenterImpl implements PlantDetailPresenter
         view.setMinimumTemperatureFormatter(temperaturePickerAdapter.getFormatter());
 
         if (view.isNewPlantInd())
-            view.setSaveButtonText("Add"); //TODO: i18n
-        else
-            view.setSaveButtonText("Update"); //TODO: i18n
+            view.setAddMode();
 
         view.setPlantName(plant.getName());
         view.setPlantScientificName(plant.getScientificName());
@@ -75,17 +73,13 @@ public class PlantDetailPresenterImpl implements PlantDetailPresenter
                                          temperaturePickerAdapter.getTemperatureForValue(view.getMinTemperature()),
                                          plantUUID);
         plantService.addPlant(newPlant);
-
-        if (!view.isNewPlantInd())
-            view.displayMessage("Plant Saved");
-        else
-            view.displayMessage("Plant Added");
+        view.displaySaveMessage(view.isNewPlantInd());
     }
 
     @Override
     public void deletePlant(UUID plantUUID)
     {
         plantService.deletePlant(Preconditions.checkNotNull(plantUUID));
-        view.displayMessage("Plant Removed");
+        view.displayDeleteMessage();
     }
 }

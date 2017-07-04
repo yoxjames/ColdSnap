@@ -40,8 +40,7 @@ public class TimePickerDialogPreference extends DialogPreference
     public View onCreateDialogView()
     {
         timePicker = new TimePicker(getContext().getApplicationContext());
-        timePicker.setBackgroundColor(Color.BLACK); // TODO: Use a theme
-        setTime(getPersistedString("00:00"));
+        setTime(getPersistedString("19:00"));
         return timePicker;
     }
 

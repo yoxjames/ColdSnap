@@ -35,11 +35,13 @@
         android:maxLength="5"
         android:inputType="number"
         android:defaultValue="64105" />
+    <!--suppress AndroidDomInspection -->
     <ListPreference
         android:key="com.example.yoxjames.coldsnap.TEMPFORMAT"
         android:title="Temperature Scale"
         android:entries="@array/temperature_formats"
-        android:entryValues="@array/temperature_formats_values"/>
+        android:entryValues="@array/temperature_formats_values"
+        android:defaultValue="F"/>
     <EditTextPreference
         android:key="com.example.yoxjames.coldsnap.LOCATION_STRING"
         android:title="Location String"
