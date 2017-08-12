@@ -24,8 +24,8 @@ import com.example.yoxjames.coldsnap.androidservice.ColdAlarm;
 import dagger.Subcomponent;
 
 
-@Subcomponent(modules = { ColdAlarmModule.class } )
+@Subcomponent(modules = { ColdAlarmModule.class })
 public interface ColdAlarmSubcomponent
 {
-    void inject (ColdAlarm coldAlarm);
+    void inject(ColdAlarm coldAlarm);
 }

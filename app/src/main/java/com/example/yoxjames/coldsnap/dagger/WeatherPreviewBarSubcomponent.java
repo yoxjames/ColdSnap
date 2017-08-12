@@ -24,7 +24,7 @@ import com.example.yoxjames.coldsnap.ui.WeatherPreviewBarFragment;
 import dagger.Subcomponent;
 
 @FragmentScope
-@Subcomponent(modules = { WeatherPreviewBarViewModule.class } )
+@Subcomponent(modules = { WeatherPreviewBarViewModule.class })
 public interface WeatherPreviewBarSubcomponent
 {
     void inject(WeatherPreviewBarFragment weatherPreviewBarFragment);

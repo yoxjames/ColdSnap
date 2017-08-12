@@ -34,6 +34,8 @@
     <string name="plant_added">Plant Added</string>
     <string name="plant_updated">Plant Updated</string>
     <string name="plant_deleted">Plant Deleted</string>
+    <string name="set_location">Set Location</string>
+    <string name="device_location_fail_message">Could not acquire device location. Ensure location is on.</string>
 
     <string-array name="temperature_formats">
         <item>"°F"</item>

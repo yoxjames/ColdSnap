@@ -91,14 +91,7 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
         plantScientificNameText = (EditText) view.findViewById(R.id.scientific_name_text);
         minimumTempNumberPicker = (NumberPicker) view.findViewById(R.id.minimum_temp_picker);
 
-        // Disgusting hack to get around an android bug: https://issuetracker.google.com/issues/36952035
-        try {
-            Method method = minimumTempNumberPicker.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
-            method.setAccessible(true);
-            method.invoke(minimumTempNumberPicker, true);
-        } catch (NoSuchMethodException | IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        reflectionFormatHack(minimumTempNumberPicker);
 
         cancelButton = (Button) view.findViewById(R.id.cancel_button);
         cancelButton.setOnClickListener(new View.OnClickListener()
@@ -124,6 +117,19 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
         return view;
     }
 
+    private void reflectionFormatHack(NumberPicker numberPicker)
+    {
+        // Disgusting hack to get around an android bug: https://issuetracker.google.com/issues/36952035
+        try
+        {
+            Method method = numberPicker.getClass().getDeclaredMethod("changeValueByOne", boolean.class);
+            method.setAccessible(true);
+            method.invoke(numberPicker, true);
+        } catch (NoSuchMethodException | IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -143,7 +149,8 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
     {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_main, menu);
-        menu.getItem(1).setVisible(false); // Remove add plant in detail view
+        menu.getItem(1).setVisible(false); // Remove set location in detail view
+        menu.getItem(2).setVisible(false); // Remove add plant in detail view
     }
 
     @Override
@@ -154,10 +161,11 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
             case R.id.menu_item_delete_plant:
                 plantDetailPresenter.deletePlant(getPlantUUID());
                 getActivity().finish();
-                return true;
+                return super.onOptionsItemSelected(item);
             case R.id.action_settings:
                 Intent intent = new Intent(getContext(), CSPreferencesActivity.class);
                 startActivity(intent);
+                return super.onOptionsItemSelected(item);
             default:
                 super.onOptionsItemSelected(item);
         }
@@ -248,5 +256,11 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
     public void setMinimumTemperatureFormatter(NumberPicker.Formatter formatter)
     {
         minimumTempNumberPicker.setFormatter(formatter);
+    }
+
+    @Override
+    public void setMinimumTemperatureValueChangeListener(NumberPicker.OnValueChangeListener listener)
+    {
+        minimumTempNumberPicker.setOnValueChangedListener(listener);
     }
 }

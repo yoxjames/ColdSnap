@@ -56,7 +56,6 @@ public class ColdSnapApplication extends Application
         if (injector == null)
             injector = DaggerColdSnapInjector.builder().context(getApplicationContext()).build();
 
-
         return injector;
     }
 

@@ -28,7 +28,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
@@ -38,10 +37,7 @@ import com.example.yoxjames.coldsnap.dagger.ColdAlarmModule;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.example.yoxjames.coldsnap.model.WeatherData;
-import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.service.WeatherService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallback;
+import com.example.yoxjames.coldsnap.service.weather.WeatherService;
 import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 import com.example.yoxjames.coldsnap.ui.PlantListActivity;
 
@@ -50,12 +46,18 @@ import java.util.Calendar;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Consumer;
+import io.reactivex.schedulers.Schedulers;
+
 @Singleton
 public class ColdAlarm extends BroadcastReceiver
 {
     @Inject WeatherService weatherService;
     @Inject SharedPreferences sharedPreferences;
-    @Inject WeatherServiceCall weatherServiceCall;
+    @Inject Single<WeatherData> weatherDataSingle;
     @Inject TemperatureFormatter temperatureFormatter;
 
     @Override
@@ -66,7 +68,64 @@ public class ColdAlarm extends BroadcastReceiver
                 .getInjector()
                 .coldAlarmSubcomponent(new ColdAlarmModule())
                 .inject(this);
-        weatherServiceCall.execute(new WeatherServiceCallAlarmCallback(context));
+
+        weatherDataSingle
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(new Consumer<WeatherData>()
+                           {
+                               @Override
+                               public void accept(@NonNull WeatherData weatherData) throws Exception
+                               {
+                                   final int mId = 1;
+
+                                   final Temperature coldThresholdPref = new Temperature(sharedPreferences.getFloat(CSPreferencesFragment.THRESHOLD, 273f));
+                                   final Temperature lowTonight = weatherData.getTodayLow();
+
+                                   if (coldThresholdPref.compareTo(lowTonight) >= 0)
+                                   {
+                                       NotificationCompat.Builder mBuilder =
+                                               (NotificationCompat.Builder) new NotificationCompat.Builder(context)
+                                                       .setSmallIcon(R.mipmap.ic_launcher)
+                                                       .setContentTitle("ColdSnap: Cold Warning")
+                                                       .setContentText("Tonight's low "
+                                                               + temperatureFormatter.format(lowTonight)
+                                                               + " is at or below threshold "
+                                                               + temperatureFormatter.format(coldThresholdPref))
+                                                       .setColor(Color.BLUE);
+                                       // Creates an explicit intent for an Activity in your app
+                                       Intent resultIntent = new Intent(context, PlantListActivity.class);
+
+                                       // The stack builder object will contain an artificial back stack for the
+                                       // started Activity.
+                                       // This ensures that navigating backward from the Activity leads out of
+                                       // your application to the Home screen.
+                                       TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+                                       // Adds the back stack for the Intent (but not the Intent itself)
+                                       stackBuilder.addParentStack(PlantListActivity.class);
+                                       // Adds the Intent that starts the Activity to the top of the stack
+                                       stackBuilder.addNextIntent(resultIntent);
+                                       PendingIntent resultPendingIntent =
+                                               stackBuilder.getPendingIntent(
+                                                       0,
+                                                       PendingIntent.FLAG_UPDATE_CURRENT
+                                               );
+                                       mBuilder.setContentIntent(resultPendingIntent);
+                                       NotificationManager mNotificationManager =
+                                               (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                                       // mId allows you to update the notification later on.
+                                       mNotificationManager.notify(mId, mBuilder.build());
+                                   }
+                               }
+                           },
+                        new Consumer<Throwable>()
+                        {
+                            @Override
+                            public void accept(@NonNull Throwable throwable) throws Exception
+                            {
+                                // Nothing for now
+                            }
+                        });
     }
 
     /**
@@ -104,62 +163,5 @@ public class ColdAlarm extends BroadcastReceiver
         PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, 0);
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(sender);
-    }
-
-    private class WeatherServiceCallAlarmCallback implements WeatherServiceCallback
-    {
-        private final Context context;
-
-        private WeatherServiceCallAlarmCallback(Context context)
-        {
-            this.context = context;
-        }
-
-        @Override
-        public void callback(@Nullable WeatherData result, WeatherDataNotFoundException e)
-        {
-            if (e == null)
-            {
-                final int mId = 1;
-
-                final Temperature coldThresholdPref = new Temperature(sharedPreferences.getFloat(CSPreferencesFragment.THRESHOLD, 273f));
-                final Temperature lowTonight = result.getTodayLow();
-
-                if (coldThresholdPref.compareTo(lowTonight) >= 0)
-                {
-                    NotificationCompat.Builder mBuilder =
-                            (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                                    .setSmallIcon(R.mipmap.ic_launcher)
-                                    .setContentTitle("ColdSnap: Cold Warning")
-                                    .setContentText("Tonight's low "
-                                                   + temperatureFormatter.format(lowTonight)
-                                                   + " is at or below threshold "
-                                                   + temperatureFormatter.format(coldThresholdPref))
-                                    .setColor(Color.BLUE);
-                    // Creates an explicit intent for an Activity in your app
-                    Intent resultIntent = new Intent(context, PlantListActivity.class);
-
-                    // The stack builder object will contain an artificial back stack for the
-                    // started Activity.
-                    // This ensures that navigating backward from the Activity leads out of
-                    // your application to the Home screen.
-                    TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-                    // Adds the back stack for the Intent (but not the Intent itself)
-                    stackBuilder.addParentStack(PlantListActivity.class);
-                    // Adds the Intent that starts the Activity to the top of the stack
-                    stackBuilder.addNextIntent(resultIntent);
-                    PendingIntent resultPendingIntent =
-                            stackBuilder.getPendingIntent(
-                                    0,
-                                    PendingIntent.FLAG_UPDATE_CURRENT
-                            );
-                    mBuilder.setContentIntent(resultPendingIntent);
-                    NotificationManager mNotificationManager =
-                            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                    // mId allows you to update the notification later on.
-                    mNotificationManager.notify(mId, mBuilder.build());
-                }
-            }
-        }
     }
 }

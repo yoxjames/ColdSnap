@@ -28,7 +28,7 @@ import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import javax.inject.Inject;
 
-public class TemperaturePickerAdapterImpl implements NumberPicker.Formatter, TemperaturePickerAdapter
+public class TemperaturePickerAdapterImpl implements NumberPicker.Formatter, TemperaturePickerAdapter, NumberPicker.OnValueChangeListener
 {
     private final SharedPreferences sharedPreferences;
     private final TemperatureFormatter temperatureFormatter;
@@ -59,8 +59,6 @@ public class TemperaturePickerAdapterImpl implements NumberPicker.Formatter, Tem
     {
         return getPreferenceValue(MINIMUM_TEMPERATURE);
     }
-
-
 
     @Override
     public int getMinimumTemperatureValue()
@@ -107,5 +105,22 @@ public class TemperaturePickerAdapterImpl implements NumberPicker.Formatter, Tem
     public NumberPicker.Formatter getFormatter()
     {
         return this;
+    }
+
+    @Override
+    public NumberPicker.OnValueChangeListener getOnValueChangeListener()
+    {
+        return this;
+    }
+
+    @Override
+    public void onValueChange(NumberPicker numberPicker, int oldValue, int newValue)
+    {
+        if (Math.abs(oldValue - newValue) == 1)
+            numberPicker.setValue(getValueForTemperature(getTemperatureForValue(newValue)));
+        else
+        {
+            numberPicker.setValue(getValueForTemperature(getTemperatureForValue(newValue)) - offset());
+        }
     }
 }

@@ -23,20 +23,16 @@ import android.content.SharedPreferences;
 
 import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.example.yoxjames.coldsnap.model.TemperatureFormatterImpl;
-import com.example.yoxjames.coldsnap.service.WeatherService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessor;
-import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessorImpl;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallImpl;
+import com.example.yoxjames.coldsnap.model.WeatherData;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 import com.example.yoxjames.coldsnap.ui.presenter.WeatherPreviewBarPresenter;
 import com.example.yoxjames.coldsnap.ui.presenter.WeatherPreviewBarPresenterImpl;
 import com.example.yoxjames.coldsnap.ui.view.WeatherPreviewBarView;
 
-import javax.inject.Provider;
-
-import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 
 @Module
 public class WeatherPreviewBarViewModule
@@ -55,26 +51,19 @@ public class WeatherPreviewBarViewModule
     }
 
     @Provides
-    static WeatherPreviewBarPresenter provideWeatherPreviewBarPresenter(WeatherPreviewBarView view, TemperatureFormatter temperatureFormatter, WeatherServiceCall weatherServiceCall)
+    static WeatherPreviewBarPresenter provideWeatherPreviewBarPresenter(WeatherPreviewBarView view,
+                                                                        TemperatureFormatter temperatureFormatter,
+                                                                        Single<WeatherData> weatherDataSingle,
+                                                                        Observable<WeatherLocation> weatherLocationObservable,
+                                                                        SharedPreferences sharedPreferences)
+
     {
-        return new WeatherPreviewBarPresenterImpl(view, temperatureFormatter, weatherServiceCall);
+        return new WeatherPreviewBarPresenterImpl(view, temperatureFormatter, weatherDataSingle, weatherLocationObservable, sharedPreferences);
     }
 
     @Provides
     static TemperatureFormatter provideTemperatureFormatter(SharedPreferences sharedPreferences)
     {
         return new TemperatureFormatterImpl(sharedPreferences);
-    }
-
-    @Provides
-    static WeatherServiceCall provideWeatherServiceCall(Provider<Lazy<WeatherServiceAsyncProcessor>> weatherServiceAsyncProcessor)
-    {
-        return new WeatherServiceCallImpl(weatherServiceAsyncProcessor);
-    }
-
-    @Provides
-    static WeatherServiceAsyncProcessor provideWeatherServiceAsyncProcessor(WeatherService weatherService)
-    {
-        return new WeatherServiceAsyncProcessorImpl(weatherService);
     }
 }

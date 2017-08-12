@@ -24,9 +24,11 @@ import android.content.SharedPreferences;
 import com.example.yoxjames.coldsnap.BuildConfig;
 import com.example.yoxjames.coldsnap.http.HTTPWeatherService;
 import com.example.yoxjames.coldsnap.http.wu.HTTPWeatherServiceWUImpl;
+import com.example.yoxjames.coldsnap.http.wu.WundergroundURLFactory;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import org.json.JSONException;
@@ -41,19 +43,13 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
-import javax.inject.Provider;
-
-import dagger.Lazy;
-
 import static org.hamcrest.CoreMatchers.any;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -61,11 +57,12 @@ public class HTTPForecastServiceWUImplTest
 {
     private @Mock HttpURLConnection httpURLConnection;
     private @Mock SharedPreferences sharedPreferences;
-    private @Mock Provider<Lazy<URL>> url;
+    private @Mock WundergroundURLFactory url;
+    private WeatherLocation weatherLocation = new WeatherLocation("55555", "Testville, AK", 0f, 0f);
     private URLStreamHandler urlStreamHandler;
     private InputStream successfulJSONResponse;
     private InputStream failureJSONResponse;
-    private String fakeURLString = "http://api.wunderground.com/api/fake_api_key/forecast/q/fake.json";
+    private final static String fakeURLString = "http://api.wunderground.com/api/fake_api_key/forecast/q/fake.json";
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -88,25 +85,8 @@ public class HTTPForecastServiceWUImplTest
                 return httpURLConnection;
             }
         };
-        when(url.get()).thenReturn(new Lazy<URL>()
-        {
-            @Override
-            public URL get()
-            {
-                try
-                {
-                    return new URL(null, fakeURLString, urlStreamHandler);
-                }
-                catch (MalformedURLException e)
-                {
-                    e.printStackTrace();
-                    fail();
-                }
-                return null;
-            }
-        });
-        when(sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Location")).thenReturn("Testville, AK");
-        when(sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105")).thenReturn("55555");
+        when(url.create(weatherLocation)).thenReturn(new URL(null, fakeURLString, urlStreamHandler));
+
     }
 
     /**
@@ -134,13 +114,13 @@ public class HTTPForecastServiceWUImplTest
         Temperature lowDayFour = Temperature.newTemperatureFromF(45);
 
         HTTPWeatherService httpWeatherService = new HTTPWeatherServiceWUImpl(url, sharedPreferences);
-        WeatherData weatherData = httpWeatherService.getWeatherData();
+        WeatherData weatherData = httpWeatherService.getWeatherData(weatherLocation);
 
         assertEquals(weatherData.getTodayHigh().compareTo(highDayOne), 0);
         assertEquals(weatherData.getTodayLow().compareTo(lowDayOne), 0);
         assertNotNull(weatherData.getSyncDate());
-        assertEquals(weatherData.getZipCode(), "55555");
-        assertEquals(weatherData.getLocationString(), "Testville, AK");
+        assertEquals(weatherData.getWeatherLocation().getZipCode(), "55555");
+        assertEquals(weatherData.getWeatherLocation().getPlaceString(), "Testville, AK");
         assertEquals(weatherData.getForecastDays().get(0).getLowTemperature().compareTo(lowDayOne),0);
         assertEquals(weatherData.getForecastDays().get(0).getHighTemperature().compareTo(highDayOne),0);
 
@@ -166,7 +146,7 @@ public class HTTPForecastServiceWUImplTest
         expectedException.expectCause(any(JSONException.class));
 
         HTTPWeatherService httpWeatherService = new HTTPWeatherServiceWUImpl(url, sharedPreferences);
-        httpWeatherService.getWeatherData();
+        httpWeatherService.getWeatherData(weatherLocation);
     }
 
     /**
@@ -180,7 +160,7 @@ public class HTTPForecastServiceWUImplTest
         expectedException.expectCause(any(IOException.class));
 
         HTTPWeatherService httpWeatherService = new HTTPWeatherServiceWUImpl(url, sharedPreferences);
-        httpWeatherService.getWeatherData();
+        httpWeatherService.getWeatherData(weatherLocation);
     }
 
     /**

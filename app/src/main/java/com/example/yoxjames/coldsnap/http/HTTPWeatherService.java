@@ -21,6 +21,7 @@ package com.example.yoxjames.coldsnap.http;
 
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 
 /**
  * Service designed to obtain WeatherData via HTTP. This could be implemented with many different
@@ -32,8 +33,9 @@ public interface HTTPWeatherService
     /**
      * Gets the WeatherData via HTTP
      *
+     * @param weatherLocation Location Data for which to fetch the WeatherData.
      * @return WeatherData from HTTP
      * @throws WeatherDataNotFoundException If for some reason this fails (no internet connectivity, API key out of hits, etc)
      */
-    WeatherData getWeatherData() throws WeatherDataNotFoundException;
+    WeatherData getWeatherData(WeatherLocation weatherLocation) throws WeatherDataNotFoundException;
 }

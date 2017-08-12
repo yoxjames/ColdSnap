@@ -19,7 +19,7 @@
 
 package com.example.yoxjames.coldsnap.dagger;
 
-import com.example.yoxjames.coldsnap.service.PlantService;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantDetailPagerPresenter;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantDetailPagerPresenterImpl;
 

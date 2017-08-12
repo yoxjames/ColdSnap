@@ -17,19 +17,15 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.service;
+package com.example.yoxjames.coldsnap.service.location;
+
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 
 /**
- * Wrapper for WeatherService that is called from the front end.
- * In practice this service is responsible for calling the async processor model.
+ * Created by yoxjames on 7/9/17.
  */
-public interface WeatherServiceCall
+
+public interface GeolocationService
 {
-    /**
-     * Execute WeatherService to get the current forecast data and then call the callback with that
-     * data.
-     * @param callback Callback implementation that will include things to be done after this service
-     *                 call is made.
-     */
-    void execute(WeatherServiceCallback callback);
+    WeatherLocation getLocation(double lat, double lon);
 }

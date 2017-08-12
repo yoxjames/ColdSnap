@@ -35,8 +35,6 @@ import com.example.yoxjames.coldsnap.ui.controls.TemperatureEditTextPreference;
 import com.example.yoxjames.coldsnap.ui.controls.TemperatureValueEditTextPreference;
 import com.example.yoxjames.coldsnap.ui.controls.TimePickerDialogPreference;
 
-import java.util.Calendar;
-
 import javax.inject.Inject;
 
 public class CSPreferencesFragment extends PreferenceFragment
@@ -99,7 +97,6 @@ public class CSPreferencesFragment extends PreferenceFragment
         };
 
         refreshActivity();
-
     }
 
     @Override
@@ -128,7 +125,7 @@ public class CSPreferencesFragment extends PreferenceFragment
         eThreshold.setSummary(temperatureFormatter.format(new Temperature(sharedPreferences.getFloat(THRESHOLD, 273f))));
         fuzz.setSummary(temperatureFormatter.formatFuzz(sharedPreferences.getFloat(WEATHER_DATA_FUZZ, 0f)));
         zipcode.setSummary(sharedPreferences.getString(ZIPCODE, ""));
-        temperatureScale.setSummary(sharedPreferences.getString(TEMPERATURE_SCALE, "F"));
+        temperatureScale.setSummary("°" + sharedPreferences.getString(TEMPERATURE_SCALE, "F"));
         locationString.setSummary(sharedPreferences.getString(LOCATION_STRING, "Location"));
         coldAlarmTimePicker.setSummary(TimePickerDialogPreference.formatTime(sharedPreferences.getString(COLD_ALARM_TIME, "19:00")));
     }

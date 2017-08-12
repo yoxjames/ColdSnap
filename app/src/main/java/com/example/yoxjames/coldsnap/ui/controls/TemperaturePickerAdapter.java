@@ -71,4 +71,11 @@ public interface TemperaturePickerAdapter
      * @return A NumberPicker.Formatter object for use in Android NumberPickers.
      */
     NumberPicker.Formatter getFormatter();
+
+    /**
+     * Gets a NumberPicker.OnValueChangeListener for use in the GUI.
+     *
+     * @return A NumberPicker.OnValueChangeListener for use in Android NumberPickers.
+     */
+    NumberPicker.OnValueChangeListener getOnValueChangeListener();
 }

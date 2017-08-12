@@ -19,21 +19,19 @@
 
 package com.example.yoxjames.coldsnap.dagger;
 
-import com.example.yoxjames.coldsnap.service.PlantService;
-import com.example.yoxjames.coldsnap.service.WeatherService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessor;
-import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessorImpl;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallImpl;
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocation;
+import com.example.yoxjames.coldsnap.model.WeatherData;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantListPresenter;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantListPresenterImpl;
 import com.example.yoxjames.coldsnap.ui.view.PlantListView;
 
-import javax.inject.Provider;
-
-import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.subjects.Subject;
 
 @Module
 public class PlantListFragmentModule
@@ -52,20 +50,12 @@ public class PlantListFragmentModule
     }
 
     @Provides
-    static PlantListPresenter providePlantListPresenter(PlantListView plantListView, PlantService plantService, WeatherServiceCall weatherServiceCall)
+    static PlantListPresenter providePlantListPresenter(PlantListView plantListView,
+                                                        PlantService plantService,
+                                                        Single<WeatherData> weatherServiceSingle,
+                                                        Subject<SimpleWeatherLocation> weatherLocationObserver,
+                                                        Observable<WeatherLocation> weatherLocationOb)
     {
-        return new PlantListPresenterImpl(plantListView, plantService, weatherServiceCall);
-    }
-
-    @Provides
-    static WeatherServiceCall provideWeatherServiceCall(Provider<Lazy<WeatherServiceAsyncProcessor>> weatherServiceAsyncProcessor)
-    {
-        return new WeatherServiceCallImpl(weatherServiceAsyncProcessor);
-    }
-
-    @Provides
-    static WeatherServiceAsyncProcessor provideWeatherServiceAsyncProcessor(WeatherService weatherService)
-    {
-        return new WeatherServiceAsyncProcessorImpl(weatherService);
+        return new PlantListPresenterImpl(plantListView, plantService, weatherServiceSingle, weatherLocationObserver, weatherLocationOb);
     }
 }

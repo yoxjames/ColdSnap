@@ -22,6 +22,7 @@ package com.example.yoxjames.coldsnap.mocks;
 import com.example.yoxjames.coldsnap.model.ForecastDay;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.WeatherData;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,7 +63,9 @@ public class WeatherDataMockFactory
                 new Date(),
                 UUID.randomUUID()));
 
-        return new WeatherData(forecastDayList, "Kansas City, MO", "64105", new Date());
+        final WeatherLocation weatherLocation = new WeatherLocation("64105", "Kansas City, MO", 0f, 0f);
+
+        return new WeatherData(forecastDayList, new Date(), weatherLocation);
     }
 
     public static List<ForecastDay> getForecastDays()

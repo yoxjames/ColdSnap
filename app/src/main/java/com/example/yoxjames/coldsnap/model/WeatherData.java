@@ -37,23 +37,19 @@ public class WeatherData
     /* Stores the highs and lows of upcoming weather days */
     private final List<ForecastDay> forecastDays;
 
-    /* Stores a human readable string representing the location this WeatherData is valid for */
-    private final String locationString;
-
-    /* Zipcode this WeatherData is valid for */
-    private final String zipCode;
+    /* Location data that this Weather Data is valid for */
+    private final WeatherLocation weatherLocation;
 
     /* Date this WeatherData was obtained */
     private final Date syncDate;
 
-    public WeatherData(List<ForecastDay> forecastDays, String locationString, String zipCode, Date syncDate)
+    public WeatherData(List<ForecastDay> forecastDays, Date syncDate, WeatherLocation weatherLocation)
     {
         this.forecastDays = Preconditions.checkNotNull(forecastDays);
+        this.weatherLocation = weatherLocation;
         if (forecastDays.size() == 0)
             throw new IllegalStateException("No ForecastDay information in WeatherData");
 
-        this.locationString = Preconditions.checkNotNull(locationString);
-        this.zipCode = Preconditions.checkNotNull(zipCode);
         this.syncDate = Preconditions.checkNotNull(syncDate);
     }
 
@@ -72,16 +68,6 @@ public class WeatherData
         return new Date(syncDate.getTime());
     }
 
-    public String getLocationString()
-    {
-        return locationString;
-    }
-
-    public String getZipCode()
-    {
-        return zipCode;
-    }
-
     /**
      * Checks if this weatherData is stale. Stale is defined as older than 2 minutes from the
      * current time.
@@ -98,4 +84,8 @@ public class WeatherData
         return forecastDays;
     }
 
+    public WeatherLocation getWeatherLocation()
+    {
+        return weatherLocation;
+    }
 }

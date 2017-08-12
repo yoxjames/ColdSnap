@@ -36,7 +36,7 @@ public class TemperatureValueEditTextPreference extends EditTextPreference
 {
     private static float getDefaultTempValue()
     {
-        return (float) new Temperature(Temperature.WATER_FREEZING_KELVIN).getDegreesKelvin();
+        return 0f;
     }
 
     public TemperatureValueEditTextPreference(Context context, AttributeSet attrs, int defStyleAttr)

@@ -73,7 +73,6 @@ public class PlantDetailActivity extends AppCompatActivity
 
         fragmentManager = getSupportFragmentManager();
 
-        //plantDetailFragment = (PlantDetailFragment) fragmentManager.findFragmentById(R.id.fragment_container);
         viewPager = (ViewPager) findViewById(R.id.activity_plant_detail_pager);
         final boolean newPlantInd = getIntent().getBooleanExtra(NEW_PLANT_IND, false);
         final UUID plantUUID = (UUID) getIntent().getSerializableExtra(PLANT_UUID_ID);
@@ -112,16 +111,6 @@ public class PlantDetailActivity extends AppCompatActivity
                 break;
             }
         }
-
-        /*
-        if (plantDetailFragment == null)
-        {
-            UUID plantUUID = (UUID) getIntent().getSerializableExtra(PLANT_UUID_ID);
-            boolean newPlantInd = getIntent().getBooleanExtra(NEW_PLANT_IND, false);
-            plantDetailFragment = PlantDetailFragment.newFragment(plantUUID, newPlantInd);
-            fragmentManager.beginTransaction().add(R.id.fragment_container, plantDetailFragment).commit();
-        }
-        */
     }
 
     @Override

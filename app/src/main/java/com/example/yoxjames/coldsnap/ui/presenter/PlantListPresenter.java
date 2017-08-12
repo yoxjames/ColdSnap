@@ -51,4 +51,12 @@ public interface PlantListPresenter
      * the user into a detail view where they can edit this new Plant.
      */
     void newPlant();
+
+    /**
+     * Called to set the current location to the device's location.
+     */
+    void resetLocation();
+
+    void unload();
+
 }

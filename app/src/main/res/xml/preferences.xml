@@ -28,7 +28,7 @@
         android:key="com.example.yoxjames.coldsnap.WEATHER_DATA_FUZZ"
         android:title="Weather Data Fuzz"
         android:maxLength="1"
-        android:inputType="numberSigned"/>
+        android:inputType="number"/>
     <EditTextPreference
         android:key="com.example.yoxjames.coldsnap.ZIPCODE"
         android:title="Postal Code/Zip Code"

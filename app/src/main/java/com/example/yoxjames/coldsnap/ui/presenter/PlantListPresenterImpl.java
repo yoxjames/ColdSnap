@@ -19,35 +19,55 @@
 
 package com.example.yoxjames.coldsnap.ui.presenter;
 
+import android.util.Log;
+
 import com.example.yoxjames.coldsnap.model.Plant;
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocation;
 import com.example.yoxjames.coldsnap.model.WeatherData;
-import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.service.PlantService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallback;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 import com.example.yoxjames.coldsnap.ui.view.PlantListItemView;
 import com.example.yoxjames.coldsnap.ui.view.PlantListView;
 
 import java.util.List;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.subjects.Subject;
 
 public class PlantListPresenterImpl implements PlantListPresenter
+
 {
     private final PlantListView view;
     private final PlantService plantService;
-    private final WeatherServiceCall weatherServiceCall;
+    private final Single<WeatherData> weatherDataSingle;
+    private final Subject<SimpleWeatherLocation> simpleWeatherLocationSubject;
+    private final Observable<WeatherLocation> weatherLocationObservable;
+    private Disposable weatherDataDisposableObserver;
+    private Disposable weatherLocationObserver;
+    private Disposable viewLocationObserver;
+
     private List<Plant> plantList;
     private WeatherData weatherData;
 
     @Inject
-    public PlantListPresenterImpl(PlantListView view, PlantService plantService, WeatherServiceCall weatherServiceCall)
+    public PlantListPresenterImpl(PlantListView view,
+                                  PlantService plantService,
+                                  Single<WeatherData> weatherDataSingle,
+                                  Subject<SimpleWeatherLocation> simpleWeatherLocationSubject,
+                                  Observable<WeatherLocation> weatherLocationObservable)
     {
         this.view = view;
         this.plantService = plantService;
-        this.weatherServiceCall = weatherServiceCall;
+        this.weatherDataSingle = weatherDataSingle;
+        this.simpleWeatherLocationSubject = simpleWeatherLocationSubject;
+        this.weatherLocationObservable = weatherLocationObservable;
     }
 
     @Override
@@ -81,7 +101,67 @@ public class PlantListPresenterImpl implements PlantListPresenter
     {
         plantList = plantService.getMyPlants();
         if (plantList.size() > 0)
-            weatherServiceCall.execute(new PlantListUICallback());
+        {
+            weatherDataDisposableObserver = weatherDataSingle
+                    .subscribe(
+                            new Consumer<WeatherData>()
+                            { // Success
+                                @Override
+                                public void accept(@NonNull WeatherData weatherData) throws Exception
+                                {
+                                    PlantListPresenterImpl.this.weatherData = weatherData;
+                                    view.notifyDataChange();
+                                }
+                            },
+                            new Consumer<Throwable>()
+                            { // Failure
+                                @Override
+                                public void accept(@NonNull Throwable throwable) throws Exception
+                                {
+                                    throwable.printStackTrace();
+                                    Log.e("Observer Error", "weatherDataSingle failed in PlantListPresenterImpl");
+                                }
+                            });
+        }
+
+        weatherLocationObserver =
+                weatherLocationObservable
+                .subscribeWith(new DisposableObserver<WeatherLocation>()
+                {
+                    @Override
+                    public void onNext(@NonNull WeatherLocation weatherLocation)
+                    {
+                        weatherDataDisposableObserver.dispose();
+                        weatherDataDisposableObserver = weatherDataSingle
+                                .subscribe(
+                                        new Consumer<WeatherData>()
+                                        { // Success
+                                            @Override
+                                            public void accept(@NonNull WeatherData weatherData) throws Exception
+                                            {
+                                                PlantListPresenterImpl.this.weatherData = weatherData;
+                                                view.notifyDataChange();
+                                            }
+                                        },
+                                        new Consumer<Throwable>()
+                                        { // Failure
+                                            @Override
+                                            public void accept(@NonNull Throwable throwable) throws Exception
+                                            {
+                                                throwable.printStackTrace();
+                                                Log.e("Observer Error", "weatherDataSingle failed in PlantListPresenterImpl");
+                                            }
+                                        });
+
+                    }
+
+                    @Override public void onError(@NonNull Throwable e)
+                    {
+                        e.printStackTrace();
+                        Log.e("Observer Error", "weatherLocationObservable failed in PlantListPresenterImpl");
+                    }
+                    @Override public void onComplete() { }
+                });
     }
 
     @Override
@@ -92,16 +172,37 @@ public class PlantListPresenterImpl implements PlantListPresenter
         view.openPlant(plant.getUuid(), true);
     }
 
-    private class PlantListUICallback implements WeatherServiceCallback
+    @Override
+    public void resetLocation()
     {
-        @Override
-        public void callback(@Nullable WeatherData result, WeatherDataNotFoundException e)
-        {
-            if (e == null)
-            {
-                weatherData = result;
-                view.notifyDataChange();
-            }
-        }
+        viewLocationObserver = view.provideLocationObservable().subscribe(
+                new Consumer<SimpleWeatherLocation>()
+                {
+                    @Override
+                    public void accept(SimpleWeatherLocation simpleWeatherLocation) throws Exception
+                    {
+                        simpleWeatherLocationSubject.onNext(simpleWeatherLocation);
+                    }
+                },
+                new Consumer<Throwable>()
+                {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception
+                    {
+                        throwable.printStackTrace();
+                        view.displayDeviceLocationFailureMessage();
+                    }
+                });
+    }
+
+    @Override
+    public void unload()
+    {
+        if (!(weatherDataDisposableObserver == null) && !weatherDataDisposableObserver.isDisposed())
+            weatherDataDisposableObserver.dispose();
+        if (!(weatherLocationObserver == null) && !weatherLocationObserver.isDisposed())
+            weatherLocationObserver.dispose();
+        if (!(viewLocationObserver == null) && !viewLocationObserver.isDisposed())
+            viewLocationObserver.dispose();
     }
 }

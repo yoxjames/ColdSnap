@@ -19,9 +19,16 @@
 
 package com.example.yoxjames.coldsnap.ui;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -32,10 +39,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.yoxjames.coldsnap.ColdSnapApplication;
 import com.example.yoxjames.coldsnap.R;
 import com.example.yoxjames.coldsnap.dagger.PlantListFragmentModule;
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocation;
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocationNotFoundException;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantListPresenter;
 import com.example.yoxjames.coldsnap.ui.view.PlantListItemView;
 import com.example.yoxjames.coldsnap.ui.view.PlantListView;
@@ -45,12 +55,19 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import dagger.internal.Preconditions;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.functions.Function;
 
 
 public class PlantListFragment extends Fragment implements PlantListView
 {
+    private static final int ACCESS_LOCATION_PERMISSION_CALLBACK = 1;
     private RecyclerView plantRecyclerView;
     private PlantAdapter adapter;
+    private Single<Location> locationObservable;
+
     @Inject PlantListPresenter plantListPresenter;
 
     @Override
@@ -61,6 +78,49 @@ public class PlantListFragment extends Fragment implements PlantListView
                 .getInjector()
                 .plantListFragmentSubcomponent(new PlantListFragmentModule(this))
                 .inject(this);
+        locationObservable = Single.create(new SingleOnSubscribe<Location>()
+        {
+            final LocationManager locationManager = (LocationManager) getContext().getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+
+            @Override
+            public void subscribe(@NonNull final SingleEmitter<Location> emitter) throws Exception
+            {
+                final LocationListener listener = new LocationListener()
+                {
+                    @Override
+                    public void onLocationChanged(Location location)
+                    {
+                        emitter.onSuccess(location);
+                    }
+
+                    @Override public void onStatusChanged(String s, int i, Bundle bundle) { }
+                    @Override public void onProviderEnabled(String s) { }
+                    @Override public void onProviderDisabled(String s) { }
+                };
+
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                {
+                    if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                    {
+                        ActivityCompat.requestPermissions(getActivity(), new String[] { Manifest.permission.ACCESS_FINE_LOCATION,  Manifest.permission.ACCESS_COARSE_LOCATION }, ACCESS_LOCATION_PERMISSION_CALLBACK);
+                        emitter.onError(new SimpleWeatherLocationNotFoundException("Location permission not granted"));
+                    }
+                    else
+                    {
+                        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                        if (location != null)
+                            emitter.onSuccess(location);
+                        else
+                            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, listener, null);
+                    }
+                }
+                else
+                    emitter.onError(new SimpleWeatherLocationNotFoundException("No acceptable location providers available"));
+            }
+        });
+
         super.onAttach(context);
     }
 
@@ -92,11 +152,35 @@ public class PlantListFragment extends Fragment implements PlantListView
     }
 
     @Override
+    public Single<SimpleWeatherLocation> provideLocationObservable()
+    {
+        return locationObservable.map(new Function<Location, SimpleWeatherLocation>()
+        {
+            @Override
+            public SimpleWeatherLocation apply(@NonNull Location location) throws Exception
+            {
+                return new SimpleWeatherLocation(location.getLatitude(), location.getLongitude());
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case ACCESS_LOCATION_PERMISSION_CALLBACK:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    plantListPresenter.resetLocation();
+        }
+    }
+
+    @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
     {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_main, menu);
-        menu.getItem(2).setVisible(false); // Set Delete to invisible
+        menu.getItem(3).setVisible(false); // Set Delete to invisible
     }
 
     @Override
@@ -114,19 +198,36 @@ public class PlantListFragment extends Fragment implements PlantListView
     }
 
     @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        plantListPresenter.unload();
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId())
         {
             case R.id.menu_item_new_plant:
                 plantListPresenter.newPlant();
-                return true;
+                return super.onOptionsItemSelected(item);
             case R.id.action_settings:
                 Intent prefIntent = new Intent(getContext(), CSPreferencesActivity.class);
                 startActivity(prefIntent);
+                return super.onOptionsItemSelected(item);
+            case R.id.menu_item_set_location:
+                plantListPresenter.resetLocation();
+                return super.onOptionsItemSelected(item);
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void displayDeviceLocationFailureMessage()
+    {
+        Toast.makeText(getContext(), R.string.device_location_fail_message, Toast.LENGTH_LONG).show();
     }
 
     private class PlantHolder extends RecyclerView.ViewHolder
@@ -140,13 +241,9 @@ public class PlantListFragment extends Fragment implements PlantListView
         PlantHolder(View itemView)
         {
             super(itemView);
-
-           // this.plantListItemPresenter = presenter;
-
             plantName = (TextView) itemView.findViewById(R.id.plant_name);
             scientificName = (TextView) itemView.findViewById(R.id.plant_scientific_name);
             status = (TextView) itemView.findViewById(R.id.plant_status);
-
             itemView.setOnClickListener(this);
         }
 

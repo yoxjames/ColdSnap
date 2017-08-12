@@ -25,6 +25,7 @@ import com.example.yoxjames.coldsnap.db.ColdSnapDBHelper;
 import com.example.yoxjames.coldsnap.db.PlantDAO;
 import com.example.yoxjames.coldsnap.model.Plant;
 import com.example.yoxjames.coldsnap.model.Temperature;
+import com.example.yoxjames.coldsnap.service.plant.PlantServiceImpl;
 
 import org.junit.Test;
 

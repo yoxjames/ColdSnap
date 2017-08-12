@@ -111,6 +111,8 @@ public interface PlantDetailView
      */
     void setMinimumTemperatureFormatter(NumberPicker.Formatter formatter);
 
+    void setMinimumTemperatureValueChangeListener(NumberPicker.OnValueChangeListener listener);
+
     /**
      * Determines whether this is a new plant from the GUI implementation. The GUI is responsible for
      * persisting certain data so state will be saved there.

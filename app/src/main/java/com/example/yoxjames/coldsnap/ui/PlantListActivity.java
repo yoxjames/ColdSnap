@@ -26,17 +26,14 @@ import android.support.v7.widget.Toolbar;
 
 import com.example.yoxjames.coldsnap.R;
 
-public class PlantListActivity extends AppCompatActivity
-{
+public class PlantListActivity extends AppCompatActivity {
     private FragmentManager fragmentManager;
     private PlantListFragment plantListFragment;
     private WeatherPreviewBarFragment weatherPreviewBarFragment;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.content_main);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -46,14 +43,12 @@ public class PlantListActivity extends AppCompatActivity
         plantListFragment = (PlantListFragment) fragmentManager.findFragmentById(R.id.fragment_container);
         weatherPreviewBarFragment = (WeatherPreviewBarFragment) fragmentManager.findFragmentById(R.id.top_bar_container);
 
-        if (weatherPreviewBarFragment == null)
-        {
+        if (weatherPreviewBarFragment == null) {
             weatherPreviewBarFragment = new WeatherPreviewBarFragment();
             fragmentManager.beginTransaction().add(R.id.top_bar_container, weatherPreviewBarFragment).commit();
         }
 
-        if (plantListFragment == null)
-        {
+        if (plantListFragment == null) {
             plantListFragment = new PlantListFragment();
             fragmentManager.beginTransaction().add(R.id.fragment_container, plantListFragment).commit();
         }
@@ -64,6 +59,5 @@ public class PlantListActivity extends AppCompatActivity
     {
         super.onResume();
     }
-
 
 }

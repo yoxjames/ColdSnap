@@ -19,7 +19,11 @@
 
 package com.example.yoxjames.coldsnap.ui.view;
 
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocation;
+
 import java.util.UUID;
+
+import io.reactivex.Single;
 
 /**
  * Generic view representing the list of plants displayed to the user in the main "Activity."
@@ -39,4 +43,11 @@ public interface PlantListView
      *                   false if we are opening an existing plant (saved)
      */
     void openPlant(UUID plantUUID, boolean isNewPlant);
+
+    Single<SimpleWeatherLocation> provideLocationObservable();
+
+    /**
+     * Display simple device location failure message
+     */
+    void displayDeviceLocationFailureMessage();
 }

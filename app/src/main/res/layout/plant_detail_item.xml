@@ -37,6 +37,7 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:maxLength="25"
         android:layout_below="@id/name_label"
         android:inputType="textCapWords|textNoSuggestions"/>
 
@@ -55,6 +56,7 @@
         android:layout_below="@id/scientific_name_label"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
+        android:maxLength="40"
         android:inputType="textCapSentences|textNoSuggestions"/>
 
     <TextView

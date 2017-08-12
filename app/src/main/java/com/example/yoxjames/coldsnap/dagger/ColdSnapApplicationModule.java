@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 
 import com.example.yoxjames.coldsnap.db.ColdSnapDBHelper;
 import com.example.yoxjames.coldsnap.db.ForecastDayCursorWrapper;
@@ -33,13 +32,21 @@ import com.example.yoxjames.coldsnap.db.PlantDAO;
 import com.example.yoxjames.coldsnap.db.PlantDAOSQLiteImpl;
 import com.example.yoxjames.coldsnap.db.WeatherDataDAO;
 import com.example.yoxjames.coldsnap.db.WeatherDataDAOSQLiteImpl;
+import com.example.yoxjames.coldsnap.http.HTTPGeolocationService;
 import com.example.yoxjames.coldsnap.http.HTTPWeatherService;
+import com.example.yoxjames.coldsnap.http.google.GoogleLocationURLFactory;
+import com.example.yoxjames.coldsnap.http.google.HTTPGeolocationServiceGoogleImpl;
 import com.example.yoxjames.coldsnap.http.wu.HTTPWeatherServiceWUImpl;
-import com.example.yoxjames.coldsnap.service.PlantService;
-import com.example.yoxjames.coldsnap.service.PlantServiceImpl;
-import com.example.yoxjames.coldsnap.service.WeatherService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceImpl;
-import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.example.yoxjames.coldsnap.http.wu.WundergroundURLFactory;
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocation;
+import com.example.yoxjames.coldsnap.model.WeatherData;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.service.location.WeatherLocationService;
+import com.example.yoxjames.coldsnap.service.location.WeatherLocationServicePreferenceImpl;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
+import com.example.yoxjames.coldsnap.service.plant.PlantServiceImpl;
+import com.example.yoxjames.coldsnap.service.weather.WeatherService;
+import com.example.yoxjames.coldsnap.service.weather.WeatherServiceImpl;
 
 import java.net.URL;
 
@@ -49,29 +56,51 @@ import javax.inject.Singleton;
 import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 @Module
 class ColdSnapApplicationModule
 {
     @Provides
     @Singleton
-    static WeatherService provideWeatherService(WeatherDataDAO dbService, HTTPWeatherService httpWeatherService, ColdSnapDBHelper dbHelper, SharedPreferences sharedPreferences)
+    static WeatherService provideWeatherService(WeatherDataDAO dbService, HTTPWeatherService httpWeatherService, ColdSnapDBHelper dbHelper, WeatherLocationService weatherLocationService)
     {
-        return new WeatherServiceImpl(dbService, httpWeatherService, dbHelper, sharedPreferences);
+        return new WeatherServiceImpl(dbService, httpWeatherService, dbHelper, weatherLocationService);
     }
 
     @Provides
-    static HTTPWeatherService provideHTTPForecastService(@Nullable Provider<Lazy<URL>> url, SharedPreferences sharedPreferences)
+    static HTTPWeatherService provideHTTPForecastService(WundergroundURLFactory urlFactory, SharedPreferences sharedPreferences)
     {
-        return new HTTPWeatherServiceWUImpl(url, sharedPreferences);
+        return new HTTPWeatherServiceWUImpl(urlFactory, sharedPreferences);
     }
 
     @Provides
-    @Nullable
-    static URL provideURL(SharedPreferences sharedPreferences)
+    static WundergroundURLFactory provideWundergroundURLFactory()
     {
+        return new WundergroundURLFactory()
+        {
+            @Override
+            public URL create(WeatherLocation weatherLocation)
+            {
+                return HTTPWeatherServiceWUImpl.getAbsoluteUrl(weatherLocation.getZipCode());
+            }
+        };
+    }
 
-        return HTTPWeatherServiceWUImpl.getAbsoluteUrl(sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105"));
+    @Provides
+    static WeatherLocationService provideWeatherLocationService(SharedPreferences sharedPreferences)
+    {
+        return new WeatherLocationServicePreferenceImpl(sharedPreferences);
     }
 
     @Provides
@@ -137,5 +166,81 @@ class ColdSnapApplicationModule
                 return new ForecastDayCursorWrapper(cursor);
             }
         };
+    }
+
+    @Provides
+    static HTTPGeolocationService provideHTTPGeolocationService(GoogleLocationURLFactory factory)
+    {
+        return new HTTPGeolocationServiceGoogleImpl(factory);
+    }
+
+    @Provides
+    static GoogleLocationURLFactory provideGoogleLocationURLFactory()
+    {
+        return new GoogleLocationURLFactory()
+        {
+            @Override
+            public URL create(final double lat, final double lon)
+            {
+                return HTTPGeolocationServiceGoogleImpl.getAbsoluteUrl(lat, lon);
+            }
+        };
+    }
+
+    @Provides
+    @Singleton
+    static Single<WeatherData> provideWeatherDataObservable(final WeatherService weatherService)
+    {
+        return Single.create(new SingleOnSubscribe<WeatherData>()
+        {
+            @Override
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            {
+                e.onSuccess(weatherService.getCurrentForecastData());
+            }
+        })
+                .subscribeOn(Schedulers.io())
+                .cache()
+                .observeOn(AndroidSchedulers.mainThread());
+    }
+
+
+    @Provides
+    @Singleton
+    static Subject<SimpleWeatherLocation> provideWeatherLocationSubject()
+    {
+        return PublishSubject.create();
+    }
+
+    @Provides
+    @Singleton
+    static Observable<WeatherLocation> provideWeatherLocationObservable(Subject<SimpleWeatherLocation> simpleWeatherLocationObservable, final HTTPGeolocationService httpGeolocationService)
+    {
+        return simpleWeatherLocationObservable
+                .serialize()
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<SimpleWeatherLocation, Observable<WeatherLocation>>()
+                {
+                    @Override
+                    public Observable<WeatherLocation> apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+                    {
+
+                        return Observable.just(simpleWeatherLocation).observeOn(Schedulers.io()).flatMap(new Function<SimpleWeatherLocation, ObservableSource<WeatherLocation>>()
+                        {
+                            @Override
+                            public ObservableSource<WeatherLocation> apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+                            {
+                                try
+                                {
+                                    return Observable.just(httpGeolocationService.getCurrentWeatherLocation(simpleWeatherLocation.getLat(), simpleWeatherLocation.getLon()));
+                                }
+                                catch (Exception e)
+                                {
+                                    return Observable.never();
+                                }
+                            }
+                        });
+                    }
+                }).cache();
     }
 }

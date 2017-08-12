@@ -46,14 +46,15 @@ public class WeatherDataTest
         forecastDays.add(testForecastDay);
         final String locationString = "Kansas City, MO";
         final String zipCode = "64105";
+        final WeatherLocation weatherLocation = new WeatherLocation(zipCode, locationString, 0f, 0f);
         final Date syncDate = new Date();
 
-        final WeatherData data = new WeatherData(forecastDays, locationString, zipCode, syncDate);
+        final WeatherData data = new WeatherData(forecastDays, syncDate, weatherLocation);
 
         assertEquals(testTemp, data.getTodayLow());
         assertEquals(testTemp, data.getTodayHigh());
-        assertEquals(locationString, data.getLocationString());
-        assertEquals(zipCode, data.getZipCode());
+        assertEquals(locationString, data.getWeatherLocation().getPlaceString());
+        assertEquals(zipCode, data.getWeatherLocation().getZipCode());
         assertFalse(data.isStale()); // Ensure this is marked not stale
     }
 
@@ -71,13 +72,15 @@ public class WeatherDataTest
         forecastDays.add(testForecastDay);
         final String locationString = "Kansas City, MO";
         final String zipCode = "64105";
+        final WeatherLocation weatherLocation = new WeatherLocation(zipCode, locationString, 0f, 0f);
+
         final Date syncDate = new Date(new Date().getTime() - (2 * 60 * 1001));
 
-        final WeatherData data = new WeatherData(forecastDays, locationString, zipCode, syncDate);
+        final WeatherData data = new WeatherData(forecastDays, syncDate, weatherLocation);
         assertEquals(testTemp, data.getTodayLow());
         assertEquals(testTemp, data.getTodayHigh());
-        assertEquals(locationString, data.getLocationString());
-        assertEquals(zipCode, data.getZipCode());
+        assertEquals(locationString, data.getWeatherLocation().getPlaceString());
+        assertEquals(zipCode, data.getWeatherLocation().getZipCode());
         assertTrue(data.isStale()); // Ensure this is marked stale
     }
 
@@ -87,8 +90,9 @@ public class WeatherDataTest
         final List<ForecastDay> forecastDays = new ArrayList<>();
         final String locationString = "Kansas City, MO";
         final String zipCode = "64105";
+        final WeatherLocation weatherLocation = new WeatherLocation(zipCode, locationString, 0f, 0f);
         final Date syncDate = new Date(new Date().getTime() - (2 * 60 * 1001));
 
-        new WeatherData(forecastDays, locationString, zipCode, syncDate);
+        new WeatherData(forecastDays, syncDate, weatherLocation);
     }
 }

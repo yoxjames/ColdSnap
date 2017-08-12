@@ -26,6 +26,11 @@
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
+        android:id="@+id/menu_item_set_location"
+        android:icon="@android:drawable/ic_menu_mylocation"
+        android:title="@string/set_location"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/menu_item_new_plant"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/new_plant"

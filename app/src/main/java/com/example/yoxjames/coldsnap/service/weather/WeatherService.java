@@ -17,17 +17,21 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.service;
+package com.example.yoxjames.coldsnap.service.weather;
+
+import com.example.yoxjames.coldsnap.model.WeatherData;
+import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
 
 /**
- * Asynchronous wrapper for {@link WeatherService}.
+ * High level service that obtains {@link WeatherData}.
  */
-public interface WeatherServiceAsyncProcessor
+public interface WeatherService
 {
     /**
-     * Executes the WeatherService and then issues weatherServiceCallback when finished.
-     * @param weatherServiceCallback  Object who's implementation's callback() function will be called
-     *                                when the Async task is finished.
+     * Gets the current forecast data and returns that information as a {@link WeatherData}
+     *
+     * @return WeatherData representing the current forecast.
+     * @throws WeatherDataNotFoundException If No valid and not Stale WeatherData could be found.
      */
-    void execute(WeatherServiceCallback weatherServiceCallback);
+    WeatherData getCurrentForecastData() throws WeatherDataNotFoundException;
 }

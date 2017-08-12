@@ -30,6 +30,7 @@ import com.example.yoxjames.coldsnap.model.ForecastDay;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import org.junit.Before;
@@ -118,7 +119,9 @@ public class WeatherDataDAOSqliteImplTest
         List <ForecastDay> forecastDays = new ArrayList<>();
         forecastDays.add(forecastDay);
         forecastDays.add(forecastDay);
-        WeatherData weatherData = new WeatherData(forecastDays, "JNUITVILLE, TEST", "55555", new Date());
+
+        WeatherLocation weatherLocation = new WeatherLocation("55555", "JNUITVILLE, TEST", 0f, 0f);
+        WeatherData weatherData = new WeatherData(forecastDays, new Date(), weatherLocation);
 
 
         WeatherDataDAOSQLiteImpl weatherDataDAOSQLite = new WeatherDataDAOSQLiteImpl(lazyProvider, cursorWrapperFactory, sharedPreferences);
@@ -135,11 +138,11 @@ public class WeatherDataDAOSqliteImplTest
 
         WeatherData weatherData = weatherDataDAOSQLite.getWeatherData(database);
 
-        assertEquals(weatherData.getZipCode(), "55555");
+        assertEquals(weatherData.getWeatherLocation().getZipCode(), "55555");
         assertEquals(weatherData.getTodayLow().compareTo(new Temperature(273.0)), 0);
         assertEquals(weatherData.getTodayHigh().compareTo(new Temperature(300.0)), 0);
 
-        assertEquals(weatherData.getLocationString(), "Kansas City, MO");
+        assertEquals(weatherData.getWeatherLocation().getPlaceString(), "Kansas City, MO");
 
         assertEquals(weatherData.getForecastDays().get(0).getLowTemperature().compareTo(new Temperature(273.0)), 0);
         assertEquals(weatherData.getForecastDays().get(0).getHighTemperature().compareTo(new Temperature(300.0)), 0);

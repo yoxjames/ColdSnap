@@ -19,7 +19,7 @@
 
 package com.example.yoxjames.coldsnap.ui.presenter;
 
-import com.example.yoxjames.coldsnap.service.PlantService;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 
 import java.util.UUID;
 

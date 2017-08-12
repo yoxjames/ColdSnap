@@ -17,21 +17,17 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.service;
+package com.example.yoxjames.coldsnap.http.wu;
 
-import com.example.yoxjames.coldsnap.model.WeatherData;
-import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+
+import java.net.URL;
 
 /**
- * High level service that obtains {@link WeatherData}.
+ * Created by yoxjames on 7/8/17.
  */
-public interface WeatherService
+
+public interface WundergroundURLFactory
 {
-    /**
-     * Gets the current forecast data and returns that information as a {@link WeatherData}
-     *
-     * @return WeatherData representing the current forecast.
-     * @throws WeatherDataNotFoundException If No valid and not Stale WeatherData could be found.
-     */
-    WeatherData getCurrentForecastData() throws WeatherDataNotFoundException;
+    URL create(WeatherLocation weatherLocation);
 }

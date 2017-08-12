@@ -24,29 +24,34 @@ import android.content.SharedPreferences;
 import com.example.yoxjames.coldsnap.mocks.WeatherDataMockFactory;
 import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.example.yoxjames.coldsnap.model.TemperatureFormatterImpl;
+import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.service.WeatherService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessor;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallImpl;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallback;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 import com.example.yoxjames.coldsnap.ui.presenter.WeatherPreviewBarPresenterImpl;
 import com.example.yoxjames.coldsnap.ui.view.WeatherPreviewBarView;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 
-import javax.inject.Provider;
+import java.util.concurrent.Callable;
 
-import dagger.Lazy;
+import io.reactivex.Scheduler;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.plugins.RxAndroidPlugins;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
+import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,57 +59,97 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class WeatherPreviewBarPresenterImplTest
 {
-    private @Mock WeatherService weatherService;
     private @Mock WeatherPreviewBarView weatherPreviewBarView;
     private @Mock SharedPreferences sharedPreferences;
-    private @Mock WeatherServiceAsyncProcessor weatherServiceAsyncProcessor;
+    private @Mock SharedPreferences.Editor sharedPreferencesEditor;
+    private Single<WeatherData> weatherDataSingle;
+    private Subject<WeatherLocation> weatherLocationSubject;
+    private WeatherData currentWeatherData;
 
-    private WeatherServiceCall weatherServiceCall;
     private TemperatureFormatter temperatureFormatter;
 
-    @Before
-    public void setupTest()
+    @BeforeClass
+    public static void setupClass()
     {
-        when(sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE,"F")).thenReturn("F");
-        doAnswer(new Answer<Void>()
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler(new Function<Callable<Scheduler>, Scheduler>()
         {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable
+            public Scheduler apply(@NonNull Callable<Scheduler> schedulerCallable) throws Exception
             {
-                WeatherServiceCallback callback = (WeatherServiceCallback) invocation.getArguments()[0];
-                callback.callback(WeatherDataMockFactory.getBasicWeatherData(), null);
-                return null;
-            }
-        }).when(weatherServiceAsyncProcessor).execute(any(WeatherServiceCallback.class));
-        temperatureFormatter = new TemperatureFormatterImpl(sharedPreferences);
-        weatherServiceCall = new WeatherServiceCallImpl(new Provider<Lazy<WeatherServiceAsyncProcessor>>()
-        {
-            @Override
-            public Lazy<WeatherServiceAsyncProcessor> get()
-            {
-                return new Lazy<WeatherServiceAsyncProcessor>()
-                {
-                    @Override
-                    public WeatherServiceAsyncProcessor get()
-                    {
-                        return weatherServiceAsyncProcessor;
-                    }
-                };
+                return Schedulers.trampoline();
             }
         });
+
+        RxJavaPlugins.setIoSchedulerHandler(new Function<Scheduler, Scheduler>()
+        {
+            @Override
+            public Scheduler apply(@NonNull Scheduler scheduler) throws Exception
+            {
+                return Schedulers.trampoline();
+            }
+        });
+    }
+    @Before
+    public void setup()
+    {
+        currentWeatherData = WeatherDataMockFactory.getBasicWeatherData();
+        weatherDataSingle = Single.create(new SingleOnSubscribe<WeatherData>()
+        {
+            @Override
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            {
+                e.onSuccess(currentWeatherData);
+            }
+        });
+
+        weatherLocationSubject = PublishSubject.create();
+        when(sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F")).thenReturn("F");
+        when(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor);
+        temperatureFormatter = new TemperatureFormatterImpl(sharedPreferences);
+
     }
 
     @Test
     public void testHappyPath() throws WeatherDataNotFoundException
     {
-        when(weatherService.getCurrentForecastData()).thenReturn(WeatherDataMockFactory.getBasicWeatherData());
         WeatherPreviewBarPresenterImpl weatherPreviewBarPresenter
-                = new WeatherPreviewBarPresenterImpl(weatherPreviewBarView, temperatureFormatter, weatherServiceCall);
+                = new WeatherPreviewBarPresenterImpl(weatherPreviewBarView, temperatureFormatter, weatherDataSingle, weatherLocationSubject, sharedPreferences);
         weatherPreviewBarPresenter.load();
 
         verify(weatherPreviewBarView, times(1)).setLocationText("Kansas City, MO - 64105");
         verify(weatherPreviewBarView, times(1)).setHighText("72°F");
         verify(weatherPreviewBarView, times(1)).setLowText("31°F");
         verify(weatherPreviewBarView, times(1)).setLastUpdatedText("Jun 1 2017");
+
+        weatherPreviewBarPresenter.unload();
+    }
+
+    @Test
+    public void testOnLocationChange()
+    {
+        WeatherPreviewBarPresenterImpl weatherPreviewBarPresenter
+                = new WeatherPreviewBarPresenterImpl(weatherPreviewBarView, temperatureFormatter, weatherDataSingle, weatherLocationSubject, sharedPreferences);
+
+        weatherPreviewBarPresenter.load();
+        weatherLocationSubject.onNext(new WeatherLocation("55555", "Testville, TS", 0f, 0f));
+
+        // All of these are called twice because the observer should reload the view.
+        verify(weatherPreviewBarView, times(2)).setLocationText("Kansas City, MO - 64105");
+        verify(weatherPreviewBarView, times(2)).setHighText("72°F");
+        verify(weatherPreviewBarView, times(2)).setLowText("31°F");
+        verify(weatherPreviewBarView, times(2)).setLastUpdatedText("Jun 1 2017");
+
+        verify(sharedPreferencesEditor, times(1)).putString(CSPreferencesFragment.LOCATION_STRING, "Testville, TS");
+        verify(sharedPreferencesEditor, times(1)).putString(CSPreferencesFragment.ZIPCODE, "55555");
+        verify(sharedPreferencesEditor, times(1)).apply();
+
+        weatherPreviewBarPresenter.unload();
+    }
+
+    @AfterClass
+    public static void teardownClass()
+    {
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler(null);
+        RxJavaPlugins.setIoSchedulerHandler(null);
     }
 }

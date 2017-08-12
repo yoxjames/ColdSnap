@@ -17,9 +17,8 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.service;
+package com.example.yoxjames.coldsnap.service.weather;
 
-import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.example.yoxjames.coldsnap.db.ColdSnapDBHelper;
@@ -27,7 +26,8 @@ import com.example.yoxjames.coldsnap.db.WeatherDataDAO;
 import com.example.yoxjames.coldsnap.http.HTTPWeatherService;
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.service.location.WeatherLocationService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -41,42 +41,41 @@ public class WeatherServiceImpl implements WeatherService
     private final WeatherDataDAO dbService;
     private final HTTPWeatherService httpService;
     private final ColdSnapDBHelper dbHelper;
-    private final SharedPreferences sharedPreferences;
+    private final WeatherLocationService weatherLocationService;
 
     /**
      * Constructor for WeatherServiceImpl
-     *
      * @param dbService The WeatherDAO DB Service implementation.
      * @param httpService HTTP Service Implementation for fetching WeatherData from the Internet
      * @param dbHelper Database helper for ColdSnap
-     * @param sharedPreferences SharedPreference service, used to obtain zipcode.
+     * @param weatherLocationService Service for obtaining the currently set WeatherLocation data
      */
     @Inject
-    public WeatherServiceImpl(WeatherDataDAO dbService, HTTPWeatherService httpService, ColdSnapDBHelper dbHelper, SharedPreferences sharedPreferences)
+    public WeatherServiceImpl(WeatherDataDAO dbService, HTTPWeatherService httpService, ColdSnapDBHelper dbHelper, WeatherLocationService weatherLocationService)
     {
         this.dbService = dbService;
         this.httpService = httpService;
         this.dbHelper = dbHelper;
-        this.sharedPreferences = sharedPreferences;
+        this.weatherLocationService = weatherLocationService;
     }
 
     @Override
     public synchronized WeatherData getCurrentForecastData() throws WeatherDataNotFoundException
     {
         final WeatherData cachedWeatherData;
-        String zipCode = sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105");
+        final WeatherLocation currentWeatherLocation = weatherLocationService.readWeatherLocation();
 
         try
         {
             cachedWeatherData = dbService.getWeatherData(dbHelper.getReadableDatabase());
-            if (cachedWeatherData.isStale() || !cachedWeatherData.getZipCode().equals(zipCode))
+            if (cachedWeatherData.isStale() || !cachedWeatherData.getWeatherLocation().equals(currentWeatherLocation))
             {
                 final SQLiteDatabase database = dbHelper.getWritableDatabase();
                 // Clear out any weather data in the DB as it is stale
                 dbService.deleteWeatherData(database);
 
                 // Fetch forecast data via HTTP
-                final WeatherData currentWeatherData = httpService.getWeatherData();
+                final WeatherData currentWeatherData = httpService.getWeatherData(currentWeatherLocation);
                 dbService.saveWeatherData(database, currentWeatherData);
 
                 return currentWeatherData;
@@ -85,7 +84,7 @@ public class WeatherServiceImpl implements WeatherService
         }
         catch (WeatherDataNotFoundException e)
         {
-            final WeatherData currentWeatherData = httpService.getWeatherData();
+            final WeatherData currentWeatherData = httpService.getWeatherData(currentWeatherLocation);
             final SQLiteDatabase database = dbHelper.getWritableDatabase();
             dbService.saveWeatherData(database, currentWeatherData);
 

@@ -20,7 +20,7 @@
 package com.example.yoxjames.coldsnap.ui.presenter;
 
 import com.example.yoxjames.coldsnap.model.Plant;
-import com.example.yoxjames.coldsnap.service.PlantService;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 import com.example.yoxjames.coldsnap.ui.controls.TemperaturePickerAdapter;
 import com.example.yoxjames.coldsnap.ui.view.PlantDetailView;
 
@@ -52,6 +52,7 @@ public class PlantDetailPresenterImpl implements PlantDetailPresenter
         view.setMinBound(temperaturePickerAdapter.getMinimumTemperatureValue());
         view.setMaxBound(temperaturePickerAdapter.getMaximumTemperatureValue());
         view.setMinimumTemperatureFormatter(temperaturePickerAdapter.getFormatter());
+        view.setMinimumTemperatureValueChangeListener(temperaturePickerAdapter.getOnValueChangeListener());
 
         if (view.isNewPlantInd())
             view.setAddMode();
@@ -60,6 +61,7 @@ public class PlantDetailPresenterImpl implements PlantDetailPresenter
         view.setPlantScientificName(plant.getScientificName());
 
         view.setMinTemperature(temperaturePickerAdapter.getValueForTemperature(plant.getMinimumTolerance()));
+
     }
 
     @Override

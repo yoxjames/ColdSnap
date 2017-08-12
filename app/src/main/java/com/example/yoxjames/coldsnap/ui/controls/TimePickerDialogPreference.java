@@ -20,7 +20,6 @@
 package com.example.yoxjames.coldsnap.ui.controls;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
 import android.view.View;

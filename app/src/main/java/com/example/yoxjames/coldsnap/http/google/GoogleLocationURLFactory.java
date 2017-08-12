@@ -17,8 +17,23 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.service;
+package com.example.yoxjames.coldsnap.http.google;
 
-public class WeatherServiceCallTest
+import java.net.URL;
+
+/**
+ * Factory for use in dagger to create injectable URL instances.
+ *
+ * Created by James Yox on 7/9/17.
+ */
+public interface GoogleLocationURLFactory
 {
+    /**
+     * Factory create method to return a URL based on inputted latitude and longitude.
+     * @param lat Latitude
+     * @param lon Longitude
+     * @return A URL object that will be used to hit the Google Places API to find information
+     * on the given lat and lon.
+     */
+    URL create(double lat, double lon);
 }

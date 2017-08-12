@@ -27,7 +27,9 @@ import com.example.yoxjames.coldsnap.db.WeatherDataDAO;
 import com.example.yoxjames.coldsnap.http.HTTPWeatherService;
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.service.location.WeatherLocationService;
+import com.example.yoxjames.coldsnap.service.weather.WeatherServiceImpl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +52,8 @@ public class WeatherServiceImplTest
     private @Mock WeatherData cachedWeatherData;
     private @Mock WeatherData httpWeatherData;
     private @Mock SharedPreferences sharedPreferences;
+    private @Mock WeatherLocationService weatherLocationService;
+    private WeatherLocation weatherLocation = new WeatherLocation("55555", "TESTVILLE, TN", 0f, 0f);
 
     private static final String zipCode = "55555";
 
@@ -63,12 +67,12 @@ public class WeatherServiceImplTest
     public void setup() throws WeatherDataNotFoundException
     {
         when(weatherDataDAO.getWeatherData(sqLiteDatabase)).thenReturn(cachedWeatherData);
-        when(httpWeatherService.getWeatherData()).thenReturn(httpWeatherData);
+        when(httpWeatherService.getWeatherData(weatherLocation)).thenReturn(httpWeatherData);
+        when(weatherLocationService.readWeatherLocation()).thenReturn(weatherLocation);
 
         when(coldSnapDBHelper.getReadableDatabase()).thenReturn(sqLiteDatabase);
         when(coldSnapDBHelper.getWritableDatabase()).thenReturn(sqLiteDatabase);
 
-        when(sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105")).thenReturn(zipCode);
     }
 
     /**
@@ -78,9 +82,9 @@ public class WeatherServiceImplTest
     public void testGetWeatherDataCached() throws WeatherDataNotFoundException
     {
         when(cachedWeatherData.isStale()).thenReturn(false);
-        when(cachedWeatherData.getZipCode()).thenReturn(zipCode);
+        when(cachedWeatherData.getWeatherLocation()).thenReturn(weatherLocation);
 
-        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, sharedPreferences);
+        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
         final WeatherData weatherData = weatherService.getCurrentForecastData();
         assertEquals(cachedWeatherData, weatherData);
     }
@@ -92,9 +96,9 @@ public class WeatherServiceImplTest
     public void testGetWeatherDataHTTP() throws WeatherDataNotFoundException
     {
         when(cachedWeatherData.isStale()).thenReturn(true);
-        when(cachedWeatherData.getZipCode()).thenReturn(zipCode);
+        when(cachedWeatherData.getWeatherLocation()).thenReturn(weatherLocation);
 
-        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, sharedPreferences);
+        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
         final WeatherData weatherData = weatherService.getCurrentForecastData();
         assertEquals(httpWeatherData, weatherData);
         verify(weatherDataDAO, times(1)).deleteWeatherData(sqLiteDatabase);
@@ -110,7 +114,7 @@ public class WeatherServiceImplTest
     {
         when(weatherDataDAO.getWeatherData(sqLiteDatabase)).thenThrow(WeatherDataNotFoundException.class);
 
-        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, sharedPreferences);
+        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
         final WeatherData weatherData = weatherService.getCurrentForecastData();
         assertEquals(httpWeatherData, weatherData);
         verify(weatherDataDAO, times(0)).deleteWeatherData(sqLiteDatabase);
@@ -124,10 +128,10 @@ public class WeatherServiceImplTest
     public void testCachedDataNoHTTP() throws WeatherDataNotFoundException
     {
 
-        when(httpWeatherService.getWeatherData()).thenThrow(WeatherDataNotFoundException.class);
+        when(httpWeatherService.getWeatherData(weatherLocation)).thenThrow(WeatherDataNotFoundException.class);
         when(cachedWeatherData.isStale()).thenReturn(true);
 
-        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, sharedPreferences);
+        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
         weatherService.getCurrentForecastData();
     }
 
@@ -138,10 +142,10 @@ public class WeatherServiceImplTest
     public void testNoDBDataNoHTTPData() throws WeatherDataNotFoundException
     {
 
-        when(httpWeatherService.getWeatherData()).thenThrow(WeatherDataNotFoundException.class);
+        when(httpWeatherService.getWeatherData(weatherLocation)).thenThrow(WeatherDataNotFoundException.class);
         when(weatherDataDAO.getWeatherData(sqLiteDatabase)).thenThrow(WeatherDataNotFoundException.class);
 
-        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, sharedPreferences);
+        WeatherServiceImpl weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
         weatherService.getCurrentForecastData();
     }
 }

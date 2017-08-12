@@ -24,7 +24,7 @@ import com.example.yoxjames.coldsnap.ui.PlantListFragment;
 import dagger.Subcomponent;
 
 @FragmentScope
-@Subcomponent(modules = {PlantListFragmentModule.class })
+@Subcomponent(modules = { PlantListFragmentModule.class })
 public interface PlantListFragmentSubcomponent
 {
     void inject(PlantListFragment plantListFragment);

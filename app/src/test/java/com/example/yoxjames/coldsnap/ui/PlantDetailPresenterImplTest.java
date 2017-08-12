@@ -24,7 +24,7 @@ import android.widget.NumberPicker;
 import com.example.yoxjames.coldsnap.mocks.PlantMockFactory;
 import com.example.yoxjames.coldsnap.model.Plant;
 import com.example.yoxjames.coldsnap.model.Temperature;
-import com.example.yoxjames.coldsnap.service.PlantService;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 import com.example.yoxjames.coldsnap.ui.controls.TemperaturePickerAdapter;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantDetailPresenter;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantDetailPresenterImpl;

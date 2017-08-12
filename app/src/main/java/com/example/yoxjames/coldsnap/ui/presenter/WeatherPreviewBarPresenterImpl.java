@@ -19,59 +19,146 @@
 
 package com.example.yoxjames.coldsnap.ui.presenter;
 
+import android.content.SharedPreferences;
+import android.util.Log;
+
 import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.example.yoxjames.coldsnap.model.WeatherData;
-import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallback;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 import com.example.yoxjames.coldsnap.ui.view.WeatherPreviewBarView;
 
 import javax.inject.Inject;
+
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.observers.DisposableObserver;
 
 public class WeatherPreviewBarPresenterImpl implements WeatherPreviewBarPresenter
 {
     private final WeatherPreviewBarView view;
     private final TemperatureFormatter temperatureFormatter;
-    private final WeatherServiceCall weatherServiceCall;
+    private final Single<WeatherData> weatherDataSingle;
+    private final Observable<WeatherLocation> weatherLocationObservable;
+    private final SharedPreferences sharedPreferences;
+    private Disposable weatherDataObserver;
+    private Disposable weatherLocationObserver;
+
 
     /**
      * Constructor for WeatherPreviewBarPresenterImpl
      * @param view The view (Think MVP pattern)
      * @param temperatureFormatter Object designed to transaction Temperature objects into viewable strings.
-     * @param weatherServiceCall Asynchronous object designed to call {@link com.example.yoxjames.coldsnap.service.WeatherService}
+     * @param weatherDataSingle Single observable that emits current WeatherData
+     * @param weatherLocationObservable RX Subject that emits current WeatherLocations whenever the location changes.
+     * @param sharedPreferences Preference service
      */
     @Inject
-    public WeatherPreviewBarPresenterImpl(WeatherPreviewBarView view, TemperatureFormatter temperatureFormatter, WeatherServiceCall weatherServiceCall)
+    public WeatherPreviewBarPresenterImpl(WeatherPreviewBarView view,
+                                          TemperatureFormatter temperatureFormatter,
+                                          Single<WeatherData> weatherDataSingle,
+                                          Observable<WeatherLocation> weatherLocationObservable,
+                                          SharedPreferences sharedPreferences)
     {
         this.view = view;
         this.temperatureFormatter = temperatureFormatter;
-        this.weatherServiceCall = weatherServiceCall;
+        this.weatherDataSingle = weatherDataSingle;
+        this.weatherLocationObservable = weatherLocationObservable;
+        this.sharedPreferences = sharedPreferences;
     }
 
     @Override
     public void load()
     {
-        weatherServiceCall.execute(new WeatherPreviewBarUICallback());
+        weatherDataObserver =
+                weatherDataSingle
+                .subscribe(
+                        new Consumer<WeatherData>()
+                        {
+                            @Override
+                            public void accept(@NonNull WeatherData weatherData) throws Exception
+                            {
+                                updateWeatherData(weatherData);
+                            }
+                        },
+                        new Consumer<Throwable>()
+                        {
+                            @Override
+                            public void accept(@NonNull Throwable throwable) throws Exception
+                            {
+                                throwable.printStackTrace();
+                                Log.e("Observer Error", "weatherDataSingle failed in WeatherPreviewBarPresenterImpl");
+                            }
+                        });
+
+        weatherLocationObserver =
+                weatherLocationObservable
+                .subscribeWith(
+                        new DisposableObserver<WeatherLocation>()
+                        {
+                            @Override
+                            public void onNext(@NonNull WeatherLocation weatherLocation)
+                            {
+                                final SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
+                                preferenceEditor.putString(CSPreferencesFragment.LOCATION_STRING, weatherLocation.getPlaceString());
+                                preferenceEditor.putString(CSPreferencesFragment.ZIPCODE, weatherLocation.getZipCode());
+                                preferenceEditor.apply();
+
+                                weatherDataObserver.dispose();
+                                weatherDataObserver =
+                                        weatherDataSingle
+                                        .subscribe(
+                                                new Consumer<WeatherData>()
+                                                   {
+                                                       @Override
+                                                       public void accept(@NonNull WeatherData weatherData) throws Exception
+                                                       {
+                                                           updateWeatherData(weatherData);
+                                                       }
+                                                   },
+                                                new Consumer<Throwable>()
+                                                {
+                                                    @Override
+                                                    public void accept(@NonNull Throwable throwable) throws Exception
+                                                    {
+                                                        throwable.printStackTrace();
+                                                        Log.e("Observer Error", "weatherDataSingle failed in WeatherPreviewBarPresenterImpl");
+                                                    }
+                                                });
+                            }
+
+                            @Override
+                            public void onError(@NonNull Throwable e)
+                            {
+                                e.printStackTrace();
+                                Log.e("Observer Error", "weatherLocationObservable failed in WeatherPreviewBarPresenterImpl");
+                            }
+
+                            @Override
+                            public void onComplete()
+                            {
+                                Log.e("Observer Error", "weatherLocationObservable completed in WeatherPreviewBarPresenterImpl");
+                            }
+                        });
     }
 
-    private class WeatherPreviewBarUICallback implements WeatherServiceCallback
+    private void updateWeatherData(WeatherData weatherData)
     {
+        view.setLocationText(weatherData.getWeatherLocation().getPlaceString() + " - " + weatherData.getWeatherLocation().getZipCode());
+        view.setHighText(temperatureFormatter.format(weatherData.getTodayHigh()));
+        view.setLowText(temperatureFormatter.format(weatherData.getTodayLow()));
+        view.setLastUpdatedText(weatherData.getForecastDays().get(0).toString());
+    }
 
-        /**
-         * This is the callback function that should be called after Weather Data has been loaded (async)
-         * @param result The WeatherData result
-         * @param e Any exceptions. Good if null, bad if not.
-         */
-        @Override
-        public void callback(WeatherData result, WeatherDataNotFoundException e)
-        {
-            if (e == null)
-            {
-                view.setLocationText(result.getLocationString() + " - " + result.getZipCode());
-                view.setHighText(temperatureFormatter.format(result.getTodayHigh()));
-                view.setLowText(temperatureFormatter.format(result.getTodayLow()));
-                view.setLastUpdatedText(result.getForecastDays().get(0).toString());
-            }
-        }
+    @Override
+    public void unload()
+    {
+        if (!(weatherDataObserver == null) && !weatherDataObserver.isDisposed())
+            weatherDataObserver.dispose();
+        if (!(weatherLocationObserver == null) && !weatherLocationObserver.isDisposed())
+            weatherLocationObserver.dispose();
     }
 }

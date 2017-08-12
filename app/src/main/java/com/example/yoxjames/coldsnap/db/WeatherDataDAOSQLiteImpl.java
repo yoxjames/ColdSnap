@@ -28,6 +28,7 @@ import com.example.yoxjames.coldsnap.model.ForecastDay;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class WeatherDataDAOSQLiteImpl implements WeatherDataDAO
             contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.FETCH_DATE, forecastDay.getDate().getTime());
             contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.HIGH_TEMP_K, forecastDay.getHighTemperature().getDegreesKelvin());
             contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.LOW_TEMP_K, forecastDay.getLowTemperature().getDegreesKelvin());
-            contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.ZIPCODE, weatherData.getZipCode());
+            contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.ZIPCODE, weatherData.getWeatherLocation().getZipCode());
 
             database.insert(ColdsnapDbSchema.ForecastDayTable.NAME, null, contentValues);
         }
@@ -79,12 +80,10 @@ public class WeatherDataDAOSQLiteImpl implements WeatherDataDAO
     @Override
     public WeatherData getWeatherData(SQLiteDatabase database) throws WeatherDataNotFoundException
     {
-
         // Read back raw data from the DB
-        ForecastDayCursorWrapper cursor = queryWeatherData(database,null,null);
         List<ForecastDayRow> forecastDayRows = new ArrayList<>();
 
-        try
+        try (ForecastDayCursorWrapper cursor = queryWeatherData(database, null, null))
         {
             cursor.moveToFirst();
             while (!cursor.isAfterLast())
@@ -94,17 +93,18 @@ public class WeatherDataDAOSQLiteImpl implements WeatherDataDAO
                 cursor.moveToNext();
             }
         }
-        finally
-        {
-            cursor.close();
-        }
 
         List<ForecastDay> forecastDays = translateToForecastDay(forecastDayRows);
 
         if (forecastDays == null || forecastDays.size() == 0 || forecastDayRows.get(0).getZipCode() == null || forecastDayRows.get(0).getZipCode().equals(""))
             throw new WeatherDataNotFoundException("No rows returned from DB query");
 
-        return new WeatherData(forecastDays, sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Location"), forecastDayRows.get(0).getZipCode(), forecastDays.get(0).getDate());
+        final WeatherLocation weatherLocation = new WeatherLocation(forecastDayRows.get(0).getZipCode(),
+                sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Location"),
+                0f,
+                0f);
+
+        return new WeatherData(forecastDays, forecastDays.get(0).getDate(), weatherLocation);
     }
 
     private List<ForecastDay> translateToForecastDay(List<ForecastDayRow> rows)

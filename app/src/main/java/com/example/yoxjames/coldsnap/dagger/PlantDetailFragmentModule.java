@@ -23,7 +23,7 @@ import android.content.SharedPreferences;
 
 import com.example.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.example.yoxjames.coldsnap.model.TemperatureFormatterImpl;
-import com.example.yoxjames.coldsnap.service.PlantService;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
 import com.example.yoxjames.coldsnap.ui.controls.TemperaturePickerAdapter;
 import com.example.yoxjames.coldsnap.ui.controls.TemperaturePickerAdapterImpl;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantDetailPresenter;

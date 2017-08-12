@@ -22,37 +22,44 @@ package com.example.yoxjames.coldsnap.ui;
 import com.example.yoxjames.coldsnap.mocks.PlantMockFactory;
 import com.example.yoxjames.coldsnap.mocks.WeatherDataMockFactory;
 import com.example.yoxjames.coldsnap.model.Plant;
+import com.example.yoxjames.coldsnap.model.SimpleWeatherLocation;
+import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
-import com.example.yoxjames.coldsnap.service.PlantService;
-import com.example.yoxjames.coldsnap.service.WeatherService;
-import com.example.yoxjames.coldsnap.service.WeatherServiceAsyncProcessor;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCall;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallImpl;
-import com.example.yoxjames.coldsnap.service.WeatherServiceCallback;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
+import com.example.yoxjames.coldsnap.service.plant.PlantService;
+import com.example.yoxjames.coldsnap.service.weather.WeatherService;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantListPresenter;
 import com.example.yoxjames.coldsnap.ui.presenter.PlantListPresenterImpl;
 import com.example.yoxjames.coldsnap.ui.view.PlantListItemView;
 import com.example.yoxjames.coldsnap.ui.view.PlantListView;
 
-import org.junit.Before;
+import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
-import javax.inject.Provider;
-
-import dagger.Lazy;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleOnSubscribe;
+import io.reactivex.android.plugins.RxAndroidPlugins;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
+import io.reactivex.plugins.RxJavaPlugins;
+import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.notNull;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,28 +70,29 @@ public class PlantListPresenterImplTest
     private @Mock WeatherService weatherService;
     private @Mock PlantService plantService;
     private @Mock PlantListView plantListView;
-    private @Mock WeatherServiceAsyncProcessor weatherServiceAsyncProcessor;
     private @Mock PlantListItemView plantListViewA;
     private @Mock PlantListItemView plantListViewB;
+    private WeatherData currentWeatherData = WeatherDataMockFactory.getBasicWeatherData();
+    private PlantListPresenter plantListPresenter;
 
-    private WeatherServiceCall weatherServiceCall;
-
-    @Before
-    public void setup()
+    @BeforeClass
+    public static void setupClass()
     {
-        weatherServiceCall = new WeatherServiceCallImpl(new Provider<Lazy<WeatherServiceAsyncProcessor>>()
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler(new Function<Callable<Scheduler>, Scheduler>()
         {
             @Override
-            public Lazy<WeatherServiceAsyncProcessor> get()
+            public Scheduler apply(@NonNull Callable<Scheduler> schedulerCallable) throws Exception
             {
-                return new Lazy<WeatherServiceAsyncProcessor>()
-                {
-                    @Override
-                    public WeatherServiceAsyncProcessor get()
-                    {
-                        return weatherServiceAsyncProcessor;
-                    }
-                };
+                return Schedulers.trampoline();
+            }
+        });
+
+        RxJavaPlugins.setIoSchedulerHandler(new Function<Scheduler, Scheduler>()
+        {
+            @Override
+            public Scheduler apply(@NonNull Scheduler scheduler) throws Exception
+            {
+                return Schedulers.trampoline();
             }
         });
     }
@@ -100,20 +108,27 @@ public class PlantListPresenterImplTest
         // Return a generic plant list. One frost tolerant and one non frost tolerant.
         when(plantService.getMyPlants()).thenReturn(PlantMockFactory.getMockPlantList());
 
-        // Load mock WeatherData. This dataset has the low for tonight at 32°F so our tender plant
-        // should show up as "sad."
-        doAnswer(new Answer<Void>()
+        Single<WeatherData> weatherDataSingle = Single.create(new SingleOnSubscribe<WeatherData>()
         {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
             {
-                WeatherServiceCallback callback = (WeatherServiceCallback) invocation.getArguments()[0];
-                callback.callback(WeatherDataMockFactory.getBasicWeatherData(), null);
-                return null;
+                e.onSuccess(currentWeatherData);
             }
-        }).when(weatherServiceAsyncProcessor).execute(any(WeatherServiceCallback.class));
+        });
 
-        PlantListPresenter plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherServiceCall);
+        Subject<SimpleWeatherLocation> simpleWeatherLocationSubject = PublishSubject.create();
+
+        Observable<WeatherLocation> weatherLocationObservable = simpleWeatherLocationSubject.map(new Function<SimpleWeatherLocation, WeatherLocation>()
+        {
+            @Override
+            public WeatherLocation apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+            {
+                return new WeatherLocation("55555", "Testville", 40f, 40f);
+            }
+        });
+
+        plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherDataSingle, simpleWeatherLocationSubject, weatherLocationObservable);
 
         // Simulate the actions of the android recycler view
         plantListPresenter.load();
@@ -144,18 +159,27 @@ public class PlantListPresenterImplTest
         // Return a generic plant list. One frost tolerant and one non frost tolerant.
         when(plantService.getMyPlants()).thenReturn(PlantMockFactory.getMockPlantList());
 
-        // Fail to load weather data. Simulate what would happen if we dont have an internet connection
-        doAnswer(new Answer<Void>()
+        Single<WeatherData> weatherDataSingle = Single.create(new SingleOnSubscribe<WeatherData>()
         {
             @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
             {
-                WeatherServiceCallback callback = (WeatherServiceCallback) invocation.getArguments()[0];
-                callback.callback(null, new WeatherDataNotFoundException());
-                return null;
+                e.onError(new WeatherDataNotFoundException("Oops no weather Data :("));
             }
-        }).when(weatherServiceAsyncProcessor).execute(any(WeatherServiceCallback.class));
-        PlantListPresenter plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherServiceCall);
+        });
+
+        Subject<SimpleWeatherLocation> simpleWeatherLocationSubject = PublishSubject.create();
+
+        Observable<WeatherLocation> weatherLocationObservable = simpleWeatherLocationSubject.map(new Function<SimpleWeatherLocation, WeatherLocation>()
+        {
+            @Override
+            public WeatherLocation apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+            {
+                return new WeatherLocation("55555", "Testville", 40f, 40f);
+            }
+        });
+
+        plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherDataSingle, simpleWeatherLocationSubject, weatherLocationObservable);
 
         // Simulate the actions of the android recycler view
         plantListPresenter.load();
@@ -179,10 +203,30 @@ public class PlantListPresenterImplTest
     @Test
     public void testNoPlants()
     {
-        // Return n empty plant list
+        // Return a generic plant list. One frost tolerant and one non frost tolerant.
         when(plantService.getMyPlants()).thenReturn(new ArrayList<Plant>());
 
-        PlantListPresenter plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherServiceCall);
+        Single<WeatherData> weatherDataSingle = Single.create(new SingleOnSubscribe<WeatherData>()
+        {
+            @Override
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            {
+                e.onSuccess(currentWeatherData);
+            }
+        });
+
+        Subject<SimpleWeatherLocation> simpleWeatherLocationSubject = PublishSubject.create();
+
+        Observable<WeatherLocation> weatherLocationObservable = simpleWeatherLocationSubject.map(new Function<SimpleWeatherLocation, WeatherLocation>()
+        {
+            @Override
+            public WeatherLocation apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+            {
+                return new WeatherLocation("55555", "Testville", 40f, 40f);
+            }
+        });
+
+        plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherDataSingle, simpleWeatherLocationSubject, weatherLocationObservable);
 
         // Simulate the actions of the android recycler view
         plantListPresenter.load();
@@ -194,16 +238,75 @@ public class PlantListPresenterImplTest
     @Test
     public void testAddPlant()
     {
-        // Return n empty plant list
-        when(plantService.getMyPlants()).thenReturn(new ArrayList<Plant>());
+        Single<WeatherData> weatherDataSingle = Single.create(new SingleOnSubscribe<WeatherData>()
+        {
+            @Override
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            {
+                e.onSuccess(currentWeatherData);
+            }
+        });
 
-        PlantListPresenter plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherServiceCall);
+        Subject<SimpleWeatherLocation> simpleWeatherLocationSubject = PublishSubject.create();
 
+        Observable<WeatherLocation> weatherLocationObservable = simpleWeatherLocationSubject.map(new Function<SimpleWeatherLocation, WeatherLocation>()
+        {
+            @Override
+            public WeatherLocation apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+            {
+                return new WeatherLocation("55555", "Testville", 40f, 40f);
+            }
+        });
+
+        plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherDataSingle, simpleWeatherLocationSubject, weatherLocationObservable);
         plantListPresenter.load();
 
         plantListPresenter.newPlant();
 
         verify(plantService, times(1)).cachePlant(notNull(Plant.class));
         verify(plantListView, times(1)).openPlant(notNull(UUID.class), any(Boolean.class));
+    }
+
+    @Test
+    public void testChangeWeatherLocation()
+    {
+        // Return a generic plant list. One frost tolerant and one non frost tolerant.
+        when(plantService.getMyPlants()).thenReturn(PlantMockFactory.getMockPlantList());
+
+        Single<WeatherData> weatherDataSingle = Single.create(new SingleOnSubscribe<WeatherData>()
+        {
+            @Override
+            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            {
+                e.onSuccess(currentWeatherData);
+            }
+        });
+
+        Subject<SimpleWeatherLocation> simpleWeatherLocationSubject = PublishSubject.create();
+
+        Observable<WeatherLocation> weatherLocationObservable = simpleWeatherLocationSubject.map(new Function<SimpleWeatherLocation, WeatherLocation>()
+        {
+            @Override
+            public WeatherLocation apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+            {
+                return new WeatherLocation("55555", "Testville", 40f, 40f);
+            }
+        });
+
+        plantListPresenter = new PlantListPresenterImpl(plantListView, plantService, weatherDataSingle, simpleWeatherLocationSubject, weatherLocationObservable);
+
+        plantListPresenter.load();
+        plantListPresenter.loadPlantView(plantListViewA, 0); // Freeze tender
+        plantListPresenter.loadPlantView(plantListViewB, 1); // Freeze tolerant
+        verify(plantListView, times(1)).notifyDataChange();
+        simpleWeatherLocationSubject.onNext(new SimpleWeatherLocation(45f, 45f));
+        verify(plantListView, times(2)).notifyDataChange();
+    }
+
+    @After
+    public void teardown()
+    {
+        plantListPresenter.unload();
+        plantListPresenter = null;
     }
 }

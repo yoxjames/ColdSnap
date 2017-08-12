@@ -17,18 +17,16 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.ui.presenter;
+package com.example.yoxjames.coldsnap.http;
+
+import com.example.yoxjames.coldsnap.model.GeolocationFailureException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 
 /**
- * Presenter for Weather Preview Bar at the top of the main launch activity in ColdSnap.
+ * Created by yoxjames on 7/9/17.
  */
-public interface WeatherPreviewBarPresenter
-{
-    /**
-     * Responsible for loading and reloading the view to show current Weather Data.
-     * This should call the WeatherService each time.
-     */
-    void load();
 
-    void unload();
+public interface HTTPGeolocationService
+{
+    WeatherLocation getCurrentWeatherLocation(double lat, double lon) throws GeolocationFailureException;
 }

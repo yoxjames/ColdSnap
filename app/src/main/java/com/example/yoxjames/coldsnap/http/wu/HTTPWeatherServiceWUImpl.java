@@ -22,20 +22,19 @@ package com.example.yoxjames.coldsnap.http.wu;
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 
+import com.example.yoxjames.coldsnap.http.GenericHTTPService;
 import com.example.yoxjames.coldsnap.http.HTTPWeatherService;
 import com.example.yoxjames.coldsnap.model.ForecastDay;
 import com.example.yoxjames.coldsnap.model.Temperature;
 import com.example.yoxjames.coldsnap.model.WeatherData;
 import com.example.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.example.yoxjames.coldsnap.model.WeatherLocation;
 import com.example.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -44,10 +43,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
-
-import dagger.Lazy;
-import dagger.internal.Preconditions;
 
 import static com.example.yoxjames.coldsnap.BuildConfig.WUNDERGROUND_API_KEY;
 
@@ -59,7 +54,7 @@ import static com.example.yoxjames.coldsnap.BuildConfig.WUNDERGROUND_API_KEY;
 /**
  * Implementation of a WeatherData HTTPWeatherService that uses the Wunderground API.
  */
-public class HTTPWeatherServiceWUImpl implements HTTPWeatherService
+public class HTTPWeatherServiceWUImpl extends GenericHTTPService implements HTTPWeatherService
 {
     /*
      * URL For Wunderground.
@@ -77,24 +72,23 @@ public class HTTPWeatherServiceWUImpl implements HTTPWeatherService
      */
     private final static String FORECAST_SERVICE = "/forecast/q";
 
-    private final Provider<Lazy<URL>> forecastURL;
+    private final WundergroundURLFactory urlFactory;
     private final SharedPreferences sharedPreferences;
 
     @Inject
-    public HTTPWeatherServiceWUImpl(Provider<Lazy<URL>> url, SharedPreferences sharedPreferences)
+    public HTTPWeatherServiceWUImpl(WundergroundURLFactory urlFactory, SharedPreferences sharedPreferences)
     {
-        this.forecastURL = Preconditions.checkNotNull(url);
+        this.urlFactory = urlFactory;
         this.sharedPreferences = sharedPreferences;
     }
 
     @Override
-    public WeatherData getWeatherData() throws WeatherDataNotFoundException
+    public WeatherData getWeatherData(WeatherLocation weatherLocation) throws WeatherDataNotFoundException
     {
         final double fuzz = sharedPreferences.getFloat(CSPreferencesFragment.WEATHER_DATA_FUZZ,0f);
-        final String zipCode = sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105");
         try
         {
-            final WUForecast wuForecast = WUForecast.parseJSON(new JSONObject(getURLString(forecastURL.get().get())));
+            final WUForecast wuForecast = WUForecast.parseJSON(new JSONObject(getURLString(urlFactory.create(weatherLocation))));
             List<ForecastDay> forecastDayList = new ArrayList<>();
 
             for (WUForecast.Day day : wuForecast.getDays())
@@ -103,44 +97,13 @@ public class HTTPWeatherServiceWUImpl implements HTTPWeatherService
                 final Temperature lowTemperature = Temperature.newTemperatureFromF(day.getLowTempF(), fuzz);
                 final ForecastDay forecastDay = new ForecastDay(day.getDateString(), highTemperature, lowTemperature, new Date(), UUID.randomUUID());
                 forecastDayList.add(forecastDay);
-
-                // TODO: Use something other than sharedPreferences for the locationString
             }
-            return new WeatherData(forecastDayList, sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Location"), zipCode, new Date());
+
+            return new WeatherData(forecastDayList, new Date(), weatherLocation);
         }
         catch (JSONException | IOException e)
         {
             throw new WeatherDataNotFoundException(e);
-        }
-    }
-
-    private String getURLString(URL url) throws IOException
-    {
-        return new String(getURLBytes(url));
-    }
-
-    private byte[] getURLBytes(URL url) throws IOException
-    {
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-            InputStream in = connection.getInputStream();
-
-            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException(connection.getResponseMessage() + ": with " + url);
-            }
-
-            int bytesRead;
-            byte[] buffer = new byte[1024];
-            while ((bytesRead = in.read(buffer)) > 0) {
-                out.write(buffer, 0, bytesRead);
-            }
-            out.close();
-            return out.toByteArray();
-        } finally {
-            connection.disconnect();
         }
     }
 
@@ -158,7 +121,7 @@ public class HTTPWeatherServiceWUImpl implements HTTPWeatherService
         if (zipcode.equals(""))
             throw new IllegalArgumentException("zipCode cannot be blank");
         if (zipcode.length() != 5)
-            throw new IllegalArgumentException("zipCode is not valid");
+            throw new IllegalArgumentException("zipCode is not valid: " + zipcode);
         try
         {
             return new URL(BASE_URL + API_KEY + FORECAST_SERVICE + "/" + zipcode + ".json");

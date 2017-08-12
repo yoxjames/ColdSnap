@@ -17,7 +17,7 @@
  * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.example.yoxjames.coldsnap.service;
+package com.example.yoxjames.coldsnap.service.plant;
 
 import com.example.yoxjames.coldsnap.model.Plant;
 
