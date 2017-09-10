@@ -34,7 +34,7 @@ android {
     buildToolsVersion '25.0.0'
 
     defaultConfig {
-        applicationId "com.example.yoxjames.coldsnap"
+        applicationId "com.yoxjames.coldsnap"
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
@@ -48,6 +48,7 @@ android {
 
         debug {
             buildConfigField "String", "WUNDERGROUND_API_KEY", "\"${props.getProperty("wundergroundAPIKey")}\""
+            buildConfigField "String", "GOOGLE_GEOLOCATION_API_KEY", "\"${props.getProperty("googleGeolocationAPIKey")}\""
         }
     }
 }

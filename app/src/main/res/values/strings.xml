@@ -45,4 +45,14 @@
         <item>"F"</item>
         <item>"C"</item>
     </string-array>
+
+    <string name="plant_threshold_expl">The temperature at which this plant will be damaged and could die</string>
+    <string name="preference_threshold_expl">If the low temperature is below this amount the app will alert you.</string>
+    <string name="preference_fuzz_expl">This temperature value represents your confidence that the weather data is accurate. If a low temperature is within this amount of a cold threshold for a plant you will be warned.</string>
+    <string name="preference_coldalarm_expl">This is the time that the app will send all notifications (such as cold warnings).</string>
+
+    <string name="plant_load_error">Plant failed to load</string>
+    <string name="plant_save_error">Could not save plant</string>
+    <string name="plant_add_error">Could not add plant</string>
+    <string name="plant_delete_error">Could not delete plant</string>
 </resources>
