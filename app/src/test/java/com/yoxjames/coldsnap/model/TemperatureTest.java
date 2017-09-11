@@ -152,4 +152,26 @@ public class TemperatureTest
         expectedException.expectMessage("Temperatures below absolute zero are not physically possible");
         Temperature.newTemperatureFromF(-460);
     }
+
+    @Test
+    public void testExtraCompareTo()
+    {
+        Temperature temperatureA = new Temperature(10, 5);
+
+        assertEquals(Temperature.COMPARISON.LESSER, temperatureA.compareSignificanceTo(new Temperature(16)));
+        assertEquals(Temperature.COMPARISON.GREATER, temperatureA.compareSignificanceTo(new Temperature(4)));
+        assertEquals(Temperature.COMPARISON.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(13)));
+        assertEquals(Temperature.COMPARISON.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(8)));
+    }
+
+    @Test
+    public void testExtraCompareToDualFuzz()
+    {
+        Temperature temperatureA = new Temperature(10, 5);
+
+        assertEquals(Temperature.COMPARISON.LESSER, temperatureA.compareSignificanceTo(new Temperature(25, 5)));
+        assertEquals(Temperature.COMPARISON.GREATER, temperatureA.compareSignificanceTo(new Temperature(1, 3)));
+        assertEquals(Temperature.COMPARISON.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(17,4)));
+        assertEquals(Temperature.COMPARISON.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(1,5)));
+    }
 }

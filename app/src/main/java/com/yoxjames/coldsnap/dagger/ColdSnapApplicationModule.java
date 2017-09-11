@@ -198,8 +198,8 @@ class ColdSnapApplicationModule
 
     @Provides
     @Singleton
-    static GPSLocationService provideGPSLocationService(Context context, HTTPGeolocationService geolocationService, SharedPreferences sharedPreferences, WeatherLocationService weatherLocationService)
+    static GPSLocationService provideGPSLocationService(Context context, HTTPGeolocationService geolocationService, WeatherLocationService weatherLocationService)
     {
-        return new GPSLocationServiceImpl(context, geolocationService, sharedPreferences, weatherLocationService);
+        return new GPSLocationServiceImpl(context, geolocationService, weatherLocationService);
     }
 }

@@ -100,6 +100,12 @@ public class WeatherPreviewBarPresenterImpl implements WeatherPreviewBarPresente
                             }
                         }));
 
+        subscribeToLocationChanges();
+    }
+
+    // This just feels wrong somehow... I feel like I am missing something about RxJava.
+    private void subscribeToLocationChanges()
+    {
         disposables.add(
                 gpsLocationService.getWeatherLocation()
                         .subscribeWith(
@@ -137,15 +143,14 @@ public class WeatherPreviewBarPresenterImpl implements WeatherPreviewBarPresente
                                     public void onError(@NonNull Throwable e)
                                     {
                                         e.printStackTrace();
-                                        // TODO: Do Something
+                                        subscribeToLocationChanges();
                                         LOG.e(getClass().getName(), "weatherLocationObservable failed");
                                     }
 
                                     @Override
                                     public void onComplete()
                                     {
-                                        // TODO: Do Something
-                                        LOG.e(getClass().getName(), "weatherLocationObservable completed... should not happen....");
+                                        subscribeToLocationChanges();
                                     }
                                 }));
     }

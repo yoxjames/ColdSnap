@@ -30,5 +30,5 @@ import io.reactivex.Single;
 
 public interface HTTPGeolocationService
 {
-    Single<WeatherLocation> getCurrentWeatherLocation(double lat, double lon) throws GeolocationFailureException;
+    Single<WeatherLocation> getCurrentWeatherLocation(double lat, double lon);
 }

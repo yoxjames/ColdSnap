@@ -22,6 +22,7 @@ package com.yoxjames.coldsnap.ui.presenter;
 import android.util.Log;
 
 import com.yoxjames.coldsnap.model.Plant;
+import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.service.location.GPSLocationService;
@@ -31,6 +32,8 @@ import com.yoxjames.coldsnap.ui.view.PlantListItemView;
 import com.yoxjames.coldsnap.ui.view.PlantListView;
 import com.yoxjames.coldsnap.util.LOG;
 
+import java.security.NoSuchProviderException;
+import java.security.ProviderException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
@@ -38,6 +41,9 @@ import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.observers.DisposableObserver;
+
+import static com.yoxjames.coldsnap.model.Temperature.*;
+import static com.yoxjames.coldsnap.model.Temperature.COMPARISON.*;
 
 public class PlantListPresenterImpl implements PlantListPresenter
 
@@ -77,12 +83,26 @@ public class PlantListPresenterImpl implements PlantListPresenter
             view.setStatus("...");
         else
         {
-            if (plant.getMinimumTolerance().compareTo(weatherData.getTodayLow()) == 0)
-                view.setStatus("\uD83D\uDE10"); // Neutral Face
-            else if (plant.getMinimumTolerance().compareTo(weatherData.getTodayLow()) == -1)
-                view.setStatus("\uD83D\uDE00"); // Happy Face
-            else
-                view.setStatus("\uD83D\uDE1E"); // Sad Face
+            COMPARISON temperatureComparison = plant.getMinimumTolerance().compareSignificanceTo(weatherData.getTodayLow());
+
+            switch (temperatureComparison)
+            {
+                case GREATER:
+                    view.setStatus("\uD83D\uDC80"); // Skull and crossbones
+                    break;
+                case LESSER:
+                    view.setStatus("\uD83D\uDE00"); // Happy Face
+                    break;
+                case MAYBE_GREATER:
+                    view.setStatus("\uD83D\uDE1E"); // Sad Face
+                    break;
+                case MAYBE_LESSER:
+                    view.setStatus("\uD83D\uDE10"); // Neutral Face
+                    break;
+                case TRUE_EQUAL:
+                    view.setStatus("\uD83D\uDE10"); // Neutral Face
+                    break;
+            }
         }
     }
 
@@ -113,39 +133,43 @@ public class PlantListPresenterImpl implements PlantListPresenter
                     @Override
                     public void onError(@NonNull Throwable e)
                     {
-                        e.printStackTrace(); // TODO: Something here
+                        throw new IllegalStateException("FATAL: Cannot load plants. There's no point in carrying on.");
                     }
 
                     @Override
                     public void onComplete()
                     {
-                        if (plantList.size() > 0)
-                        {
-                            disposables.add(weatherService.getCurrentForecastData()
-                                    .subscribe(
-                                            new Consumer<WeatherData>()
-                                            { // Success
-                                                @Override
-                                                public void accept(@NonNull WeatherData weatherData) throws Exception
-                                                {
-                                                    PlantListPresenterImpl.this.weatherData = weatherData;
-                                                    view.notifyDataChange();
-                                                }
-                                            },
-                                            new Consumer<Throwable>()
-                                            { // Failure
-                                                @Override
-                                                public void accept(@NonNull Throwable throwable) throws Exception
-                                                {
-                                                    throwable.printStackTrace();
-                                                    // TODO: Do Something
-                                                    LOG.e(getClass().getName(), "weatherDataSingle failed");
-                                                }
-                                            }));
-                        }
                         view.notifyDataChange();
                     }
                 }));
+
+        disposables.add(weatherService.getCurrentForecastData()
+                .subscribe(
+                        new Consumer<WeatherData>()
+                        { // Success
+                            @Override
+                            public void accept(@NonNull WeatherData weatherData) throws Exception
+                            {
+                                PlantListPresenterImpl.this.weatherData = weatherData;
+                                view.notifyDataChange();
+                            }
+                        },
+                        new Consumer<Throwable>()
+                        { // Failure
+                            @Override
+                            public void accept(@NonNull Throwable throwable) throws Exception
+                            {
+                                throwable.printStackTrace();
+                                LOG.e(getClass().getName(), "weatherDataSingle failed");
+
+                            }
+                        }));
+
+        subscribeToLocationChanges();
+    }
+
+    private void subscribeToLocationChanges()
+    {
         disposables.add(
                 gpsLocationService.getWeatherLocation()
                         .subscribeWith(new DisposableObserver<WeatherLocation>()
@@ -153,7 +177,6 @@ public class PlantListPresenterImpl implements PlantListPresenter
                             @Override
                             public void onNext(@NonNull WeatherLocation weatherLocation)
                             {
-                                Log.d("WEATHER", weatherLocation.getPlaceString());
                                 disposables.add(weatherService.getCurrentForecastData()
                                         .subscribe(
                                                 new Consumer<WeatherData>()
@@ -178,13 +201,24 @@ public class PlantListPresenterImpl implements PlantListPresenter
 
                             }
 
-                            @Override public void onError(@NonNull Throwable e)
+                            @Override
+                            public void onError(@NonNull Throwable e)
                             {
                                 e.printStackTrace();
-                                // TODO: Do Someething
+                                if (e instanceof SecurityException)
+                                    view.displayLocationPermissionsError();
+                                else if (e instanceof NoSuchProviderException)
+                                    view.displayLocationNotAvailableError();
+                                else
+                                    view.displayDeviceLocationFailureMessage(); // We're not exactly sure what happened
+
                                 LOG.e(getClass().getName(), "weatherLocationObservable failed");
+                                subscribeToLocationChanges();
                             }
-                            @Override public void onComplete() { }
+                            @Override public void onComplete()
+                            {
+                                subscribeToLocationChanges();
+                            }
                         }));
     }
 
@@ -203,6 +237,7 @@ public class PlantListPresenterImpl implements PlantListPresenter
     @Override
     public void unload()
     {
+        gpsLocationService.cancelRequestLocation();
         disposables.dispose();
     }
 }

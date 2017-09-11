@@ -46,6 +46,12 @@ public class Temperature implements Comparable<Temperature>
     public static final double WATER_FREEZING_KELVIN = 273.15;
 
     /*
+     * This represents the amount of degrees (in Kelvin) by which we recognize difference. Anything
+     * that is not more than this value apart is considered the same in this application.
+     */
+    private static final double SIGNIFICANCE = 0.5;
+
+    /*
      * Actual value representing degrees kelvin
      */
     private final double degreesKelvin;
@@ -56,11 +62,10 @@ public class Temperature implements Comparable<Temperature>
      */
     private final double fuzz;
 
-    /*
-     * This represents the amount of degrees (in Kelvin) by which we recognize difference. Anything
-     * that is not more than this value apart is considered the same in this application.
-     */
-    private static final double SIGNIFICANCE = 0.5;
+    public enum COMPARISON
+    {
+        GREATER, MAYBE_GREATER, TRUE_EQUAL, MAYBE_LESSER, LESSER;
+    }
 
     /**
      * Constructs a new Temperature object based on degrees in Celsius. Fuzz will be zero.
@@ -269,6 +274,23 @@ public class Temperature implements Comparable<Temperature>
             return -1;
         else
             return 1;
+    }
+
+    public COMPARISON compareSignificanceTo(@NonNull Temperature o)
+    {
+        Preconditions.checkNotNull(o);
+
+        if (this.compareTo(o) == 0)
+            if (abs(this.degreesKelvin - o.degreesKelvin) < SIGNIFICANCE)
+                return COMPARISON.TRUE_EQUAL;
+            else if (this.degreesKelvin > o.degreesKelvin)
+                return COMPARISON.MAYBE_GREATER;
+            else
+                return COMPARISON.MAYBE_LESSER;
+        else if (this.compareTo(o) == 1)
+            return COMPARISON.GREATER;
+        else
+            return COMPARISON.LESSER;
     }
 
     /**

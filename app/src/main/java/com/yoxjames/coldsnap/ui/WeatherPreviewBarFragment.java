@@ -77,15 +77,15 @@ public class WeatherPreviewBarFragment extends Fragment implements WeatherPrevie
     @Override
     public void onDestroy()
     {
-        super.onDestroy();
         weatherPreviewBarPresenter.unload();
+        super.onDestroy();
     }
 
     @Override
-    public void onPause()
+    public void onStop()
     {
-        super.onPause();
         weatherPreviewBarPresenter.unload();
+        super.onStop();
     }
 
     @Override

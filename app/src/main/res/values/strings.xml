@@ -55,4 +55,8 @@
     <string name="plant_save_error">Could not save plant</string>
     <string name="plant_add_error">Could not add plant</string>
     <string name="plant_delete_error">Could not delete plant</string>
+
+    <string name="location_permission_denied">Cannot use location due to permissions denial. Feel free to manually set the location</string>
+    <string name="no_location_providers_error">No location services available. Is location disabled?</string>
+
 </resources>

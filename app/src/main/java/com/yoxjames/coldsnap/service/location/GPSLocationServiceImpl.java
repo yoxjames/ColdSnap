@@ -21,31 +21,34 @@ package com.yoxjames.coldsnap.service.location;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 
 import com.yoxjames.coldsnap.http.HTTPGeolocationService;
-import com.yoxjames.coldsnap.model.SimpleWeatherLocation;
-import com.yoxjames.coldsnap.model.SimpleWeatherLocationNotFoundException;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.util.LOG;
+
+import java.security.NoSuchProviderException;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Cancellable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import io.reactivex.observables.ConnectableObservable;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 
 /**
  * Created by yoxjames on 8/27/17.
@@ -56,28 +59,39 @@ public class GPSLocationServiceImpl implements GPSLocationService
 {
     private final Context context;
     private final HTTPGeolocationService geolocationService;
-    private final Observable<WeatherLocation> weatherLocationObservable;
-    private final Subject<SimpleWeatherLocation> weatherLocationSubject;
-    private final SharedPreferences sharedPreferences;
     private final WeatherLocationService weatherLocationService;
+    private ConnectableObservable<Location> currentAndroidObservable;
+    private Observable<WeatherLocation> currentWeatherLocationObservable;
+    private Observable<Location> androidLocation;
+    private Disposable connectionDisposable;
 
     @Inject
-    public GPSLocationServiceImpl(final Context context, final HTTPGeolocationService geolocationService, final SharedPreferences sharedPreferences, final WeatherLocationService weatherLocationService)
+    public GPSLocationServiceImpl(final Context context, final HTTPGeolocationService geolocationService, final WeatherLocationService weatherLocationService)
     {
         this.context = context;
         this.geolocationService = geolocationService;
-        this.sharedPreferences = sharedPreferences;
         this.weatherLocationService = weatherLocationService;
-        this.weatherLocationSubject = PublishSubject.create();
-        this.weatherLocationObservable = weatherLocationSubject
-                .serialize()
+        androidLocation = getAndroidLocation();
+        currentAndroidObservable = androidLocation.publish();
+        currentWeatherLocationObservable = getCurrentWeatherLocationObservable().share();
+    }
+
+    @Override
+    public Observable<WeatherLocation> getWeatherLocation()
+    {
+        return currentWeatherLocationObservable;
+    }
+
+    private Observable<WeatherLocation> getCurrentWeatherLocationObservable()
+    {
+        return currentAndroidObservable
                 .observeOn(Schedulers.io())
-                .flatMap(new Function<SimpleWeatherLocation, ObservableSource<WeatherLocation>>()
+                .flatMap(new Function<Location, ObservableSource<WeatherLocation>>()
                 {
                     @Override
-                    public ObservableSource<WeatherLocation> apply(@NonNull SimpleWeatherLocation simpleWeatherLocation) throws Exception
+                    public ObservableSource<WeatherLocation> apply(@NonNull Location location) throws Exception
                     {
-                        return geolocationService.getCurrentWeatherLocation(simpleWeatherLocation.getLat(), simpleWeatherLocation.getLon())
+                        return geolocationService.getCurrentWeatherLocation(location.getLatitude(), location.getLongitude())
                                 .toObservable()
                                 .doOnError(new Consumer<Throwable>()
                                 {
@@ -96,6 +110,7 @@ public class GPSLocationServiceImpl implements GPSLocationService
                                     }
                                 });
                     }
+
                 })
                 .doOnNext(new Consumer<WeatherLocation>()
                 {
@@ -105,63 +120,76 @@ public class GPSLocationServiceImpl implements GPSLocationService
                         weatherLocationService.saveWeatherLocation(weatherLocation).blockingAwait();
                     }
                 })
-                .observeOn(AndroidSchedulers.mainThread())
-                .share();
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
-    public Observable<WeatherLocation> getWeatherLocation()
+    private Observable<Location> getAndroidLocation()
     {
-        return weatherLocationObservable;
+        return Observable.create(new ObservableOnSubscribe<Location>()
+        {
+            @Override
+            public void subscribe(@NonNull final ObservableEmitter<Location> emitter) throws Exception
+            {
+                final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+                final LocationListener listener = new LocationListener()
+                {
+                    @Override
+                    public void onLocationChanged(Location location)
+                    {
+                        emitter.onNext(location);
+                        emitter.onComplete();
+                    }
+
+                    @Override public void onStatusChanged(String s, int i, Bundle bundle) { }
+                    @Override public void onProviderEnabled(String s) { }
+                    @Override public void onProviderDisabled(String s) { }
+                };
+
+                emitter.setCancellable(new Cancellable()
+                {
+                    @Override
+                    public void cancel() throws Exception
+                    {
+                        locationManager.removeUpdates(listener);
+                    }
+                });
+
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                    {
+                        emitter.onError(new SecurityException("Location privs not granted"));
+                        return;
+                    }
+
+                    Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    if (location != null)
+                        emitter.onNext(location);
+                    locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, listener, null);
+                }
+                else
+                {
+                    emitter.onError(new NoSuchProviderException("No location provider available"));
+                }
+            }
+        });
     }
 
     @Override
     public void pushWeatherLocation()
     {
-        final LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (connectionDisposable != null)
+            connectionDisposable.dispose();
+        connectionDisposable = currentAndroidObservable.connect();
+    }
 
-        final LocationListener listener = new LocationListener()
-        {
-            @Override
-            public void onLocationChanged(Location location)
-            {
-                weatherLocationSubject.onNext(new SimpleWeatherLocation(location.getLatitude(), location.getLongitude()));
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle)
-            {
-            }
-
-            @Override
-            public void onProviderEnabled(String s)
-            {
-            }
-
-            @Override
-            public void onProviderDisabled(String s)
-            {
-            }
-        };
-
-        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-        {
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            {
-                weatherLocationSubject.onError(new SimpleWeatherLocationNotFoundException("Location permission not granted"));
-            }
-            else
-            {
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-                if (location != null)
-                    weatherLocationSubject.onNext(new SimpleWeatherLocation(location.getLatitude(), location.getLongitude()));
-                else
-                    locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, listener, null);
-            }
-        }
-        else
-            weatherLocationSubject.onError(new SimpleWeatherLocationNotFoundException("No acceptable location providers available"));
+    @Override
+    public void cancelRequestLocation()
+    {
+        if (connectionDisposable != null)
+            connectionDisposable.dispose();
     }
 }
 

@@ -67,7 +67,7 @@ public class HTTPGeolocationServiceGoogleImpl extends GenericHTTPService impleme
     }
 
     @Override
-    public Single<WeatherLocation> getCurrentWeatherLocation(final double lat, final double lon) throws GeolocationFailureException
+    public Single<WeatherLocation> getCurrentWeatherLocation(final double lat, final double lon)
     {
         return Single.create(new SingleOnSubscribe<WeatherLocation>()
         {
@@ -98,11 +98,12 @@ public class HTTPGeolocationServiceGoogleImpl extends GenericHTTPService impleme
                 }
                 catch (JSONException | IOException exp)
                 {
-                    e.onError(new GeolocationFailureException("Geolocation failed", exp));
+                    if (!e.isDisposed())
+                        e.onError(new GeolocationFailureException("Geolocation failed", exp));
                 }
             }
         })
-                .timeout(10, TimeUnit.SECONDS)
+                .timeout(30, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io());
     }
 

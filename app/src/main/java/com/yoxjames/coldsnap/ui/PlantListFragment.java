@@ -19,10 +19,13 @@
 
 package com.yoxjames.coldsnap.ui;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -115,13 +118,14 @@ public class PlantListFragment extends Fragment implements PlantListView
     {
         super.onResume();
         plantListPresenter.load();
+
     }
 
     @Override
     public void onDestroy()
     {
-        super.onDestroy();
         plantListPresenter.unload();
+        super.onDestroy();
     }
 
     @Override
@@ -137,17 +141,66 @@ public class PlantListFragment extends Fragment implements PlantListView
                 startActivity(prefIntent);
                 return super.onOptionsItemSelected(item);
             case R.id.menu_item_set_location:
-                plantListPresenter.resetLocation();
+                if (hasPermissions())
+                    plantListPresenter.resetLocation();
                 return super.onOptionsItemSelected(item);
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private boolean hasPermissions()
+    {
+        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        {
+            this.requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    ACCESS_LOCATION_PERMISSION_CALLBACK);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults)
+    {
+        if (requestCode == ACCESS_LOCATION_PERMISSION_CALLBACK)
+        {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            {
+                plantListPresenter.resetLocation();
+            }
+            else // When they deny the permission
+            {
+                displayLocationPermissionsError();
+            }
+        }
+    }
+
+
     @Override
     public void displayDeviceLocationFailureMessage()
     {
         Toast.makeText(getContext(), R.string.device_location_fail_message, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void displayLocationPermissionsError()
+    {
+        showToast(R.string.location_permission_denied);
+    }
+
+    @Override
+    public void displayLocationNotAvailableError()
+    {
+        showToast(R.string.no_location_providers_error);
+    }
+
+    private void showToast(int resID)
+    {
+        Toast.makeText(getContext(), getString(resID), Toast.LENGTH_LONG).show();
     }
 
     private class PlantHolder extends RecyclerView.ViewHolder

@@ -43,4 +43,15 @@ public interface PlantListView
      * Display simple device location failure message
      */
     void displayDeviceLocationFailureMessage();
+
+    /**
+     * Display location failure due to permissions
+     */
+    void displayLocationPermissionsError();
+
+    /**
+     * Displays an error to the user that informs them that a location device is not available
+     * and potentially turned off.
+     */
+    void displayLocationNotAvailableError();
 }

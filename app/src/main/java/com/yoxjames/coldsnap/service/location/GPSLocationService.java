@@ -31,4 +31,5 @@ public interface GPSLocationService
 {
     Observable<WeatherLocation> getWeatherLocation();
     void pushWeatherLocation();
+    void cancelRequestLocation();
 }

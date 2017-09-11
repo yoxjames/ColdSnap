@@ -25,6 +25,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import com.yoxjames.coldsnap.R;
+import com.yoxjames.coldsnap.util.LOG;
 
 public class PlantListActivity extends AppCompatActivity {
     private FragmentManager fragmentManager;
@@ -59,5 +60,4 @@ public class PlantListActivity extends AppCompatActivity {
     {
         super.onResume();
     }
-
 }
