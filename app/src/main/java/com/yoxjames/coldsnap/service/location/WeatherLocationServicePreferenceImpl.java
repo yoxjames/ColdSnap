@@ -27,12 +27,9 @@ import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
 import javax.inject.Inject;
 
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
-import io.reactivex.annotations.NonNull;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -52,38 +49,34 @@ public class WeatherLocationServicePreferenceImpl implements WeatherLocationServ
     @Override
     public Single<WeatherLocation> readWeatherLocation()
     {
-        return Single.create(new SingleOnSubscribe<WeatherLocation>()
+        return Single.create((SingleOnSubscribe<WeatherLocation>) e ->
         {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<WeatherLocation> e) throws Exception
-            {
-                final String zipCode = sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105");
-                final String locationString = sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Kansas City, MO");
-                final double lat = 0f;
-                final double lon = 0f;
+            final String zipCode = sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105");
+            final String locationString = sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Kansas City, MO");
+            final double lat = 0f;
+            final double lon = 0f;
 
-                e.onSuccess(new WeatherLocation(zipCode, locationString, lat, lon));
-            }
-        }).subscribeOn(Schedulers.io());
+            e.onSuccess(new WeatherLocation(zipCode, locationString, lat, lon));
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     @Override
     public Completable saveWeatherLocation(final WeatherLocation weatherLocation)
     {
-        return Completable.create(new CompletableOnSubscribe()
+        return Completable.create(e ->
         {
-            @Override
-            public void subscribe(@NonNull CompletableEmitter e) throws Exception
-            {
-                final SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
+            final SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
 
-                preferenceEditor.putString(CSPreferencesFragment.ZIPCODE, weatherLocation.getZipCode());
-                preferenceEditor.putString(CSPreferencesFragment.LOCATION_STRING, weatherLocation.getPlaceString());
-                if (preferenceEditor.commit())
-                    e.onComplete();
-                else
-                    e.onError(new IllegalStateException("Saving preferences failed"));
-            }
-        }).subscribeOn(Schedulers.io());
+            preferenceEditor.putString(CSPreferencesFragment.ZIPCODE, weatherLocation.getZipCode());
+            preferenceEditor.putString(CSPreferencesFragment.LOCATION_STRING, weatherLocation.getPlaceString());
+            if (preferenceEditor.commit())
+                e.onComplete();
+            else
+                e.onError(new IllegalStateException("Saving preferences failed"));
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 }

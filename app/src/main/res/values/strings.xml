@@ -58,5 +58,19 @@
 
     <string name="location_permission_denied">Cannot use location due to permissions denial. Feel free to manually set the location</string>
     <string name="no_location_providers_error">No location services available. Is location disabled?</string>
-
+    <string name="about">About</string>
+    <string name="coldsnap">ColdSnap</string>
+    <string name="by_james_yox">By: James Yox</string>
+    <string name="open_source_licence">Open Source Licence</string>
+    <string name="gpl_v3_0">GPL v3.0</string>
+    <string name="view_source">View Source</string>
+    <string name="github">GitHub</string>
+    <string name="help">Help</string>
+    <string name="report_bug">Report Bug</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="changelog">Changelog</string>
+    <string name="special_thanks">Special Thanks</string>
+    <string name="wunderground">WunderGround</string>
+    <string name="icons8">Icons8</string>
+    <string name="powered_by">Powered By</string>
 </resources>

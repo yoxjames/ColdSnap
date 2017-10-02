@@ -40,4 +40,8 @@
         android:icon="@android:drawable/ic_menu_delete"
         android:title="@string/delete_plant"
         app:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/menu_about_coldsnap"
+        android:title="@string/about"
+        app:showAsAction="never" />
 </menu>

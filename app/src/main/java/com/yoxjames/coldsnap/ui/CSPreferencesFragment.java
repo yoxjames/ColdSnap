@@ -23,7 +23,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
-import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
 import com.yoxjames.coldsnap.ColdSnapApplication;
@@ -75,45 +74,33 @@ public class CSPreferencesFragment extends PreferenceFragment
         eThreshold = (TemperaturePickerRelativeDialogPreference) findPreference(THRESHOLD);
         fuzz = (TemperaturePickerValueDialogPreference) findPreference(WEATHER_DATA_FUZZ);
         zipcode = (EditTextPreference) findPreference(ZIPCODE);
-        zipcode.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+        zipcode.setOnPreferenceClickListener(preference ->
         {
-            @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
-                EditTextPreference editPref = (EditTextPreference) preference;
-                editPref.getEditText().setSelection(editPref.getText().length());
-                return true;
-            }
+            EditTextPreference editPref = (EditTextPreference) preference;
+            editPref.getEditText().setSelection(editPref.getText().length());
+            return true;
         });
         temperatureScale = (ListPreference) findPreference(TEMPERATURE_SCALE);
         locationString = (EditTextPreference) findPreference(LOCATION_STRING);
-        locationString.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+        locationString.setOnPreferenceClickListener(preference ->
         {
-            @Override
-            public boolean onPreferenceClick(Preference preference)
-            {
-                EditTextPreference editPref = (EditTextPreference) preference;
-                editPref.getEditText().setSelection(editPref.getText().length());
-                return true;
-            }
+            EditTextPreference editPref = (EditTextPreference) preference;
+            editPref.getEditText().setSelection(editPref.getText().length());
+            return true;
         });
 
         // TODO: This is a placeholder.Plan to make application smarter here.
         coldAlarmTimePicker = (TimePickerDialogPreference) findPreference(COLD_ALARM_TIME);
 
-        preferenceChangeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
+        preferenceChangeListener = (sharedPreferences1, s) ->
         {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s)
-            {
-                refreshActivity();
+            refreshActivity();
 
-                // Reset alarm for the new alarm aime inputted
-                if (s.equals(COLD_ALARM_TIME))
-                {
-                    ColdAlarm.cancelAlarm(getActivity().getApplicationContext());
-                    ColdAlarm.setAlarm(getActivity().getApplicationContext());
-                }
+            // Reset alarm for the new alarm aime inputted
+            if (s.equals(COLD_ALARM_TIME))
+            {
+                ColdAlarm.cancelAlarm(getActivity().getApplicationContext());
+                ColdAlarm.setAlarm(getActivity().getApplicationContext());
             }
         };
 

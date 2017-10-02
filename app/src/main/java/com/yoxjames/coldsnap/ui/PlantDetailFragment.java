@@ -49,6 +49,7 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
 {
     private static final String PLANT_UUID_ID = "com.example.yoxjames.coldsnap.ui";
 
+    private View view;
     private EditText plantNameText;
     private EditText plantScientificNameText;
     private TemperaturePickerRelative minimumTempNumberPicker;
@@ -82,42 +83,25 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.plant_detail_item, container, false);
+        view = inflater.inflate(R.layout.plant_detail_item, container, false);
 
-        plantNameText = (EditText) view.findViewById(R.id.name_text);
-        plantScientificNameText = (EditText) view.findViewById(R.id.scientific_name_text);
-        minimumTempNumberPicker = (TemperaturePickerRelative) view.findViewById(R.id.minimum_temp_picker);
+        plantNameText = view.findViewById(R.id.name_text);
+        plantScientificNameText = view.findViewById(R.id.scientific_name_text);
+        minimumTempNumberPicker = view.findViewById(R.id.minimum_temp_picker);
 
-        cancelButton = (Button) view.findViewById(R.id.cancel_button);
-        cancelButton.setOnClickListener(new View.OnClickListener()
+        cancelButton = view.findViewById(R.id.cancel_button);
+        cancelButton.setOnClickListener(v -> getActivity().finish());
+
+        saveButton = view.findViewById(R.id.save_button);
+        saveButton.setOnClickListener(v -> plantDetailPresenter.savePlantInformation());
+
+        minimumTempNumberPicker.setOnLongClickListener(v ->
         {
-            @Override
-            public void onClick(View v)
-            {
-                getActivity().finish();
-            }
+            showToast(getString(R.string.plant_threshold_expl));
+            return false;
         });
 
-        saveButton = (Button) view.findViewById(R.id.save_button);
-        saveButton.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
-                plantDetailPresenter.savePlantInformation();
-            }
-        });
-
-        minimumTempNumberPicker.setOnLongClickListener(new View.OnLongClickListener()
-        {
-            @Override
-            public boolean onLongClick(View view)
-            {
-                showToast(getString(R.string.plant_threshold_expl));
-                return false;
-            }
-        });
-
+        view.setVisibility(View.INVISIBLE); // Make view invisible until it is ready to show.
         return view;
     }
 
@@ -140,8 +124,8 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
     {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_main, menu);
-        menu.getItem(1).setVisible(false); // Remove set location in detail view
-        menu.getItem(2).setVisible(false); // Remove add plant in detail view
+        menu.findItem(R.id.menu_item_set_location).setVisible(false);
+        menu.findItem(R.id.menu_item_new_plant).setVisible(false);
     }
 
     @Override
@@ -155,7 +139,6 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
             case R.id.action_settings:
                 Intent intent = new Intent(getContext(), CSPreferencesActivity.class);
                 startActivity(intent);
-                return super.onOptionsItemSelected(item);
             default:
                 super.onOptionsItemSelected(item);
         }
@@ -166,6 +149,12 @@ public class PlantDetailFragment extends Fragment implements PlantDetailView
     private UUID getPlantUUID()
     {
         return (UUID) getArguments().getSerializable(PLANT_UUID_ID);
+    }
+
+    @Override
+    public void showView()
+    {
+        view.setVisibility(View.VISIBLE);
     }
 
     @Override

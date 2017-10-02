@@ -34,7 +34,6 @@ import javax.inject.Inject;
 
 import io.reactivex.annotations.NonNull;
 import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Predicate;
 import io.reactivex.observers.DisposableObserver;
 
 /**
@@ -72,14 +71,7 @@ public class ColdAlarmPresenter
                         if (weatherData.getTodayLow().compareTo(coldThresholdPref) == -1)
                             view.displayThresholdMessage(temperatureFormatter.format(weatherData.getTodayLow()), temperatureFormatter.format(coldThresholdPref));
 
-                        plantService.getPlants().filter(new Predicate<Plant>()
-                        {
-                            @Override
-                            public boolean test(@NonNull Plant plant) throws Exception
-                            {
-                                return (plant.getMinimumTolerance().compareTo(weatherData.getTodayLow()) > 0);
-                            }
-                        }).subscribe(new DisposableObserver<Plant>()
+                        plantService.getPlants().filter(plant -> (plant.getMinimumTolerance().compareTo(weatherData.getTodayLow()) > 0)).subscribe(new DisposableObserver<Plant>()
                         {
                             @Override
                             public void onNext(@NonNull Plant plant)

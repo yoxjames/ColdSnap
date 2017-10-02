@@ -19,18 +19,18 @@
 
 package com.yoxjames.coldsnap.ui.presenter;
 
-import com.yoxjames.coldsnap.model.Plant;
 import com.yoxjames.coldsnap.service.plant.PlantService;
 import com.yoxjames.coldsnap.ui.view.PlantDetailPagerView;
 import com.yoxjames.coldsnap.util.LOG;
 
 import java.util.ArrayList;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 
 public class PlantDetailPagerPresenterImpl implements PlantDetailPagerPresenter
@@ -72,14 +72,7 @@ public class PlantDetailPagerPresenterImpl implements PlantDetailPagerPresenter
 
         disposables = new CompositeDisposable();
 
-        disposables.add(plantService.getPlants().map(new Function<Plant, UUID>()
-        {
-            @Override
-            public UUID apply(@NonNull Plant plant) throws Exception
-            {
-                return plant.getUuid();
-            }
-        }).subscribeWith(new DisposableObserver<UUID>()
+        disposables.add(plantService.getPlants().map(plant -> plant.getUuid()).subscribeWith(new DisposableObserver<UUID>()
         {
             @Override
             public void onNext(@NonNull UUID uuid)

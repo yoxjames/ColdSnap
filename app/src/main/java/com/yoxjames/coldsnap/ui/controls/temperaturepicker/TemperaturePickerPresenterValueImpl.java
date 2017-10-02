@@ -31,7 +31,6 @@ import javax.inject.Inject;
 public class TemperaturePickerPresenterValueImpl extends AbstractTemperaturePickerPresenter
         implements TemperaturePickerPresenter
 {
-    private final TemperatureFormatter temperatureFormatter;
     private final TemperaturePickerView temperaturePickerView;
     private final TemperatureValueAdapter temperatureValueAdapter;
 
@@ -39,7 +38,6 @@ public class TemperaturePickerPresenterValueImpl extends AbstractTemperaturePick
     public TemperaturePickerPresenterValueImpl(TemperatureFormatter temperatureFormatter, TemperaturePickerView temperaturePickerView, TemperatureValueAdapter temperatureValueAdapter)
     {
         super(temperatureFormatter, temperaturePickerView, temperatureValueAdapter);
-        this.temperatureFormatter = temperatureFormatter;
         this.temperaturePickerView = temperaturePickerView;
         this.temperatureValueAdapter = temperatureValueAdapter;
     }

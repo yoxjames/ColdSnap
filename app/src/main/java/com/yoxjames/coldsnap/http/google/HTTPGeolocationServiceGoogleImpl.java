@@ -19,7 +19,6 @@
 
 package com.yoxjames.coldsnap.http.google;
 
-import com.yoxjames.coldsnap.BuildConfig;
 import com.yoxjames.coldsnap.http.GenericHTTPService;
 import com.yoxjames.coldsnap.http.HTTPGeolocationService;
 import com.yoxjames.coldsnap.model.GeolocationFailureException;
@@ -29,18 +28,19 @@ import com.yoxjames.coldsnap.util.LOG;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 import dagger.internal.Preconditions;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.yoxjames.coldsnap.BuildConfig.GOOGLE_GEOLOCATION_API_KEY;
@@ -69,38 +69,34 @@ public class HTTPGeolocationServiceGoogleImpl extends GenericHTTPService impleme
     @Override
     public Single<WeatherLocation> getCurrentWeatherLocation(final double lat, final double lon)
     {
-        return Single.create(new SingleOnSubscribe<WeatherLocation>()
+        return Single.create((SingleOnSubscribe<WeatherLocation>) e ->
         {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<WeatherLocation> e) throws Exception
+            final GoogleLocation googleLocation;
+            try
             {
-                final GoogleLocation googleLocation;
-                try
-                {
-                    LOG.d("API", "Google API Call ->" + GEOLOCATION_SERVICE);
-                    String rawJSON = getURLString(googleLocationURLFactory.create(lat, lon));
-                    JSONArray addressJSON =
-                            new JSONObject(rawJSON)
-                                    .getJSONArray("results")
-                                    .getJSONObject(0)
-                                    .getJSONArray("address_components");
+                LOG.d("API", "Google API Call ->" + GEOLOCATION_SERVICE);
+                String rawJSON = getURLString(googleLocationURLFactory.create(lat, lon));
+                JSONArray addressJSON =
+                        new JSONObject(rawJSON)
+                                .getJSONArray("results")
+                                .getJSONObject(0)
+                                .getJSONArray("address_components");
 
-                    googleLocation = new GoogleLocation.Builder()
-                            .lat(lat)
-                            .lon(lon)
-                            .sublocality(resolveSubLocality(addressJSON))
-                            .state(resolveState(addressJSON))
-                            .postalCode(resolvePostalCode(addressJSON))
-                            .build();
+                googleLocation = new GoogleLocation.Builder()
+                        .lat(lat)
+                        .lon(lon)
+                        .sublocality(resolveSubLocality(addressJSON))
+                        .state(resolveState(addressJSON))
+                        .postalCode(resolvePostalCode(addressJSON))
+                        .build();
 
-                    e.onSuccess(new WeatherLocation(googleLocation.getPostalCode(), googleLocation.getSublocality() + ", " + googleLocation.getState(), lat, lon));
+                e.onSuccess(new WeatherLocation(googleLocation.getPostalCode(), googleLocation.getSublocality() + ", " + googleLocation.getState(), lat, lon));
 
-                }
-                catch (JSONException | IOException exp)
-                {
-                    if (!e.isDisposed())
-                        e.onError(new GeolocationFailureException("Geolocation failed", exp));
-                }
+            }
+            catch (JSONException | IOException exp)
+            {
+                if (!e.isDisposed())
+                    e.onError(new GeolocationFailureException("Geolocation failed", exp));
             }
         })
                 .timeout(30, TimeUnit.SECONDS)

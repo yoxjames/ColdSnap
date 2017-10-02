@@ -57,4 +57,10 @@ public interface WeatherPreviewBarView
      *                        updated.
      */
     void setLastUpdatedText(String lastUpdatedText);
+
+    /**
+     * Sets the view as visible. This should be done once all data is present. This will remove the progress
+     * indicator and show the actual view content.
+     */
+    void setContentVisible();
 }

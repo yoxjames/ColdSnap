@@ -25,6 +25,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.yoxjames.coldsnap.ColdSnapApplication;
@@ -41,6 +43,8 @@ public class WeatherPreviewBarFragment extends Fragment implements WeatherPrevie
     private TextView highField;
     private TextView lowField;
     private TextView lastUpdatedField;
+    private LinearLayout content;
+    private ProgressBar progress;
     @Inject WeatherPreviewBarPresenter weatherPreviewBarPresenter;
 
     @Override
@@ -59,10 +63,12 @@ public class WeatherPreviewBarFragment extends Fragment implements WeatherPrevie
     {
         View view = inflater.inflate(R.layout.weather_preview_bar, container, false);
 
-        locationText = (TextView) view.findViewById(R.id.location_text);
-        highField = (TextView) view.findViewById(R.id.high_field);
-        lowField = (TextView) view.findViewById(R.id.low_field);
-        lastUpdatedField = (TextView) view.findViewById(R.id.last_updated_field);
+        locationText = view.findViewById(R.id.location_text);
+        highField = view.findViewById(R.id.high_field);
+        lowField = view.findViewById(R.id.low_field);
+        lastUpdatedField = view.findViewById(R.id.last_updated_field);
+        content = view.findViewById(R.id.preview_bar_content);
+        progress = view.findViewById(R.id.preview_bar_progress);
 
         return view;
     }
@@ -115,6 +121,13 @@ public class WeatherPreviewBarFragment extends Fragment implements WeatherPrevie
     @Override
     public void setLastUpdatedText(String lastUpdatedText)
     {
-        this.lastUpdatedField.setText(lastUpdatedText);
+        lastUpdatedField.setText(lastUpdatedText);
+    }
+
+    @Override
+    public void setContentVisible()
+    {
+        content.setVisibility(View.VISIBLE);
+        progress.setVisibility(View.INVISIBLE);
     }
 }

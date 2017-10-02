@@ -106,7 +106,7 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
 
         NotificationCompat.Builder mBuilder =
                 (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setSmallIcon(R.drawable.cold_alarm_icon)
                         .setContentTitle("ColdSnap: Cold Warning")
                         .setContentText("Tonight's low "
                                 + tonightFormatted
@@ -149,7 +149,7 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
 
         NotificationCompat.Builder mBuilder =
                 (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setSmallIcon(R.drawable.cold_alert)
                         .setContentTitle("ColdSnap: Plant in Danger!")
                         .setContentText(plantName + "is in danger of dying due to cold!")
                         .setColor(Color.BLUE);

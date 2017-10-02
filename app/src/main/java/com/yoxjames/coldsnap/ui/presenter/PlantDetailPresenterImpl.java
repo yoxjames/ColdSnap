@@ -70,6 +70,7 @@ public class PlantDetailPresenterImpl implements PlantDetailPresenter
                     view.setPlantName(plant.getName());
                     view.setPlantScientificName(plant.getScientificName());
                     view.setMinTemperature(temperatureValueAdapter.getValue(plant.getMinimumTolerance()));
+                    view.showView();
                 }
 
                 @Override
@@ -82,6 +83,7 @@ public class PlantDetailPresenterImpl implements PlantDetailPresenter
             }));
         else
         {
+            view.showView();
             view.setMinTemperature(temperatureValueAdapter.getValue(new Temperature(Temperature.WATER_FREEZING_KELVIN)));
         }
     }

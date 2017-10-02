@@ -43,7 +43,7 @@ public class TimePickerDialogPreference extends DialogPreference
     {
         //timePicker = new TimePicker(getContext().getApplicationContext());
         View view = LayoutInflater.from(getContext()).inflate(R.layout.preference_coldalarm_time, null);
-        timePicker = (TimePicker) view.findViewById(R.id.cold_alarm_time_picker);
+        timePicker = view.findViewById(R.id.cold_alarm_time_picker);
         setTime(getPersistedString("19:00"));
         return view;
     }

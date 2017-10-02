@@ -19,10 +19,9 @@
 
 package com.yoxjames.coldsnap.dagger;
 
-import android.content.SharedPreferences;
-
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.service.location.GPSLocationService;
+import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 import com.yoxjames.coldsnap.service.weather.WeatherService;
 import com.yoxjames.coldsnap.ui.presenter.WeatherPreviewBarPresenter;
 import com.yoxjames.coldsnap.ui.presenter.WeatherPreviewBarPresenterImpl;
@@ -51,10 +50,11 @@ public class WeatherPreviewBarViewModule
     static WeatherPreviewBarPresenter provideWeatherPreviewBarPresenter(WeatherPreviewBarView view,
                                                                         TemperatureFormatter temperatureFormatter,
                                                                         WeatherService weatherService,
-                                                                        GPSLocationService gpsLocationService,
-                                                                        SharedPreferences sharedPreferences)
+                                                                        WeatherLocationService weatherLocationService,
+                                                                        GPSLocationService gpsLocationService)
 
     {
-        return new WeatherPreviewBarPresenterImpl(view, temperatureFormatter , gpsLocationService, sharedPreferences, weatherService);
+        return new WeatherPreviewBarPresenterImpl(view, temperatureFormatter, gpsLocationService, weatherLocationService, weatherService);
     }
+
 }

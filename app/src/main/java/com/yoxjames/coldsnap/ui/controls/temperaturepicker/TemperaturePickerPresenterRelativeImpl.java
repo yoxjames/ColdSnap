@@ -35,7 +35,6 @@ public class TemperaturePickerPresenterRelativeImpl extends AbstractTemperatureP
     private static final Temperature MINIMUM_TEMPERATURE = Temperature.newTemperatureFromC(-70);
     private static final Temperature MAXIMUM_TEMPERATURE = Temperature.newTemperatureFromC(100);
 
-    private final TemperatureFormatter temperatureFormatter;
     private final TemperaturePickerView temperaturePickerView;
     private final TemperatureValueAdapter temperatureValueAdapter;
 
@@ -43,7 +42,6 @@ public class TemperaturePickerPresenterRelativeImpl extends AbstractTemperatureP
     public TemperaturePickerPresenterRelativeImpl(TemperatureFormatter temperatureFormatter, TemperaturePickerView temperaturePickerView, TemperatureValueAdapter temperatureValueAdapter)
     {
         super(temperatureFormatter, temperaturePickerView, temperatureValueAdapter);
-        this.temperatureFormatter = temperatureFormatter;
         this.temperaturePickerView = temperaturePickerView;
         this.temperatureValueAdapter = temperatureValueAdapter;
     }

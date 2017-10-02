@@ -19,17 +19,17 @@
 
 package com.yoxjames.coldsnap.ui.presenter;
 
-import android.content.SharedPreferences;
-
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.service.location.GPSLocationService;
+import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 import com.yoxjames.coldsnap.service.weather.WeatherService;
 import com.yoxjames.coldsnap.ui.view.WeatherPreviewBarView;
 import com.yoxjames.coldsnap.util.LOG;
 
 import javax.inject.Inject;
+
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
@@ -40,31 +40,30 @@ public class WeatherPreviewBarPresenterImpl implements WeatherPreviewBarPresente
     private final WeatherPreviewBarView view;
     private final TemperatureFormatter temperatureFormatter;
     private final GPSLocationService gpsLocationService;
-    private final SharedPreferences sharedPreferences;
+    private final WeatherLocationService weatherLocationService;
     private final WeatherService weatherService;
     private CompositeDisposable disposables;
-
 
     /**
      * Constructor for WeatherPreviewBarPresenterImpl
      *
-     * @param view                 The view (Think MVP pattern)
-     * @param temperatureFormatter Object designed to transaction Temperature objects into viewable strings.
-     * @param gpsLocationService   Rx API for GPS location change events
-     * @param sharedPreferences    Preference service
-     * @param weatherService       Async provider of Reactive objects to obtain {@link WeatherData}
+     * @param view                   The view (Think MVP pattern)
+     * @param temperatureFormatter   Object designed to transaction Temperature objects into viewable strings.
+     * @param gpsLocationService     Rx API for GPS location change events
+     * @param weatherLocationService
+     * @param weatherService         Async provider of Reactive objects to obtain {@link WeatherData}
      */
     @Inject
     public WeatherPreviewBarPresenterImpl(WeatherPreviewBarView view,
                                           TemperatureFormatter temperatureFormatter,
                                           GPSLocationService gpsLocationService,
-                                          SharedPreferences sharedPreferences,
+                                          WeatherLocationService weatherLocationService,
                                           WeatherService weatherService)
     {
         this.view = view;
         this.temperatureFormatter = temperatureFormatter;
         this.gpsLocationService = gpsLocationService;
-        this.sharedPreferences = sharedPreferences;
+        this.weatherLocationService = weatherLocationService;
         this.weatherService = weatherService;
     }
 
@@ -76,29 +75,34 @@ public class WeatherPreviewBarPresenterImpl implements WeatherPreviewBarPresente
 
         this.disposables = new CompositeDisposable();
 
-        disposables.add(weatherService.getCurrentForecastData()
-                .subscribe(
-                        new Consumer<WeatherData>()
-                        {
-                            @Override
-                            public void accept(@NonNull WeatherData weatherData) throws Exception
-                            {
-                                view.setLocationText(weatherData.getWeatherLocation().getPlaceString() + " - " + weatherData.getWeatherLocation().getZipCode());
-                                view.setHighText(temperatureFormatter.format(weatherData.getTodayHigh()));
-                                view.setLowText(temperatureFormatter.format(weatherData.getTodayLow()));
-                                view.setLastUpdatedText(weatherData.getForecastDays().get(0).toString());
-                            }
-                        },
-                        new Consumer<Throwable>()
-                        {
-                            @Override
-                            public void accept(@NonNull Throwable throwable) throws Exception
-                            {
-                                throwable.printStackTrace();
-                                // TODO: Do something
-                                LOG.e(getClass().getName(), "weatherDataSingle failed");
-                            }
-                        }));
+        disposables.add(weatherLocationService.readWeatherLocation().subscribe(
+                weatherLocation -> view.setLocationText(weatherLocation.getPlaceString() + " - " + weatherLocation.getZipCode()),
+                throwable ->
+                {
+                    // Do nothing, hopefully weather data brings it back. If not we will handle
+                    // the failure there.
+                }));
+
+                disposables.add(weatherService.getCurrentForecastData()
+                        .subscribe(
+                                weatherData ->
+                                {
+                                    view.setLocationText(weatherData.getWeatherLocation().getPlaceString() + " - " + weatherData.getWeatherLocation().getZipCode());
+                                    view.setHighText(temperatureFormatter.format(weatherData.getTodayHigh()));
+                                    view.setLowText(temperatureFormatter.format(weatherData.getTodayLow()));
+                                    view.setLastUpdatedText(weatherData.getForecastDays().get(0).toString());
+                                    view.setContentVisible();
+                                },
+                                new Consumer<Throwable>()
+                                {
+                                    @Override
+                                    public void accept(@NonNull Throwable throwable) throws Exception
+                                    {
+                                        throwable.printStackTrace();
+                                        // TODO: Do something
+                                        LOG.e(getClass().getName(), "weatherDataSingle failed");
+                                    }
+                                }));
 
         subscribeToLocationChanges();
     }
@@ -116,16 +120,12 @@ public class WeatherPreviewBarPresenterImpl implements WeatherPreviewBarPresente
                                     {
                                         disposables.add(weatherService.getCurrentForecastData()
                                                 .subscribe(
-                                                        new Consumer<WeatherData>()
+                                                        weatherData ->
                                                         {
-                                                            @Override
-                                                            public void accept(@NonNull WeatherData weatherData) throws Exception
-                                                            {
-                                                                view.setLocationText(weatherData.getWeatherLocation().getPlaceString() + " - " + weatherData.getWeatherLocation().getZipCode());
-                                                                view.setHighText(temperatureFormatter.format(weatherData.getTodayHigh()));
-                                                                view.setLowText(temperatureFormatter.format(weatherData.getTodayLow()));
-                                                                view.setLastUpdatedText(weatherData.getForecastDays().get(0).toString());
-                                                            }
+                                                            view.setLocationText(weatherData.getWeatherLocation().getPlaceString() + " - " + weatherData.getWeatherLocation().getZipCode());
+                                                            view.setHighText(temperatureFormatter.format(weatherData.getTodayHigh()));
+                                                            view.setLowText(temperatureFormatter.format(weatherData.getTodayLow()));
+                                                            view.setLastUpdatedText(weatherData.getForecastDays().get(0).toString());
                                                         },
                                                         new Consumer<Throwable>()
                                                         {

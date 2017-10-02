@@ -34,18 +34,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.yoxjames.coldsnap.ColdSnapApplication;
 import com.yoxjames.coldsnap.R;
 import com.yoxjames.coldsnap.dagger.PlantListFragmentModule;
-import com.yoxjames.coldsnap.service.location.GPSLocationService;
 import com.yoxjames.coldsnap.ui.presenter.PlantListPresenter;
 import com.yoxjames.coldsnap.ui.view.PlantListItemView;
 import com.yoxjames.coldsnap.ui.view.PlantListView;
 
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
@@ -55,7 +56,6 @@ public class PlantListFragment extends Fragment implements PlantListView
     private static final int ACCESS_LOCATION_PERMISSION_CALLBACK = 1;
     private RecyclerView plantRecyclerView;
     private PlantAdapter adapter;
-    private GPSLocationService gpsLocationService;
 
     @Inject PlantListPresenter plantListPresenter;
 
@@ -76,7 +76,7 @@ public class PlantListFragment extends Fragment implements PlantListView
     {
         View view = inflater.inflate(R.layout.fragment_plant_list, container, false);
 
-        plantRecyclerView = (RecyclerView) view.findViewById(R.id.plant_recycler_view);
+        plantRecyclerView = view.findViewById(R.id.plant_recycler_view);
         plantRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
         adapter = new PlantListFragment.PlantAdapter();
@@ -118,7 +118,6 @@ public class PlantListFragment extends Fragment implements PlantListView
     {
         super.onResume();
         plantListPresenter.load();
-
     }
 
     @Override
@@ -144,6 +143,10 @@ public class PlantListFragment extends Fragment implements PlantListView
                 if (hasPermissions())
                     plantListPresenter.resetLocation();
                 return super.onOptionsItemSelected(item);
+            case R.id.menu_about_coldsnap:
+                Intent aboutIntent = new Intent(getContext(), AboutActivity.class);
+                startActivity(aboutIntent);
+                return super.onOptionsItemSelected(item);
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -162,8 +165,7 @@ public class PlantListFragment extends Fragment implements PlantListView
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults)
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
     {
         if (requestCode == ACCESS_LOCATION_PERMISSION_CALLBACK)
         {
@@ -209,14 +211,17 @@ public class PlantListFragment extends Fragment implements PlantListView
         private final TextView plantName;
         private final TextView scientificName;
         private final TextView status;
+        private final ProgressBar progress;
+
         private UUID plantUUID;
 
         PlantHolder(View itemView)
         {
             super(itemView);
-            plantName = (TextView) itemView.findViewById(R.id.plant_name);
-            scientificName = (TextView) itemView.findViewById(R.id.plant_scientific_name);
-            status = (TextView) itemView.findViewById(R.id.plant_status);
+            plantName = itemView.findViewById(R.id.plant_name);
+            scientificName = itemView.findViewById(R.id.plant_scientific_name);
+            status = itemView.findViewById(R.id.plant_status);
+            progress = itemView.findViewById(R.id.progress);
             itemView.setOnClickListener(this);
         }
 
@@ -224,6 +229,13 @@ public class PlantListFragment extends Fragment implements PlantListView
         public void onClick(View v)
         {
             openPlant(plantUUID);
+        }
+
+        @Override
+        public void showView()
+        {
+            status.setVisibility(View.VISIBLE);
+            progress.setVisibility(View.INVISIBLE);
         }
 
         @Override

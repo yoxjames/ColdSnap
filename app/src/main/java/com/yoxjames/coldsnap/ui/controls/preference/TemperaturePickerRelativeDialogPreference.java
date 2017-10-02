@@ -27,7 +27,6 @@ import android.view.View;
 
 import com.yoxjames.coldsnap.R;
 import com.yoxjames.coldsnap.model.Temperature;
-import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperatureManualInputListener;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerRelative;
 
 /**
@@ -53,16 +52,12 @@ public class TemperaturePickerRelativeDialogPreference extends DialogPreference
     public View onCreateDialogView()
     {
         View view = LayoutInflater.from(getContext()).inflate(R.layout.preference_temperature_dialog, null);
-        temperaturePickerRelative = (TemperaturePickerRelative) view.findViewById(R.id.temperature_relative_picker);
+        temperaturePickerRelative = view.findViewById(R.id.temperature_relative_picker);
         temperaturePickerRelative.setKelvinValue(getPersistedFloat(getDefaultTempValue()));
-        temperaturePickerRelative.addTemperatureManualInputListener(new TemperatureManualInputListener()
+        temperaturePickerRelative.addTemperatureManualInputListener(() ->
         {
-            @Override
-            public void onTemperatureManuallyInputted()
-            {
-                persistFloat((float) temperaturePickerRelative.getKelvinValue());
-                getDialog().dismiss();
-            }
+            persistFloat((float) temperaturePickerRelative.getKelvinValue());
+            getDialog().dismiss();
         });
         return view;
     }

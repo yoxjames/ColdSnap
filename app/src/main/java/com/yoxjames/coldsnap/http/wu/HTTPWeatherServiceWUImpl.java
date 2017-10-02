@@ -21,6 +21,7 @@ package com.yoxjames.coldsnap.http.wu;
 
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
+
 import com.yoxjames.coldsnap.http.GenericHTTPService;
 import com.yoxjames.coldsnap.http.HTTPWeatherService;
 import com.yoxjames.coldsnap.model.ForecastDay;
@@ -29,22 +30,22 @@ import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
 import com.yoxjames.coldsnap.util.LOG;
+
 import org.json.JSONObject;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
+
 import static com.yoxjames.coldsnap.BuildConfig.WUNDERGROUND_API_KEY;
 
 
@@ -87,26 +88,22 @@ public class HTTPWeatherServiceWUImpl extends GenericHTTPService implements HTTP
     @Override
     public Single<WeatherData> getWeatherData(final WeatherLocation weatherLocation)
     {
-        return Single.create(new SingleOnSubscribe<WeatherData>()
+        return Single.create((SingleOnSubscribe<WeatherData>) e ->
         {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            final double fuzz = sharedPreferences.getFloat(CSPreferencesFragment.WEATHER_DATA_FUZZ, 0f);
+            LOG.d("API", "Wunderground API Call ->" + FORECAST_SERVICE);
+            final WUForecast wuForecast = WUForecast.parseJSON(new JSONObject(getURLString(urlFactory.create(weatherLocation))));
+            List<ForecastDay> forecastDayList = new ArrayList<>();
+
+            for (WUForecast.Day day : wuForecast.getDays())
             {
-                final double fuzz = sharedPreferences.getFloat(CSPreferencesFragment.WEATHER_DATA_FUZZ, 0f);
-                LOG.d("API", "Wunderground API Call ->" + FORECAST_SERVICE);
-                final WUForecast wuForecast = WUForecast.parseJSON(new JSONObject(getURLString(urlFactory.create(weatherLocation))));
-                List<ForecastDay> forecastDayList = new ArrayList<>();
-
-                for (WUForecast.Day day : wuForecast.getDays())
-                {
-                    final Temperature highTemperature = Temperature.newTemperatureFromF(day.getHighTempF(), fuzz);
-                    final Temperature lowTemperature = Temperature.newTemperatureFromF(day.getLowTempF(), fuzz);
-                    final ForecastDay forecastDay = new ForecastDay(day.getDateString(), highTemperature, lowTemperature, new Date(), UUID.randomUUID());
-                    forecastDayList.add(forecastDay);
-                }
-
-                e.onSuccess(new WeatherData(forecastDayList, new Date(), weatherLocation));
+                final Temperature highTemperature = Temperature.newTemperatureFromF(day.getHighTempF(), fuzz);
+                final Temperature lowTemperature = Temperature.newTemperatureFromF(day.getLowTempF(), fuzz);
+                final ForecastDay forecastDay = new ForecastDay(day.getDateString(), highTemperature, lowTemperature, new Date(), UUID.randomUUID());
+                forecastDayList.add(forecastDay);
             }
+
+            e.onSuccess(new WeatherData(forecastDayList, new Date(), weatherLocation));
         }).subscribeOn(Schedulers.io());
     }
 

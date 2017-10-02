@@ -28,21 +28,14 @@ import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 
-import org.reactivestreams.Publisher;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
 
 /**
  * Implementation of WeatherService
@@ -95,17 +88,10 @@ public class WeatherServiceImpl implements WeatherService
                     {
                         return httpService.getWeatherData(weatherLocation);
                     }
-                }).doOnSuccess(new Consumer<WeatherData>()
-                {
-                    @Override
-                    public void accept(WeatherData weatherData) throws Exception
-                    {
-                        dbService
-                                .deleteWeatherData(database)
-                                .concatWith(dbService.saveWeatherData(database, weatherData))
-                                .blockingAwait();
-                    }
-                });
+                }).doOnSuccess(weatherData -> dbService
+                        .deleteWeatherData(database)
+                        .concatWith(dbService.saveWeatherData(database, weatherData))
+                        .blockingAwait());
 
         final Single<WeatherData> db = weatherLocationService
                 .readWeatherLocation()
@@ -121,14 +107,7 @@ public class WeatherServiceImpl implements WeatherService
                 });
 
         cachedSingle = Single.concat(db, http)
-                .filter(new Predicate<WeatherData>()
-                {
-                    @Override
-                    public boolean test(@NonNull WeatherData weatherData) throws Exception
-                    {
-                        return !weatherData.isStale();
-                    }
-                })
+                .filter(weatherData -> !weatherData.isStale())
                 .share()
                 .firstOrError()
                 .observeOn(AndroidSchedulers.mainThread());

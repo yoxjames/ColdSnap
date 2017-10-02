@@ -23,6 +23,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?android:attr/selectableItemBackground">
+
     <TextView
         android:id="@+id/plant_name"
         android:layout_width="wrap_content"
@@ -48,17 +49,30 @@
         android:textStyle="italic"
         tools:text="Scientific name"/>
 
-    <TextView
-        android:id="@+id/plant_status"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/plant_name"
-        android:layout_toStartOf="@+id/plant_name"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginRight="24dp"
-        android:textSize="30sp"
-        tools:text=":)"/>
+
+        android:gravity="end"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="24dp">
+
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"/>
+
+        <TextView
+            android:id="@+id/plant_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="5dp"
+            android:textSize="30sp"
+            android:visibility="invisible"
+            tools:text=":)"/>
+
+    </RelativeLayout>
+
 </RelativeLayout>

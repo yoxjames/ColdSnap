@@ -103,7 +103,7 @@ public class WeatherDataMockFactory
                 new Date(new Date().getTime() - 2 * 60 * 1000 + 1),
                 UUID.randomUUID()));
 
-        return new WeatherData(forecastDayList, new Date(new Date().getTime() - 2 * 60 * 1000 + 1), weatherLocation);
+        return new WeatherData(forecastDayList, new Date(new Date().getTime() - 3 * 60 * 1000 + 1), weatherLocation);
     }
 
     public static WeatherData getStaleWeatherData()

@@ -23,27 +23,27 @@ import android.content.ContentValues;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
 import com.yoxjames.coldsnap.model.ForecastDay;
 import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherDataNotFoundException;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+
 import dagger.Lazy;
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -67,61 +67,52 @@ public class WeatherDataDAOSQLiteImpl implements WeatherDataDAO
     @Override
     public Completable saveWeatherData(final SQLiteDatabase database, final WeatherData weatherData)
     {
-        return Completable.create(new CompletableOnSubscribe()
+        return Completable.create(e ->
         {
-            @Override
-            public void subscribe(@NonNull CompletableEmitter e) throws Exception
+            ContentValues contentValues = contentValuesProvider.get().get();
+            for (ForecastDay forecastDay : weatherData.getForecastDays())
             {
-                ContentValues contentValues = contentValuesProvider.get().get();
-                for (ForecastDay forecastDay : weatherData.getForecastDays())
-                {
-                    contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.UUID, forecastDay.getUUID().toString());
-                    contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.DATE, forecastDay.toString());
-                    contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.FETCH_DATE, forecastDay.getDate().getTime());
-                    contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.HIGH_TEMP_K, forecastDay.getHighTemperature().getDegreesKelvin());
-                    contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.LOW_TEMP_K, forecastDay.getLowTemperature().getDegreesKelvin());
-                    contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.ZIPCODE, weatherData.getWeatherLocation().getZipCode());
+                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.UUID, forecastDay.getUUID().toString());
+                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.DATE, forecastDay.toString());
+                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.FETCH_DATE, forecastDay.getDate().getTime());
+                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.HIGH_TEMP_K, forecastDay.getHighTemperature().getDegreesKelvin());
+                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.LOW_TEMP_K, forecastDay.getLowTemperature().getDegreesKelvin());
+                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.ZIPCODE, weatherData.getWeatherLocation().getZipCode());
 
-                    database.insert(ColdsnapDbSchema.ForecastDayTable.NAME, null, contentValues);
-                }
-
-                e.onComplete();
+                database.insert(ColdsnapDbSchema.ForecastDayTable.NAME, null, contentValues);
             }
+
+            e.onComplete();
         }).subscribeOn(Schedulers.io());
     }
 
     @Override
     public Single<WeatherData> getWeatherData(final SQLiteDatabase database, final WeatherLocation weatherLocation)
     {
-        return Single.create(new SingleOnSubscribe<WeatherData>()
+        return Single.create((SingleOnSubscribe<WeatherData>) e ->
         {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<WeatherData> e) throws Exception
+            // Read back raw data from the DB
+            List<ForecastDayRow> forecastDayRows = new ArrayList<>();
+
+            try (ForecastDayCursorWrapper cursor = queryWeatherData(database, null, null))
             {
-                // Read back raw data from the DB
-                List<ForecastDayRow> forecastDayRows = new ArrayList<>();
-
-                try (ForecastDayCursorWrapper cursor = queryWeatherData(database, null, null))
+                cursor.moveToFirst();
+                while (!cursor.isAfterLast())
                 {
-                    cursor.moveToFirst();
-                    while (!cursor.isAfterLast())
-                    {
-                        forecastDayRows.add(cursor.getForecastDay());
+                    forecastDayRows.add(cursor.getForecastDay());
 
-                        cursor.moveToNext();
-                    }
-                }
-
-                List<ForecastDay> forecastDays = translateToForecastDay(forecastDayRows);
-
-                if (forecastDays == null || forecastDays.size() == 0 || forecastDayRows.get(0).getZipCode() == null || forecastDayRows.get(0).getZipCode().equals(""))
-                    e.onError(new WeatherDataNotFoundException("No rows returned from DB query"));
-                else
-                {
-                    e.onSuccess(new WeatherData(forecastDays, forecastDays.get(0).getDate(), weatherLocation));
+                    cursor.moveToNext();
                 }
             }
 
+            List<ForecastDay> forecastDays = translateToForecastDay(forecastDayRows);
+
+            if (forecastDays == null || forecastDays.size() == 0 || forecastDayRows.get(0).getZipCode() == null || forecastDayRows.get(0).getZipCode().equals(""))
+                e.onError(new WeatherDataNotFoundException("No rows returned from DB query"));
+            else
+            {
+                e.onSuccess(new WeatherData(forecastDays, forecastDays.get(0).getDate(), weatherLocation));
+            }
         }).subscribeOn(Schedulers.io());
     }
 
@@ -142,14 +133,10 @@ public class WeatherDataDAOSQLiteImpl implements WeatherDataDAO
     @Override
     public Completable deleteWeatherData(final SQLiteDatabase database)
     {
-        return Completable.create(new CompletableOnSubscribe()
+        return Completable.create(e ->
         {
-            @Override
-            public void subscribe(@NonNull CompletableEmitter e) throws Exception
-            {
-                database.delete(ColdsnapDbSchema.ForecastDayTable.NAME, null, null);
-                e.onComplete();
-            }
+            database.delete(ColdsnapDbSchema.ForecastDayTable.NAME, null, null);
+            e.onComplete();
         }).subscribeOn(Schedulers.io());
     }
 

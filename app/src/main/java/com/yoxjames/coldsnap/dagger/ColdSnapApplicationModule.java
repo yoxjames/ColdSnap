@@ -22,9 +22,7 @@ package com.yoxjames.coldsnap.dagger;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.preference.PreferenceManager;
-
 
 import com.yoxjames.coldsnap.db.ColdSnapDBHelper;
 import com.yoxjames.coldsnap.db.ForecastDayCursorWrapper;
@@ -43,7 +41,6 @@ import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.TemperatureFormatterImpl;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapterImpl;
-import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.service.location.GPSLocationService;
 import com.yoxjames.coldsnap.service.location.GPSLocationServiceImpl;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
@@ -52,8 +49,6 @@ import com.yoxjames.coldsnap.service.plant.PlantService;
 import com.yoxjames.coldsnap.service.plant.PlantServiceImpl;
 import com.yoxjames.coldsnap.service.weather.WeatherService;
 import com.yoxjames.coldsnap.service.weather.WeatherServiceImpl;
-
-import java.net.URL;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -81,14 +76,7 @@ class ColdSnapApplicationModule
     @Provides
     static WundergroundURLFactory provideWundergroundURLFactory()
     {
-        return new WundergroundURLFactory()
-        {
-            @Override
-            public URL create(WeatherLocation weatherLocation)
-            {
-                return HTTPWeatherServiceWUImpl.getAbsoluteUrl(weatherLocation.getZipCode());
-            }
-        };
+        return weatherLocation -> HTTPWeatherServiceWUImpl.getAbsoluteUrl(weatherLocation.getZipCode());
     }
 
     @Provides
@@ -120,14 +108,7 @@ class ColdSnapApplicationModule
     @Provides
     static PlantCursorWrapper.Factory provideplantCursorWrapperFactory()
     {
-        return new PlantCursorWrapper.Factory()
-        {
-            @Override
-            public PlantCursorWrapper create(Cursor cursor)
-            {
-                return new PlantCursorWrapper(cursor);
-            }
-        };
+        return cursor -> new PlantCursorWrapper(cursor);
     }
 
     @Provides
@@ -146,14 +127,7 @@ class ColdSnapApplicationModule
     @Provides
     static ForecastDayCursorWrapper.Factory provideForecastDayCursorWrapperFactory()
     {
-        return new ForecastDayCursorWrapper.Factory()
-        {
-            @Override
-            public ForecastDayCursorWrapper create(Cursor cursor)
-            {
-                return new ForecastDayCursorWrapper(cursor);
-            }
-        };
+        return cursor -> new ForecastDayCursorWrapper(cursor);
     }
 
     @Provides
@@ -165,14 +139,7 @@ class ColdSnapApplicationModule
     @Provides
     static GoogleLocationURLFactory provideGoogleLocationURLFactory()
     {
-        return new GoogleLocationURLFactory()
-        {
-            @Override
-            public URL create(final double lat, final double lon)
-            {
-                return HTTPGeolocationServiceGoogleImpl.getAbsoluteUrl(lat, lon);
-            }
-        };
+        return (lat, lon) -> HTTPGeolocationServiceGoogleImpl.getAbsoluteUrl(lat, lon);
     }
 
     @Provides

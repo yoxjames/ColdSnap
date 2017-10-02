@@ -23,6 +23,10 @@ import java.util.UUID;
 
 public interface PlantListItemView
 {
+    /**
+     * Shows the emoticon vs just showing the progress bar (base state).
+     */
+    void showView();
     void setPlantName(String plantName);
     void setPlantScientificName(String scientificName);
     void setStatus(String status);

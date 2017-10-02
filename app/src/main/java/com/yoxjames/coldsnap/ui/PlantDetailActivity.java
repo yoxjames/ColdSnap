@@ -41,7 +41,7 @@ import javax.inject.Inject;
 
 public class PlantDetailActivity extends AppCompatActivity implements PlantDetailPagerView
 {
-    private static final String PLANT_UUID_ID = "com.example.yoxjames.coldsnap.ui";
+    private static final String PLANT_UUID_ID = "com.yoxjames.coldsnap.ui";
 
     private FragmentManager fragmentManager;
     private UUID plantUUID;

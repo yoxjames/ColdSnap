@@ -19,10 +19,7 @@
 
 package com.yoxjames.coldsnap.ui.presenter;
 
-import android.util.Log;
-
 import com.yoxjames.coldsnap.model.Plant;
-import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.service.location.GPSLocationService;
@@ -33,17 +30,17 @@ import com.yoxjames.coldsnap.ui.view.PlantListView;
 import com.yoxjames.coldsnap.util.LOG;
 
 import java.security.NoSuchProviderException;
-import java.security.ProviderException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
+
 import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.observers.DisposableObserver;
 
-import static com.yoxjames.coldsnap.model.Temperature.*;
-import static com.yoxjames.coldsnap.model.Temperature.COMPARISON.*;
+import static com.yoxjames.coldsnap.model.Temperature.COMPARISON;
 
 public class PlantListPresenterImpl implements PlantListPresenter
 
@@ -103,6 +100,7 @@ public class PlantListPresenterImpl implements PlantListPresenter
                     view.setStatus("\uD83D\uDE10"); // Neutral Face
                     break;
             }
+            view.showView();
         }
     }
 
@@ -145,14 +143,10 @@ public class PlantListPresenterImpl implements PlantListPresenter
 
         disposables.add(weatherService.getCurrentForecastData()
                 .subscribe(
-                        new Consumer<WeatherData>()
-                        { // Success
-                            @Override
-                            public void accept(@NonNull WeatherData weatherData) throws Exception
-                            {
-                                PlantListPresenterImpl.this.weatherData = weatherData;
-                                view.notifyDataChange();
-                            }
+                        weatherData1 ->
+                        {
+                            PlantListPresenterImpl.this.weatherData = weatherData1;
+                            view.notifyDataChange();
                         },
                         new Consumer<Throwable>()
                         { // Failure
@@ -179,14 +173,10 @@ public class PlantListPresenterImpl implements PlantListPresenter
                             {
                                 disposables.add(weatherService.getCurrentForecastData()
                                         .subscribe(
-                                                new Consumer<WeatherData>()
-                                                { // Success
-                                                    @Override
-                                                    public void accept(@NonNull WeatherData weatherData) throws Exception
-                                                    {
-                                                        PlantListPresenterImpl.this.weatherData = weatherData;
-                                                        view.notifyDataChange();
-                                                    }
+                                                weatherData1 ->
+                                                {
+                                                    PlantListPresenterImpl.this.weatherData = weatherData1;
+                                                    view.notifyDataChange();
                                                 },
                                                 new Consumer<Throwable>()
                                                 { // Failure

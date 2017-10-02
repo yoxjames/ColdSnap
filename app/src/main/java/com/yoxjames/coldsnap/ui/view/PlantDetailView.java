@@ -26,6 +26,12 @@ package com.yoxjames.coldsnap.ui.view;
 public interface PlantDetailView
 {
     /**
+     * Shows the view. This should be done once all appropriate binding is done. Prevents a "null"
+     * view from being shown.
+     */
+    void showView();
+
+    /**
      * Sets the plant name.
      *
      * @param name Name to set the plant to.

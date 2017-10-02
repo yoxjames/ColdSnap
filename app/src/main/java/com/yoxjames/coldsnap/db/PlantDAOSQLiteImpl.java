@@ -33,16 +33,11 @@ import javax.inject.Singleton;
 
 import dagger.Lazy;
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -64,27 +59,23 @@ public class PlantDAOSQLiteImpl implements PlantDAO
     @Override
     public Observable<Plant> getPlants(final SQLiteDatabase database)
     {
-        return Observable.create(new ObservableOnSubscribe<Plant>()
+        return Observable.create((ObservableOnSubscribe<Plant>) e ->
         {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<Plant> e) throws Exception
-            {
-                final PlantCursorWrapper cursor = queryPlantData(database, null, null);
+            final PlantCursorWrapper cursor = queryPlantData(database, null, null);
 
-                try
+            try
+            {
+                cursor.moveToFirst();
+                while (!cursor.isAfterLast())
                 {
-                    cursor.moveToFirst();
-                    while (!cursor.isAfterLast())
-                    {
-                        e.onNext(cursor.getPlant());
-                        cursor.moveToNext();
-                    }
+                    e.onNext(cursor.getPlant());
+                    cursor.moveToNext();
                 }
-                finally
-                {
-                    cursor.close();
-                    e.onComplete();
-                }
+            }
+            finally
+            {
+                cursor.close();
+                e.onComplete();
             }
         })
                 .subscribeOn(Schedulers.io())
@@ -94,17 +85,13 @@ public class PlantDAOSQLiteImpl implements PlantDAO
     @Override
     public Single<Plant> getPlant(final SQLiteDatabase database, final UUID plantUUID)
     {
-        return Single.create(new SingleOnSubscribe<Plant>()
+        return Single.create((SingleOnSubscribe<Plant>) e ->
         {
-            @Override
-            public void subscribe(@NonNull SingleEmitter<Plant> e) throws Exception
-            {
-                final PlantCursorWrapper cursor = queryPlantData(database, "plant_uuid = ?", new String[] { plantUUID.toString() });
-                if (cursor.moveToFirst())
-                    e.onSuccess(cursor.getPlant());
-                else
-                    e.onError(new IllegalArgumentException("UUID " + plantUUID + " not found."));
-            }
+            final PlantCursorWrapper cursor = queryPlantData(database, "plant_uuid = ?", new String[] { plantUUID.toString() });
+            if (cursor.moveToFirst())
+                e.onSuccess(cursor.getPlant());
+            else
+                e.onError(new IllegalArgumentException("UUID " + plantUUID + " not found."));
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -113,22 +100,18 @@ public class PlantDAOSQLiteImpl implements PlantDAO
     @Override
     public Completable addPlant(final SQLiteDatabase database, final Plant plant)
     {
-        return Completable.create(new CompletableOnSubscribe()
+        return Completable.create(e ->
         {
-            @Override
-            public void subscribe(@NonNull CompletableEmitter e) throws Exception
-            {
-                final ContentValues values = contentValuesProvider.get().get();
+            final ContentValues values = contentValuesProvider.get().get();
 
-                values.put(ColdsnapDbSchema.PlantTable.Cols.UUID, plant.getUuid().toString());
-                values.put(ColdsnapDbSchema.PlantTable.Cols.NAME, plant.getName());
-                values.put(ColdsnapDbSchema.PlantTable.Cols.SCIENTIFIC_NAME, plant.getScientificName());
-                values.put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, plant.getMinimumTolerance().getDegreesKelvin());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.UUID, plant.getUuid().toString());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.NAME, plant.getName());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.SCIENTIFIC_NAME, plant.getScientificName());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, plant.getMinimumTolerance().getDegreesKelvin());
 
-                database.insert(ColdsnapDbSchema.PlantTable.NAME, null, values);
+            database.insert(ColdsnapDbSchema.PlantTable.NAME, null, values);
 
-                e.onComplete();
-            }
+            e.onComplete();
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -137,18 +120,14 @@ public class PlantDAOSQLiteImpl implements PlantDAO
     @Override
     public Completable deletePlant(final SQLiteDatabase database, final UUID plantUUID)
     {
-        return Completable.create(new CompletableOnSubscribe()
+        return Completable.create(e ->
         {
-            @Override
-            public void subscribe(@NonNull CompletableEmitter e) throws Exception
-            {
-                final String plantUUIDString = plantUUID.toString();
+            final String plantUUIDString = plantUUID.toString();
 
-                database.delete(ColdsnapDbSchema.PlantTable.NAME, ColdsnapDbSchema.PlantTable.Cols.UUID + " = ?",
-                        new String[] { plantUUIDString });
+            database.delete(ColdsnapDbSchema.PlantTable.NAME, ColdsnapDbSchema.PlantTable.Cols.UUID + " = ?",
+                    new String[] { plantUUIDString });
 
-                e.onComplete();
-            }
+            e.onComplete();
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
@@ -157,25 +136,21 @@ public class PlantDAOSQLiteImpl implements PlantDAO
     @Override
     public Completable updatePlant(final SQLiteDatabase database, final UUID plantUUID, final Plant newPlant)
     {
-        return Completable.create(new CompletableOnSubscribe()
+        return Completable.create(e ->
         {
-            @Override
-            public void subscribe(@NonNull CompletableEmitter e) throws Exception
-            {
-                final String plantUUIDstring = plantUUID.toString();
-                final ContentValues values = contentValuesProvider.get().get();
-                if (!plantUUID.equals(newPlant.getUuid()))
-                    throw new IllegalArgumentException("plantUUID must be the same UUID as newPlant's UUID");
+            final String plantUUIDstring = plantUUID.toString();
+            final ContentValues values = contentValuesProvider.get().get();
+            if (!plantUUID.equals(newPlant.getUuid()))
+                throw new IllegalArgumentException("plantUUID must be the same UUID as newPlant's UUID");
 
-                values.put(ColdsnapDbSchema.PlantTable.Cols.UUID, newPlant.getUuid().toString());
-                values.put(ColdsnapDbSchema.PlantTable.Cols.NAME, newPlant.getName());
-                values.put(ColdsnapDbSchema.PlantTable.Cols.SCIENTIFIC_NAME, newPlant.getScientificName());
-                values.put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, newPlant.getMinimumTolerance().getDegreesKelvin());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.UUID, newPlant.getUuid().toString());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.NAME, newPlant.getName());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.SCIENTIFIC_NAME, newPlant.getScientificName());
+            values.put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, newPlant.getMinimumTolerance().getDegreesKelvin());
 
-                database.update(ColdsnapDbSchema.PlantTable.NAME, values, ColdsnapDbSchema.PlantTable.Cols.UUID + " = ?",
-                        new String[] { plantUUIDstring });
-                e.onComplete();
-            }
+            database.update(ColdsnapDbSchema.PlantTable.NAME, values, ColdsnapDbSchema.PlantTable.Cols.UUID + " = ?",
+                    new String[] { plantUUIDstring });
+            e.onComplete();
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
