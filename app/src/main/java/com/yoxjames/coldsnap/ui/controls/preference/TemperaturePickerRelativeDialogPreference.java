@@ -66,8 +66,7 @@ public class TemperaturePickerRelativeDialogPreference extends DialogPreference
     public void onDialogClosed(boolean positiveResult)
     {
         if (positiveResult)
-        {
             persistFloat((float) temperaturePickerRelative.getKelvinValue());
-        }
+
     }
 }

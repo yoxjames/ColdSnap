@@ -25,22 +25,26 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import com.yoxjames.coldsnap.db.ColdSnapDBHelper;
-import com.yoxjames.coldsnap.db.ForecastDayCursorWrapper;
-import com.yoxjames.coldsnap.db.PlantCursorWrapper;
 import com.yoxjames.coldsnap.db.PlantDAO;
-import com.yoxjames.coldsnap.db.PlantDAOSQLiteImpl;
+import com.yoxjames.coldsnap.db.PlantDAOImpl;
+import com.yoxjames.coldsnap.db.PlantImageDAOImpl;
 import com.yoxjames.coldsnap.db.WeatherDataDAO;
 import com.yoxjames.coldsnap.db.WeatherDataDAOSQLiteImpl;
-import com.yoxjames.coldsnap.http.HTTPGeolocationService;
-import com.yoxjames.coldsnap.http.HTTPWeatherService;
-import com.yoxjames.coldsnap.http.google.GoogleLocationURLFactory;
-import com.yoxjames.coldsnap.http.google.HTTPGeolocationServiceGoogleImpl;
-import com.yoxjames.coldsnap.http.wu.HTTPWeatherServiceWUImpl;
-import com.yoxjames.coldsnap.http.wu.WundergroundURLFactory;
+import com.yoxjames.coldsnap.db.image.PlantImageRowCursorWrapper;
+import com.yoxjames.coldsnap.db.image.PlantImageRowDAO;
+import com.yoxjames.coldsnap.db.image.PlantImageRowDAOSQLiteImpl;
+import com.yoxjames.coldsnap.db.plant.PlantRowCursorWrapper;
+import com.yoxjames.coldsnap.db.plant.PlantRowDAO;
+import com.yoxjames.coldsnap.db.plant.PlantRowDAOSQLiteImpl;
+import com.yoxjames.coldsnap.db.weather.ForecastDayRowCursorWrapper;
+import com.yoxjames.coldsnap.http.HTTPForecastService;
+import com.yoxjames.coldsnap.http.openweathermap.HTTPForecastServiceOWMImpl;
+import com.yoxjames.coldsnap.http.openweathermap.OpenWeatherMapHTTPService;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.TemperatureFormatterImpl;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapterImpl;
+import com.yoxjames.coldsnap.service.image.ImageService;
 import com.yoxjames.coldsnap.service.location.GPSLocationService;
 import com.yoxjames.coldsnap.service.location.GPSLocationServiceImpl;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
@@ -56,29 +60,14 @@ import javax.inject.Singleton;
 import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
+import okhttp3.OkHttpClient;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 @Module
 class ColdSnapApplicationModule
 {
-    @Provides
-    @Singleton
-    static WeatherService provideWeatherService(WeatherDataDAO dbService, HTTPWeatherService httpWeatherService, ColdSnapDBHelper dbHelper, WeatherLocationService weatherLocationService)
-    {
-        return new WeatherServiceImpl(dbService, httpWeatherService, dbHelper, weatherLocationService);
-    }
-
-    @Provides
-    static HTTPWeatherService provideHTTPForecastService(WundergroundURLFactory urlFactory, SharedPreferences sharedPreferences)
-    {
-        return new HTTPWeatherServiceWUImpl(urlFactory, sharedPreferences);
-    }
-
-    @Provides
-    static WundergroundURLFactory provideWundergroundURLFactory()
-    {
-        return weatherLocation -> HTTPWeatherServiceWUImpl.getAbsoluteUrl(weatherLocation.getZipCode());
-    }
-
     @Provides
     static WeatherLocationService provideWeatherLocationService(SharedPreferences sharedPreferences)
     {
@@ -92,27 +81,42 @@ class ColdSnapApplicationModule
     }
 
     @Provides
-    @Singleton
-    static WeatherDataDAO provideWeatherDataDAO(Provider<Lazy<ContentValues>> lazyProvider, SharedPreferences sharedPreferences, Provider<Lazy<ForecastDayCursorWrapper.Factory>> cursorWrapperFactory)
+    static WeatherDataDAO provideWeatherDataDAO(Provider<Lazy<ContentValues>> lazyProvider, SharedPreferences sharedPreferences, Provider<Lazy<ForecastDayRowCursorWrapper.Factory>> cursorWrapperFactory, ColdSnapDBHelper coldSnapDBHelper)
     {
-        return new WeatherDataDAOSQLiteImpl(lazyProvider, cursorWrapperFactory, sharedPreferences);
+        return new WeatherDataDAOSQLiteImpl(lazyProvider, cursorWrapperFactory, sharedPreferences, coldSnapDBHelper);
     }
 
     @Provides
-    @Singleton
-    static PlantDAO providePlantDAO(Provider<Lazy<ContentValues>> lazyProvider, Provider<Lazy<PlantCursorWrapper.Factory>> plantCursorWrapperFactory)
+    static PlantRowDAO providePlantRowDAO(Provider<Lazy<ContentValues>> lazyProvider, Provider<Lazy<PlantRowCursorWrapper.Factory>> plantCursorWrapperFactory, ColdSnapDBHelper dbHelper)
     {
-        return new PlantDAOSQLiteImpl(lazyProvider, plantCursorWrapperFactory);
+        return new PlantRowDAOSQLiteImpl(lazyProvider, plantCursorWrapperFactory, dbHelper);
     }
 
     @Provides
-    static PlantCursorWrapper.Factory provideplantCursorWrapperFactory()
+    static PlantDAO providePlantDAO(PlantRowDAO plantRowDAO)
     {
-        return cursor -> new PlantCursorWrapper(cursor);
+        return new PlantDAOImpl(plantRowDAO);
     }
 
     @Provides
-    @Singleton
+    static PlantImageRowCursorWrapper.Factory providePlantImageRowCursorWrapperFactory()
+    {
+        return PlantImageRowCursorWrapper::new;
+    }
+
+    @Provides
+    static PlantImageRowDAO providePlantImageRowDAO(Provider<Lazy<ContentValues>> lazyProvider, Provider<Lazy<PlantImageRowCursorWrapper.Factory>> factory, ColdSnapDBHelper dbHelper)
+    {
+        return new PlantImageRowDAOSQLiteImpl(lazyProvider, factory, dbHelper);
+    }
+
+    @Provides
+    static PlantRowCursorWrapper.Factory provideplantCursorWrapperFactory()
+    {
+        return PlantRowCursorWrapper::new;
+    }
+
+    @Provides
     static ColdSnapDBHelper provideConditionsDBHelper(Context context)
     {
         return new ColdSnapDBHelper(context);
@@ -125,48 +129,69 @@ class ColdSnapApplicationModule
     }
 
     @Provides
-    static ForecastDayCursorWrapper.Factory provideForecastDayCursorWrapperFactory()
+    static ForecastDayRowCursorWrapper.Factory provideForecastDayCursorWrapperFactory()
     {
-        return cursor -> new ForecastDayCursorWrapper(cursor);
+        return ForecastDayRowCursorWrapper::new;
     }
 
     @Provides
-    static HTTPGeolocationService provideHTTPGeolocationService(GoogleLocationURLFactory factory)
-    {
-        return new HTTPGeolocationServiceGoogleImpl(factory);
-    }
-
-    @Provides
-    static GoogleLocationURLFactory provideGoogleLocationURLFactory()
-    {
-        return (lat, lon) -> HTTPGeolocationServiceGoogleImpl.getAbsoluteUrl(lat, lon);
-    }
-
-    @Provides
-    @Singleton
     static TemperatureFormatter provideTemperatureFormatter(SharedPreferences sharedPreferences)
     {
         return new TemperatureFormatterImpl(sharedPreferences);
     }
 
     @Provides
-    @Singleton
     static TemperatureValueAdapter provideTemperatureValueAdapter(SharedPreferences sharedPreferences)
     {
         return new TemperatureValueAdapterImpl(sharedPreferences);
     }
 
     @Provides
-    @Singleton
-    static PlantService provideAsyncPlantService(ColdSnapDBHelper coldSnapDBHelper, PlantDAO plantDAO)
+    static PlantService provideAsyncPlantService(PlantDAO plantDAO)
     {
-        return new PlantServiceImpl(coldSnapDBHelper, plantDAO);
+        return new PlantServiceImpl(plantDAO);
+    }
+
+    @Provides
+    static GPSLocationService provideGPSLocationService()
+    {
+        return new GPSLocationServiceImpl();
+    }
+
+    @Provides
+    static WeatherService provideWeatherService(WeatherDataDAO weatherDataDAO, HTTPForecastService httpForecastService)
+    {
+        return new WeatherServiceImpl(weatherDataDAO, httpForecastService);
     }
 
     @Provides
     @Singleton
-    static GPSLocationService provideGPSLocationService(Context context, HTTPGeolocationService geolocationService, WeatherLocationService weatherLocationService)
+    static HTTPForecastService provideHTTPForecastService(OpenWeatherMapHTTPService owmService, SharedPreferences sharedPreferences)
     {
-        return new GPSLocationServiceImpl(context, geolocationService, weatherLocationService);
+        return new HTTPForecastServiceOWMImpl(owmService, sharedPreferences);
+    }
+
+    @Provides
+    @Singleton
+    static OpenWeatherMapHTTPService provideOWMhttpService()
+    {
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://api.openweathermap.org/data/2.5/")
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(httpClient.build())
+                .build();
+
+        return retrofit.create(OpenWeatherMapHTTPService.class);
+    }
+
+    @Provides
+    @Singleton
+    static ImageService provideImageService(PlantImageRowDAO plantImageRowDAO)
+    {
+        return new PlantImageDAOImpl(plantImageRowDAO);
     }
 }
+

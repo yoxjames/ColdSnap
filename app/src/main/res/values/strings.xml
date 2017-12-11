@@ -73,4 +73,5 @@
     <string name="wunderground">WunderGround</string>
     <string name="icons8">Icons8</string>
     <string name="powered_by">Powered By</string>
+    <string name="connection_failure">Connection Failure</string>
 </resources>

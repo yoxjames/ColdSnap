@@ -24,127 +24,153 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.yoxjames.coldsnap.model.ForecastDay;
+import com.yoxjames.coldsnap.db.weather.ForecastDayRowCursorWrapper;
+import com.yoxjames.coldsnap.db.weather.ForecastHourRow;
+import com.yoxjames.coldsnap.model.ForecastHour;
+import com.yoxjames.coldsnap.model.ForecastHourUtil;
 import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherDataNotFoundException;
 import com.yoxjames.coldsnap.model.WeatherLocation;
+import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
+import org.threeten.bp.Instant;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import dagger.Lazy;
+import dagger.Reusable;
 import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.SingleOnSubscribe;
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
  * Implementation for WeatherDataDAO. This is implemented using SQLite for Android.
  */
-@Singleton
+@Reusable
 public class WeatherDataDAOSQLiteImpl implements WeatherDataDAO
 {
     private final Provider<Lazy<ContentValues>> contentValuesProvider;
-    private final Provider<Lazy<ForecastDayCursorWrapper.Factory>> cursorWrapperFactoryProvider;
+    private final Provider<Lazy<ForecastDayRowCursorWrapper.Factory>> cursorWrapperFactoryProvider;
     private final SharedPreferences sharedPreferences;
+    private final ColdSnapDBHelper coldSnapDBHelper;
 
     @Inject
-    public WeatherDataDAOSQLiteImpl(Provider<Lazy<ContentValues>> contentValuesProvider, Provider<Lazy<ForecastDayCursorWrapper.Factory>> cursorWrapperFactoryProvider, SharedPreferences sharedPreferences)
+    public WeatherDataDAOSQLiteImpl(Provider<Lazy<ContentValues>> contentValuesProvider, Provider<Lazy<ForecastDayRowCursorWrapper.Factory>> cursorWrapperFactoryProvider, SharedPreferences sharedPreferences, ColdSnapDBHelper coldSnapDBHelper)
     {
         this.contentValuesProvider = contentValuesProvider;
         this.cursorWrapperFactoryProvider = cursorWrapperFactoryProvider;
         this.sharedPreferences = sharedPreferences;
+        this.coldSnapDBHelper = coldSnapDBHelper;
     }
 
     @Override
-    public Completable saveWeatherData(final SQLiteDatabase database, final WeatherData weatherData)
+    public Completable saveWeatherData(final WeatherData weatherData)
     {
-        return Completable.create(e ->
+        return Completable.fromRunnable(() ->
         {
+            final SQLiteDatabase database = coldSnapDBHelper.getWritableDatabase();
             ContentValues contentValues = contentValuesProvider.get().get();
-            for (ForecastDay forecastDay : weatherData.getForecastDays())
+            for (ForecastHour forecastHour : weatherData.getForecastHours())
             {
-                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.UUID, forecastDay.getUUID().toString());
-                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.DATE, forecastDay.toString());
-                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.FETCH_DATE, forecastDay.getDate().getTime());
-                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.HIGH_TEMP_K, forecastDay.getHighTemperature().getDegreesKelvin());
-                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.LOW_TEMP_K, forecastDay.getLowTemperature().getDegreesKelvin());
-                contentValues.put(ColdsnapDbSchema.ForecastDayTable.Cols.ZIPCODE, weatherData.getWeatherLocation().getZipCode());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.UUID, forecastHour.getUuid().toString());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.FETCH_INSTANCE, weatherData.getSyncInstant().getEpochSecond());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.HOUR_INSTANCE, forecastHour.getHour().getEpochSecond());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.TEMP_K, forecastHour.getTemperature().getDegreesKelvin());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.FUZZ_K, forecastHour.getTemperature().getFuzz());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.LAT, forecastHour.getLat());
+                contentValues.put(ColdsnapDbSchema.ForecastHourTable.Cols.LON, forecastHour.getLon());
 
-                database.insert(ColdsnapDbSchema.ForecastDayTable.NAME, null, contentValues);
+                database.insert(ColdsnapDbSchema.ForecastHourTable.NAME, null, contentValues);
             }
 
-            e.onComplete();
+            final SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
+
+            preferenceEditor.putString(CSPreferencesFragment.LOCATION_STRING, weatherData.getWeatherLocation().getPlaceString());
+            if (!preferenceEditor.commit())
+                throw new IllegalStateException("Saving preferences failed");
+
         }).subscribeOn(Schedulers.io());
     }
 
     @Override
-    public Single<WeatherData> getWeatherData(final SQLiteDatabase database, final WeatherLocation weatherLocation)
+    public Observable<WeatherData> getWeatherData(final SimpleWeatherLocation weatherLocation)
     {
-        return Single.create((SingleOnSubscribe<WeatherData>) e ->
-        {
-            // Read back raw data from the DB
-            List<ForecastDayRow> forecastDayRows = new ArrayList<>();
 
-            try (ForecastDayCursorWrapper cursor = queryWeatherData(database, null, null))
+        return Observable.fromCallable(() ->
+        {
+            final SQLiteDatabase database = coldSnapDBHelper.getReadableDatabase();
+            // Read back raw data from the DB
+            List<ForecastHourRow> forecastDayRows = new ArrayList<>();
+
+            try (ForecastDayRowCursorWrapper cursor = queryWeatherData(database,
+                    "lat = ? AND lon = ?",
+                    new String[] { String.valueOf(weatherLocation.getLat()), String.valueOf(weatherLocation.getLon()) }))
             {
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast())
                 {
                     forecastDayRows.add(cursor.getForecastDay());
-
                     cursor.moveToNext();
                 }
             }
 
-            List<ForecastDay> forecastDays = translateToForecastDay(forecastDayRows);
+            final String locationString = sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "");
 
-            if (forecastDays == null || forecastDays.size() == 0 || forecastDayRows.get(0).getZipCode() == null || forecastDayRows.get(0).getZipCode().equals(""))
-                e.onError(new WeatherDataNotFoundException("No rows returned from DB query"));
+            List<ForecastHour> forecastHours = translateToForecastHour(forecastDayRows);
+
+            if (forecastHours == null || forecastHours.size() == 0)
+                throw new WeatherDataNotFoundException("No rows returned from DB query");
             else
             {
-                e.onSuccess(new WeatherData(forecastDays, forecastDays.get(0).getDate(), weatherLocation));
+                ForecastHourUtil.HighLowPair highLowData = ForecastHourUtil.getDailyHighLow(forecastHours);
+
+                return new WeatherData(forecastHours,
+                        Instant.ofEpochSecond(forecastDayRows.get(0).getSyncInstant()),
+                        new WeatherLocation(locationString, forecastDayRows.get(0).getLat(), forecastDayRows.get(0).getLon()),
+                        highLowData.getDailyLow(),
+                        highLowData.getDailyHigh());
             }
         }).subscribeOn(Schedulers.io());
     }
 
-    private List<ForecastDay> translateToForecastDay(List<ForecastDayRow> rows)
+    private List<ForecastHour> translateToForecastHour(List<ForecastHourRow> rows)
     {
-        final double fuzz = sharedPreferences.getFloat(CSPreferencesFragment.WEATHER_DATA_FUZZ,0f);
-        List<ForecastDay> forecastDays = new ArrayList<>();
-        for (ForecastDayRow row : rows)
-        {
-            Temperature highTemp = new Temperature(row.getHighTempK(), fuzz);
-            Temperature lowTemp = new Temperature(row.getLowTempK(), fuzz);
+        List<ForecastHour> forecastHours = new ArrayList<>();
 
-            forecastDays.add(new ForecastDay(row.getDate(), highTemp, lowTemp, new Date(row.getSyncDateTime()), UUID.fromString(row.getForecastUUID())));
-        }
-        return forecastDays;
+        final double fuzzK = sharedPreferences.getFloat(CSPreferencesFragment.WEATHER_DATA_FUZZ, 0.0f);
+
+        for (ForecastHourRow row : rows)
+            forecastHours.add(new ForecastHour(Instant.ofEpochSecond(row.getHourInstant()),
+                    new Temperature(row.getTempK(), fuzzK),
+                    UUID.fromString(row.getForecastUUID()),
+                    row.getLat(),
+                    row.getLon()));
+
+        return forecastHours;
     }
 
     @Override
-    public Completable deleteWeatherData(final SQLiteDatabase database)
+    public Completable deleteWeatherData()
     {
-        return Completable.create(e ->
-        {
-            database.delete(ColdsnapDbSchema.ForecastDayTable.NAME, null, null);
-            e.onComplete();
-        }).subscribeOn(Schedulers.io());
+        return Completable.fromRunnable(() ->
+                {
+                    final SQLiteDatabase database = coldSnapDBHelper.getWritableDatabase();
+                    database.delete(ColdsnapDbSchema.ForecastHourTable.NAME, null, null);
+                })
+                .subscribeOn(Schedulers.io());
     }
 
-    private ForecastDayCursorWrapper queryWeatherData(SQLiteDatabase database, String whereClause, String[] whereArgs)
+    private ForecastDayRowCursorWrapper queryWeatherData(SQLiteDatabase database, String whereClause, String[] whereArgs)
     {
-
         Cursor cursor = database.query(
-                ColdsnapDbSchema.ForecastDayTable.NAME,
+                ColdsnapDbSchema.ForecastHourTable.NAME,
                 null,
                 whereClause,
                 whereArgs,

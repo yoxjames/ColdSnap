@@ -19,63 +19,59 @@
 
 package com.yoxjames.coldsnap.service.plant;
 
-import com.yoxjames.coldsnap.db.ColdSnapDBHelper;
 import com.yoxjames.coldsnap.db.PlantDAO;
 import com.yoxjames.coldsnap.model.Plant;
+import com.yoxjames.coldsnap.service.ActionReply;
 
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-import io.reactivex.Completable;
+import dagger.Reusable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 
 /**
  * Created by yoxjames on 8/26/17.
  */
 
-@Singleton
+@Reusable
 public class PlantServiceImpl implements PlantService
 {
     private final PlantDAO plantDAO;
-    private final ColdSnapDBHelper coldSnapDBHelper;
 
     @Inject
-    public PlantServiceImpl(ColdSnapDBHelper coldSnapDBHelper, PlantDAO plantDAO)
+    public PlantServiceImpl(PlantDAO plantDAO)
     {
         this.plantDAO = plantDAO;
-        this.coldSnapDBHelper = coldSnapDBHelper;
     }
 
     @Override
     public Observable<Plant> getPlants()
     {
-        return plantDAO.getPlants(coldSnapDBHelper.getReadableDatabase()).share();
+        return plantDAO.getPlants();
     }
 
     @Override
-    public Single<Plant> getPlant(UUID plantUUID)
+    public Observable<Plant> getPlant(UUID plantUUID)
     {
-        return plantDAO.getPlant(coldSnapDBHelper.getReadableDatabase(), plantUUID);
+        return plantDAO.getPlant(plantUUID);
     }
 
     @Override
-    public Completable addPlant(Plant plant)
+    public Observable<ActionReply> addPlant(Plant plant)
     {
-        return plantDAO.addPlant(coldSnapDBHelper.getWritableDatabase(), plant);
+        return plantDAO.addPlant(plant);
     }
 
     @Override
-    public Completable updatePlant(Plant plant)
+    public Observable<ActionReply> updatePlant(UUID oldPlantUUID, Plant newPlant)
     {
-        return plantDAO.updatePlant(coldSnapDBHelper.getWritableDatabase(), plant.getUuid(), plant);
+        return plantDAO.replacePlant(oldPlantUUID, newPlant);
     }
 
     @Override
-    public Completable deletePlant(Plant plant)
+    public Observable<ActionReply> deletePlant(UUID plantUUID)
     {
-        return plantDAO.deletePlant(coldSnapDBHelper.getWritableDatabase(), plant.getUuid());
+        return plantDAO.deletePlant(plantUUID);
     }
 }

@@ -25,10 +25,13 @@ import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import javax.inject.Inject;
 
+import dagger.Reusable;
+
 /**
  * Implementation of TemperatureFormatter that uses Android's SharedPreferences to determine
  * whether to show {@link Temperature} objects in either F or C.
  */
+@Reusable
 public class TemperatureFormatterImpl implements TemperatureFormatter
 {
     /*

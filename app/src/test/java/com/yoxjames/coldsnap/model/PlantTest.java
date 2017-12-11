@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -35,8 +36,9 @@ public class PlantTest
         final String testScientificName = "Junitis plantus";
         final Temperature testMinTemp = Temperature.newTemperatureFromF(32);
         final UUID testUUID = UUID.randomUUID();
+        final UUID mainImageUUID = UUID.randomUUID();
 
-        final Plant testPlant = new Plant(testName, testScientificName, testMinTemp, testUUID);
+        final Plant testPlant = new Plant(testName, testScientificName, testMinTemp, testUUID, mainImageUUID);
 
         assertEquals(testName, testPlant.getName());
         assertEquals(testScientificName, testPlant.getScientificName());
@@ -58,5 +60,6 @@ public class PlantTest
         assertEquals(defaultScientificName, testPlant.getScientificName());
         assertEquals(defaultMinTemp.compareTo(testPlant.getMinimumTolerance()), 0);
         assertNotNull(testPlant.getUuid());
+        assertNull(testPlant.getMainImageUUID());
     }
 }

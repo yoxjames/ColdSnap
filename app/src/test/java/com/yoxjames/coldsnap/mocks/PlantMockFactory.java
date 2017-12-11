@@ -19,11 +19,13 @@
 
 package com.yoxjames.coldsnap.mocks;
 
+import com.yoxjames.coldsnap.db.plant.PlantRow;
 import com.yoxjames.coldsnap.model.Plant;
 import com.yoxjames.coldsnap.model.Temperature;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class PlantMockFactory
 {
@@ -43,5 +45,27 @@ public class PlantMockFactory
     public static Plant getFreezeTenderPlant()
     {
         return new Plant("Tender Test", "Unitus tenderus", Temperature.newTemperatureFromF(32));
+    }
+
+    public static PlantRow getFreezeTolerantPlantRow()
+    {
+        return new PlantRow.Builder()
+                .uuid(UUID.randomUUID().toString())
+                .mainImageUUID(UUID.randomUUID().toString())
+                .name("Tolerant test")
+                .scientificName("Unitus tolerantus")
+                .coldThresholdK(Temperature.WATER_FREEZING_KELVIN - 10)
+                .build();
+    }
+
+    public static PlantRow getFreezeTenderPlantRow()
+    {
+        return new PlantRow.Builder()
+                .uuid(UUID.randomUUID().toString())
+                .mainImageUUID(UUID.randomUUID().toString())
+                .name("Tender test")
+                .scientificName("Unitus tenderus")
+                .coldThresholdK(Temperature.WATER_FREEZING_KELVIN + 10)
+                .build();
     }
 }

@@ -21,18 +21,16 @@ package com.yoxjames.coldsnap;
 
 import android.app.Application;
 
+import com.jakewharton.threetenabp.AndroidThreeTen;
 import com.yoxjames.coldsnap.dagger.ColdSnapInjector;
 import com.yoxjames.coldsnap.dagger.DaggerColdSnapInjector;
 import com.yoxjames.coldsnap.util.LOG;
 
 /**
- * Main ColdSnap Application class. Mainly used for Dagger implementation.
+ * Forecast ColdSnap Application class. Mainly used for Dagger implementation.
  */
 public class ColdSnapApplication extends Application
 {
-    // TODO: Figure out how to use Dagger properly.
-    //@Inject DispatchingAndroidInjector<Fragment> dispatchingAndroidInjector
-
     ColdSnapInjector injector;
 
     public ColdSnapApplication()
@@ -40,14 +38,12 @@ public class ColdSnapApplication extends Application
         LOG.androidLogger();
     }
 
-    /*
     @Override
     public void onCreate()
     {
         super.onCreate();
-        //DaggerColdSnapApplicationComponent.create().inject(this);
+        AndroidThreeTen.init(this);
     }
-    */
 
     /**
      * Gets the ColdSnapInjector which can then return submodules to inject each fragment or other
@@ -63,10 +59,4 @@ public class ColdSnapApplication extends Application
 
         return injector;
     }
-
-    /*@Override
-    public DispatchingAndroidInjector<Fragment> supportFragmentInjector()
-    {
-        return dispatchingAndroidInjector;
-    }*/
 }

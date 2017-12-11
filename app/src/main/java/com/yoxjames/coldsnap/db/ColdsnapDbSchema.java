@@ -29,18 +29,20 @@ public class ColdsnapDbSchema
     /**
      * Helper class for the forcast_day table.
      */
-    public static final class ForecastDayTable
+    public static final class ForecastHourTable
     {
-        public static final String NAME = "forecast_day";
+        public static final String NAME = "forecast_hour";
 
         public static final class Cols
         {
+            public static final String ID = "forecast_hour_id";
             public static final String UUID = "forecast_uuid";
-            public static final String FETCH_DATE = "fetch_date";
-            public static final String DATE = "date";
-            public static final String HIGH_TEMP_K = "high_temp_k";
-            public static final String LOW_TEMP_K = "low_temp_k";
-            public static final String ZIPCODE = "zipcode";
+            public static final String HOUR_INSTANCE = "hour_instance";
+            public static final String FETCH_INSTANCE = "fetch_instance";
+            public static final String TEMP_K = "temp_k";
+            public static final String FUZZ_K = "fuzz_k";
+            public static final String LAT = "lat";
+            public static final String LON = "lon";
         }
     }
 
@@ -53,10 +55,30 @@ public class ColdsnapDbSchema
 
         public static final class Cols
         {
+            public static final String ID = "plant_id";
             public static final String UUID = "plant_uuid";
             public static final String NAME = "name";
             public static final String SCIENTIFIC_NAME = "scientific_name";
             public static final String COLD_THRESHOLD_DEGREES = "cold_threshold_degrees";
+            public static final String MAIN_IMAGE_UUID = "main_image_uuid";
+        }
+    }
+
+    /**
+     * Helper class for the image table
+     */
+    public static final class ImageTable
+    {
+        public static final String NAME = "image";
+
+        public static final class Cols
+        {
+            public static final String ID = "image_id";
+            public static final String UUID = "image_uuid";
+            public static final String PLANT_UUID = "plant_uuid";
+            public static final String TITLE = "image_title";
+            public static final String IMAGE_FILENAME = "image_filename";
+            public static final String IMAGE_DATE = "image_date";
         }
     }
 }

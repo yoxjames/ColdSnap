@@ -18,7 +18,7 @@
   ~ along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<android.support.v7.widget.RecyclerView
+<com.yoxjames.coldsnap.ui.plantlist.PlantListRecyclerView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/plant_recycler_view"
     android:layout_width="match_parent"

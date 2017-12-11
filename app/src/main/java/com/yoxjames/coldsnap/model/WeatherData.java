@@ -19,7 +19,8 @@
 
 package com.yoxjames.coldsnap.model;
 
-import java.util.Date;
+import org.threeten.bp.Instant;
+
 import java.util.List;
 
 import javax.annotation.concurrent.Immutable;
@@ -29,43 +30,52 @@ import dagger.internal.Preconditions;
 /**
  * Created by James Yox on 4/8/17.
  *
- * Main POJO that will contain all weather data.
+ * Forecast POJO that will contain all weather data.
  */
 @Immutable
 public class WeatherData
 {
-    /* Stores the highs and lows of upcoming weather days */
-    private final List<ForecastDay> forecastDays;
-
-    /* Location data that this Weather Data is valid for */
+    private final List<ForecastHour> forecastHours;
     private final WeatherLocation weatherLocation;
+    private final Instant syncTime;
+    private final ForecastHour lowToday;
+    private final ForecastHour highToday;
 
-    /* Date this WeatherData was obtained */
-    private final Date syncDate;
-
-    public WeatherData(List<ForecastDay> forecastDays, Date syncDate, WeatherLocation weatherLocation)
+    public WeatherData(List<ForecastHour> forecastHours, Instant syncTime, WeatherLocation weatherLocation, ForecastHour lowToday, ForecastHour highToday)
     {
-        this.forecastDays = Preconditions.checkNotNull(forecastDays);
-        this.weatherLocation = weatherLocation;
-        if (forecastDays.size() == 0)
+        this.forecastHours = Preconditions.checkNotNull(forecastHours);
+        this.weatherLocation = Preconditions.checkNotNull(weatherLocation);
+        this.lowToday = Preconditions.checkNotNull(lowToday);
+        this.highToday = Preconditions.checkNotNull(highToday);
+        if (forecastHours.size() == 0)
             throw new IllegalStateException("No ForecastDay information in WeatherData");
 
-        this.syncDate = Preconditions.checkNotNull(syncDate);
+        this.syncTime = Preconditions.checkNotNull(syncTime);
     }
 
     public Temperature getTodayLow()
     {
-        return forecastDays.get(0).getLowTemperature();
+        return lowToday.getTemperature();
+    }
+
+    public Instant getTodayLowTime()
+    {
+        return lowToday.getHour();
     }
 
     public Temperature getTodayHigh()
     {
-        return forecastDays.get(0).getHighTemperature();
+        return highToday.getTemperature();
     }
 
-    public Date getSyncDate()
+    public Instant getTodayHighTime()
     {
-        return new Date(syncDate.getTime());
+        return highToday.getHour();
+    }
+
+    public Instant getSyncInstant()
+    {
+        return syncTime;
     }
 
     /**
@@ -76,12 +86,12 @@ public class WeatherData
      */
     public boolean isStale()
     {
-        return this.getForecastDays().size() <= 0 || (getSyncDate().getTime() + (2 * 60 * 1000)) <= (new Date().getTime());
+        return this.getForecastHours().size() <= 0 || (getSyncInstant().getEpochSecond() + 60 * 2) <= Instant.now().getEpochSecond();
     }
 
-    public List<ForecastDay> getForecastDays()
+    public List<ForecastHour> getForecastHours()
     {
-        return forecastDays;
+        return forecastHours;
     }
 
     public WeatherLocation getWeatherLocation()

@@ -19,7 +19,7 @@
 
 package com.yoxjames.coldsnap.dagger;
 
-import com.yoxjames.coldsnap.androidservice.ColdAlarm;
+import com.yoxjames.coldsnap.job.ColdAlarm;
 
 import dagger.Subcomponent;
 

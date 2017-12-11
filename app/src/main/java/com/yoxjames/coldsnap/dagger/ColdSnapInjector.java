@@ -20,7 +20,9 @@
 package com.yoxjames.coldsnap.dagger;
 
 import android.content.Context;
+
 import javax.inject.Singleton;
+
 import dagger.BindsInstance;
 import dagger.Component;
 
@@ -28,9 +30,8 @@ import dagger.Component;
 @Singleton
 public interface ColdSnapInjector
 {
-    WeatherPreviewBarSubcomponent weatherPreviewBarSubcomponent(WeatherPreviewBarViewModule weatherPreviewBarViewModule);
-    PlantListFragmentSubcomponent plantListFragmentSubcomponent(PlantListFragmentModule plantListFragmentModule);
     PlantDetailFragmentSubcomponent plantDetailFragmentSubcomponent(PlantDetailFragmentModule plantDetailFragmentModule);
+    MainActivitySubcomponent mainActivitySubcomponent(MainActivityModule module);
     CSPreferencesFragmentSubcomponent csPreferencesFragmentSubcomponent(CSPreferencesFragmentModule csPreferencesFragmentModule);
     ColdAlarmSubcomponent coldAlarmSubcomponent(ColdAlarmModule coldAlarmModule);
     PlantDetailActivitySubcomponent plantDetailActivitySubcomponent(PlantDetailActivityModule plantDetailActivityModule);

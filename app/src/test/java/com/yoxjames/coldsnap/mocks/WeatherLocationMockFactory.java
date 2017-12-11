@@ -20,6 +20,7 @@
 package com.yoxjames.coldsnap.mocks;
 
 import com.yoxjames.coldsnap.model.WeatherLocation;
+import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 
 /**
  * Created by yoxjames on 9/9/17.
@@ -29,6 +30,11 @@ public class WeatherLocationMockFactory
 {
     public static WeatherLocation kansasCity()
     {
-        return new WeatherLocation("64105", "Kansas City", 39.101901, -94.581821);
+        return new WeatherLocation("Kansas City", 39.101901, -94.581821);
+    }
+
+    public static SimpleWeatherLocation kansasCitySimple()
+    {
+        return new SimpleWeatherLocation(39.101901, -94.581821);
     }
 }

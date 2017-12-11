@@ -19,42 +19,18 @@
 
 package com.yoxjames.coldsnap.db;
 
-import android.database.sqlite.SQLiteDatabase;
-
 import com.yoxjames.coldsnap.model.WeatherData;
-import com.yoxjames.coldsnap.model.WeatherLocation;
+import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 
 import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.Observable;
 
 /**
  * Data Access Object for WeatherData!
  */
 public interface WeatherDataDAO
 {
-
-    /**
-     * Saves weatherData to database.
-     *
-     * @param database The database to save WeatherData to
-     * @param weatherData The WeatherData to save.
-     */
-    Completable saveWeatherData(SQLiteDatabase database, WeatherData weatherData);
-
-    /**
-     * Obtains weatherData from the database. At this time, only one instance of WeatherData
-     * is saved on the database at a time
-     *
-     * @param database The database to search for WeatherData
-     * @return WeatherData from database
-     */
-    Single<WeatherData> getWeatherData(SQLiteDatabase database, WeatherLocation weatherLocation);
-
-
-    /**
-     * Deletes all WeatherData from database
-     *
-     * @param database The databse to delete WeatherData from
-     */
-    Completable deleteWeatherData(SQLiteDatabase database);
+    Completable saveWeatherData(WeatherData weatherData);
+    Observable<WeatherData> getWeatherData(SimpleWeatherLocation weatherLocation);
+    Completable deleteWeatherData();
 }

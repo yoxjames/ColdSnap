@@ -21,21 +21,20 @@ package com.yoxjames.coldsnap.service.location;
 
 import android.content.SharedPreferences;
 
-import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
 
 import javax.inject.Inject;
 
+import dagger.Reusable;
 import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.SingleOnSubscribe;
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by yoxjames on 7/8/17.
  */
 
+@Reusable
 public class WeatherLocationServicePreferenceImpl implements WeatherLocationService
 {
     private final SharedPreferences sharedPreferences;
@@ -47,36 +46,32 @@ public class WeatherLocationServicePreferenceImpl implements WeatherLocationServ
     }
 
     @Override
-    public Single<WeatherLocation> readWeatherLocation()
+    public Observable<SimpleWeatherLocation> getWeatherLocation()
     {
-        return Single.create((SingleOnSubscribe<WeatherLocation>) e ->
+        return Observable.fromCallable(() ->
         {
-            final String zipCode = sharedPreferences.getString(CSPreferencesFragment.ZIPCODE, "64105");
-            final String locationString = sharedPreferences.getString(CSPreferencesFragment.LOCATION_STRING, "Kansas City, MO");
-            final double lat = 0f;
-            final double lon = 0f;
+            final double lat = sharedPreferences.getFloat(CSPreferencesFragment.LAT, 39.098579f);
+            final double lon = sharedPreferences.getFloat(CSPreferencesFragment.LON, -94.582596f);
 
-            e.onSuccess(new WeatherLocation(zipCode, locationString, lat, lon));
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+            return new SimpleWeatherLocation(lat, lon);
+
+        }).subscribeOn(Schedulers.io());
     }
 
     @Override
-    public Completable saveWeatherLocation(final WeatherLocation weatherLocation)
+    public Completable saveWeatherLocation(final SimpleWeatherLocation weatherLocation)
     {
-        return Completable.create(e ->
+        return Completable.fromRunnable(() ->
         {
             final SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
 
-            preferenceEditor.putString(CSPreferencesFragment.ZIPCODE, weatherLocation.getZipCode());
-            preferenceEditor.putString(CSPreferencesFragment.LOCATION_STRING, weatherLocation.getPlaceString());
-            if (preferenceEditor.commit())
-                e.onComplete();
-            else
-                e.onError(new IllegalStateException("Saving preferences failed"));
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread());
+            preferenceEditor.putFloat(CSPreferencesFragment.LAT, (float) weatherLocation.getLat());
+            preferenceEditor.putFloat(CSPreferencesFragment.LON, (float) weatherLocation.getLon());
+
+            if (!preferenceEditor.commit())
+                throw new IllegalStateException("Saving preferences failed");
+
+        }).subscribeOn(Schedulers.io());
     }
+
 }

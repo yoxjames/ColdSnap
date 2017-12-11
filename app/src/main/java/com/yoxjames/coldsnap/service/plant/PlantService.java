@@ -20,11 +20,11 @@
 package com.yoxjames.coldsnap.service.plant;
 
 import com.yoxjames.coldsnap.model.Plant;
+import com.yoxjames.coldsnap.service.ActionReply;
 
 import java.util.UUID;
-import io.reactivex.Completable;
+
 import io.reactivex.Observable;
-import io.reactivex.Single;
 
 /**
  * Created by yoxjames on 8/26/17.
@@ -33,8 +33,8 @@ import io.reactivex.Single;
 public interface PlantService
 {
     Observable<Plant> getPlants();
-    Single<Plant> getPlant(UUID plantUUID);
-    Completable addPlant(Plant plant);
-    Completable updatePlant(Plant plant);
-    Completable deletePlant(Plant plant);
+    Observable<Plant> getPlant(UUID plantUUID);
+    Observable<ActionReply> addPlant(Plant plant);
+    Observable<ActionReply> updatePlant(UUID oldPlantUUID, Plant newPlant);
+    Observable<ActionReply> deletePlant(UUID plantUUID);
 }

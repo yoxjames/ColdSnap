@@ -20,10 +20,8 @@
 package com.yoxjames.coldsnap.service.location;
 
 
-import com.yoxjames.coldsnap.model.WeatherLocation;
-
 import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.Observable;
 
 /**
  * Service for reading the current WeatherLocation and updating and clearing the exsting WeatherLocation
@@ -35,18 +33,13 @@ import io.reactivex.Single;
 public interface WeatherLocationService
 {
     /**
-     * Obtains the WeatherLocation that is currently stored.
-     *
-     * @return A WeatherLocation object for the currently set location.
-     */
-    Single<WeatherLocation> readWeatherLocation();
-
-    /**
      * Removes the current WeatherLocation object and replaces it with the inputted WeatherLocation.
      * This should not have to be done often as most users should really only use this once for the location
      * of the plants they are growing. At this time only one WeatherLocation at a time is supported.
      *
      * @param weatherLocation The new WeatherLocation to save.
      */
-    Completable saveWeatherLocation(WeatherLocation weatherLocation);
+    Completable saveWeatherLocation(SimpleWeatherLocation weatherLocation);
+
+    Observable<SimpleWeatherLocation> getWeatherLocation();
 }

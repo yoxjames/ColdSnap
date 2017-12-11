@@ -28,78 +28,19 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 
-import com.yoxjames.coldsnap.http.HTTPGeolocationService;
-import com.yoxjames.coldsnap.model.WeatherLocation;
-import com.yoxjames.coldsnap.util.LOG;
-
 import java.security.NoSuchProviderException;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import dagger.Reusable;
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
-import io.reactivex.observables.ConnectableObservable;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by yoxjames on 8/27/17.
  */
-
-@Singleton
+@Reusable
 public class GPSLocationServiceImpl implements GPSLocationService
 {
-    private final Context context;
-    private final HTTPGeolocationService geolocationService;
-    private final WeatherLocationService weatherLocationService;
-    private ConnectableObservable<Location> currentAndroidObservable;
-    private Observable<WeatherLocation> currentWeatherLocationObservable;
-    private Observable<Location> androidLocation;
-    private Disposable connectionDisposable;
-
-    @Inject
-    public GPSLocationServiceImpl(final Context context, final HTTPGeolocationService geolocationService, final WeatherLocationService weatherLocationService)
-    {
-        this.context = context;
-        this.geolocationService = geolocationService;
-        this.weatherLocationService = weatherLocationService;
-        androidLocation = getAndroidLocation();
-        currentAndroidObservable = androidLocation.publish();
-        currentWeatherLocationObservable = getCurrentWeatherLocationObservable().share();
-    }
-
     @Override
-    public Observable<WeatherLocation> getWeatherLocation()
-    {
-        return currentWeatherLocationObservable;
-    }
-
-    private Observable<WeatherLocation> getCurrentWeatherLocationObservable()
-    {
-        return currentAndroidObservable
-                .observeOn(Schedulers.io())
-                .flatMap(new Function<Location, ObservableSource<WeatherLocation>>()
-                {
-                    @Override
-                    public ObservableSource<WeatherLocation> apply(@NonNull Location location) throws Exception
-                    {
-                        return geolocationService.getCurrentWeatherLocation(location.getLatitude(), location.getLongitude())
-                                .toObservable()
-                                .doOnError(throwable -> LOG.d(getClass().getName(), "Geolocation Service Failed, swallowing error"))
-                                .onErrorResumeNext((ObservableSource<? extends WeatherLocation>) throwable -> Observable.empty());
-
-                    }
-
-                })
-                .doOnNext(weatherLocation -> weatherLocationService.saveWeatherLocation(weatherLocation).blockingAwait())
-                .observeOn(AndroidSchedulers.mainThread());
-    }
-
-    private Observable<Location> getAndroidLocation()
+    public Observable<Location> getLocation(final Context context)
     {
         return Observable.create(emitter ->
         {
@@ -140,21 +81,6 @@ public class GPSLocationServiceImpl implements GPSLocationService
                 emitter.onError(new NoSuchProviderException("No location provider available"));
             }
         });
-    }
-
-    @Override
-    public void pushWeatherLocation()
-    {
-        if (connectionDisposable != null)
-            connectionDisposable.dispose();
-        connectionDisposable = currentAndroidObservable.connect();
-    }
-
-    @Override
-    public void cancelRequestLocation()
-    {
-        if (connectionDisposable != null)
-            connectionDisposable.dispose();
     }
 }
 

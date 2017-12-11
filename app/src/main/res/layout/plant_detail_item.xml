@@ -25,39 +25,45 @@
 
     <TextView
         android:id="@+id/name_label"
-        style="?android:listSeparatorTextViewStyle"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/plant_name_label"
         android:layout_alignParentTop="true"
-        android:text="@string/plant_name_label"/>
+        android:layout_toEndOf="@+id/imageViewContainer"/>
 
     <EditText
         android:id="@+id/name_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
         android:maxLength="25"
-        android:layout_below="@id/name_label"
-        android:inputType="textCapWords|textNoSuggestions"/>
+        android:textSize="12sp"
+        android:inputType="textCapWords|textNoSuggestions"
+        android:layout_below="@+id/name_label"
+        android:layout_toEndOf="@+id/imageViewContainer"/>
 
     <TextView
         android:id="@+id/scientific_name_label"
-        style="?android:listSeparatorTextViewStyle"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/name_text"
-        android:text="@string/plant_scientific_name_label"/>
+        android:text="@string/plant_scientific_name_label"
+        android:layout_below="@+id/name_text"
+        android:layout_alignStart="@+id/name_label"/>
 
     <EditText
         android:id="@+id/scientific_name_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/scientific_name_label"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:textSize="12sp"
         android:maxLength="40"
-        android:inputType="textCapSentences|textNoSuggestions"/>
+        android:inputType="textCapSentences|textNoSuggestions"
+        android:layout_below="@+id/scientific_name_label"
+        android:layout_toEndOf="@+id/imageViewContainer"/>
+
+    <RelativeLayout
+        android:id="@+id/imageViewContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/minimum_temperature_text"

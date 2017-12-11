@@ -19,10 +19,10 @@
 
 package com.yoxjames.coldsnap.dagger;
 
-import com.yoxjames.coldsnap.ui.PlantDetailFragment;
+import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailFragment;
 import dagger.Subcomponent;
 
-@FragmentScope
+@ActivityScope
 @Subcomponent(modules = { PlantDetailFragmentModule.class })
 public interface PlantDetailFragmentSubcomponent
 {

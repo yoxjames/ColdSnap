@@ -27,7 +27,7 @@ import android.preference.PreferenceFragment;
 
 import com.yoxjames.coldsnap.ColdSnapApplication;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.androidservice.ColdAlarm;
+import com.yoxjames.coldsnap.job.ColdAlarm;
 import com.yoxjames.coldsnap.dagger.CSPreferencesFragmentModule;
 import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
@@ -41,15 +41,15 @@ public class CSPreferencesFragment extends PreferenceFragment
 {
 
     public static final String THRESHOLD = "com.yoxjames.coldsnap.THRESHOLD";
-    public static final String ZIPCODE = "com.yoxjames.coldsnap.ZIPCODE";
     public static final String TEMPERATURE_SCALE = "com.yoxjames.coldsnap.TEMPFORMAT";
     public static final String WEATHER_DATA_FUZZ = "com.yoxjames.coldsnap.WEATHER_DATA_FUZZ";
-    public static final String LOCATION_STRING = "com.yoxjames.coldsnap.LOCATION_STRING";
     public static final String COLD_ALARM_TIME = "com.yoxjames.coldsnap.COLD_ALARM_TIME";
+    public static final String LOCATION_STRING = "com.yoxjames.coldsnap.LOCATION_STRING";
+    public static final String LAT = "com.yoxjames.coldsnap.LAT";
+    public static final String LON = "com.yoxjames.coldsnap.LON";
 
     private TemperaturePickerRelativeDialogPreference eThreshold;
     private TemperaturePickerValueDialogPreference fuzz;
-    private EditTextPreference zipcode;
     private ListPreference temperatureScale;
     private EditTextPreference locationString;
     private TimePickerDialogPreference coldAlarmTimePicker;
@@ -73,13 +73,6 @@ public class CSPreferencesFragment extends PreferenceFragment
         addPreferencesFromResource(R.xml.preferences);
         eThreshold = (TemperaturePickerRelativeDialogPreference) findPreference(THRESHOLD);
         fuzz = (TemperaturePickerValueDialogPreference) findPreference(WEATHER_DATA_FUZZ);
-        zipcode = (EditTextPreference) findPreference(ZIPCODE);
-        zipcode.setOnPreferenceClickListener(preference ->
-        {
-            EditTextPreference editPref = (EditTextPreference) preference;
-            editPref.getEditText().setSelection(editPref.getText().length());
-            return true;
-        });
         temperatureScale = (ListPreference) findPreference(TEMPERATURE_SCALE);
         locationString = (EditTextPreference) findPreference(LOCATION_STRING);
         locationString.setOnPreferenceClickListener(preference ->
@@ -131,10 +124,9 @@ public class CSPreferencesFragment extends PreferenceFragment
     public void refreshActivity()
     {
         eThreshold.setSummary(temperatureFormatter.format(new Temperature(sharedPreferences.getFloat(THRESHOLD, 273f))));
-        fuzz.setSummary(temperatureFormatter.formatFuzz(sharedPreferences.getFloat(WEATHER_DATA_FUZZ, 0f)));
-        zipcode.setSummary(sharedPreferences.getString(ZIPCODE, ""));
+        fuzz.setSummary(temperatureFormatter.formatFuzz(sharedPreferences.getFloat(WEATHER_DATA_FUZZ, 0.0f)));
         temperatureScale.setSummary("°" + sharedPreferences.getString(TEMPERATURE_SCALE, "F"));
-        locationString.setSummary(sharedPreferences.getString(LOCATION_STRING, "Kansas City, MO"));
+        locationString.setSummary(sharedPreferences.getString(LOCATION_STRING, ""));
         coldAlarmTimePicker.setSummary(TimePickerDialogPreference.formatTime(sharedPreferences.getString(COLD_ALARM_TIME, "19:00")));
     }
 }

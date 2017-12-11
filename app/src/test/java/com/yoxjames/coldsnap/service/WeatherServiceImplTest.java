@@ -23,11 +23,12 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.yoxjames.coldsnap.db.ColdSnapDBHelper;
 import com.yoxjames.coldsnap.db.WeatherDataDAO;
-import com.yoxjames.coldsnap.http.HTTPWeatherService;
+import com.yoxjames.coldsnap.http.HTTPForecastService;
 import com.yoxjames.coldsnap.mocks.WeatherDataMockFactory;
 import com.yoxjames.coldsnap.mocks.WeatherLocationMockFactory;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
+import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 import com.yoxjames.coldsnap.service.weather.WeatherService;
 import com.yoxjames.coldsnap.service.weather.WeatherServiceImpl;
@@ -40,10 +41,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import io.reactivex.Completable;
-import io.reactivex.Single;
+import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 public class WeatherServiceImplTest
 {
     private @Mock WeatherDataDAO weatherDataDAO;
-    private @Mock HTTPWeatherService httpWeatherService;
+    private @Mock HTTPForecastService httpWeatherService;
     private @Mock ColdSnapDBHelper coldSnapDBHelper;
     private @Mock WeatherLocationService weatherLocationService;
     private @Mock SQLiteDatabase database;
@@ -66,49 +66,50 @@ public class WeatherServiceImplTest
     @Test
     public void testStaleDBReplaceWithHTTP()
     {
+        final SimpleWeatherLocation kansasCitySimple = WeatherLocationMockFactory.kansasCitySimple();
         final WeatherLocation kansasCity = WeatherLocationMockFactory.kansasCity();
+
         final WeatherData weatherDataStale = WeatherDataMockFactory.getStaleWeatherData(kansasCity);
-        final WeatherData weatherDataValid = WeatherDataMockFactory.getBasicWeatherData(kansasCity);
+        final WeatherData weatherDataValid = WeatherDataMockFactory.getValidWeatherData(kansasCity);
 
         when(coldSnapDBHelper.getWritableDatabase()).thenReturn(database);
-        when(weatherLocationService.readWeatherLocation()).thenReturn(Single.just(kansasCity));
-        when(weatherDataDAO.getWeatherData(database, kansasCity)).thenReturn(Single.just(weatherDataStale));
-        when(httpWeatherService.getWeatherData(kansasCity)).thenReturn(Single.just(weatherDataValid));
-        when(weatherDataDAO.deleteWeatherData(database)).thenReturn(Completable.complete());
-        when(weatherDataDAO.saveWeatherData(database, weatherDataValid)).thenReturn(Completable.complete());
+        when(weatherLocationService.getWeatherLocation()).thenReturn(Observable.just(kansasCitySimple));
+        when(weatherDataDAO.getWeatherData(kansasCitySimple)).thenReturn(Observable.just(weatherDataStale));
+        when(httpWeatherService.getForecast(kansasCitySimple)).thenReturn(Observable.just(weatherDataValid));
+        when(weatherDataDAO.deleteWeatherData()).thenReturn(Completable.complete());
+        when(weatherDataDAO.saveWeatherData(weatherDataValid)).thenReturn(Completable.complete());
 
-        WeatherService weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
+        WeatherService weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService);
 
-        final TestObserver<WeatherData> weatherDataSingle = weatherService.getCurrentForecastData().test();
+        final TestObserver<WeatherData> weatherDataSingle = weatherService.getWeatherData(kansasCitySimple).test();
 
         weatherDataSingle.assertResult(weatherDataValid);
-        verify(weatherDataDAO, times(1)).deleteWeatherData(database);
-        verify(weatherDataDAO, times(1)).saveWeatherData(database, weatherDataValid);
-
-
+        verify(weatherDataDAO, times(1)).deleteWeatherData();
+        verify(weatherDataDAO, times(1)).saveWeatherData(weatherDataValid);
     }
 
     @Test
     public void testValidDBNoHTTP()
     {
+        final SimpleWeatherLocation kansasCitySimple = WeatherLocationMockFactory.kansasCitySimple();
         final WeatherLocation kansasCity = WeatherLocationMockFactory.kansasCity();
-        final WeatherData weatherDataValid = WeatherDataMockFactory.getBasicWeatherData(kansasCity);
+
+        final WeatherData weatherDataValid = WeatherDataMockFactory.getValidWeatherData(kansasCity);
 
         when(coldSnapDBHelper.getWritableDatabase()).thenReturn(database);
-        when(weatherLocationService.readWeatherLocation()).thenReturn(Single.just(kansasCity));
-        when(weatherDataDAO.getWeatherData(database, kansasCity)).thenReturn(Single.just(weatherDataValid));
-        when(httpWeatherService.getWeatherData(kansasCity)).thenReturn(Single.just(weatherDataValid));
-        when(weatherDataDAO.deleteWeatherData(database)).thenReturn(Completable.complete());
-        when(weatherDataDAO.saveWeatherData(database, weatherDataValid)).thenReturn(Completable.complete());
+        when(weatherLocationService.getWeatherLocation()).thenReturn(Observable.just(kansasCitySimple));
+        when(weatherDataDAO.getWeatherData(kansasCitySimple)).thenReturn(Observable.just(weatherDataValid));
+        when(httpWeatherService.getForecast(kansasCitySimple)).thenReturn(Observable.just(weatherDataValid));
+        when(weatherDataDAO.deleteWeatherData()).thenReturn(Completable.complete());
+        when(weatherDataDAO.saveWeatherData(weatherDataValid)).thenReturn(Completable.complete());
 
-        WeatherService weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService, coldSnapDBHelper, weatherLocationService);
+        WeatherService weatherService = new WeatherServiceImpl(weatherDataDAO, httpWeatherService);
 
-        final TestObserver<WeatherData> weatherDataSingle = weatherService.getCurrentForecastData().test();
+        final TestObserver<WeatherData> weatherDataSingle = weatherService.getWeatherData(kansasCitySimple).test();
 
         weatherDataSingle.assertResult(weatherDataValid);
 
-        verify(httpWeatherService, times(0)).getWeatherData(any(WeatherLocation.class));
-        verify(weatherDataDAO, times(0)).deleteWeatherData(database);
-        verify(weatherDataDAO, times(0)).saveWeatherData(database, weatherDataValid);
+        verify(weatherDataDAO, times(0)).deleteWeatherData();
+        verify(weatherDataDAO, times(0)).saveWeatherData(weatherDataValid);
     }
 }

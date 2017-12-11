@@ -20,12 +20,13 @@
 package com.yoxjames.coldsnap.db;
 
 import android.content.ContentValues;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.yoxjames.coldsnap.db.plant.PlantRow;
+import com.yoxjames.coldsnap.db.plant.PlantRowCursorWrapper;
+import com.yoxjames.coldsnap.db.plant.PlantRowDAO;
+import com.yoxjames.coldsnap.db.plant.PlantRowDAOSQLiteImpl;
 import com.yoxjames.coldsnap.mocks.PlantMockFactory;
-import com.yoxjames.coldsnap.model.Plant;
-import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.utils.RxColdSnap;
 
 import org.junit.Before;
@@ -35,7 +36,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Provider;
@@ -43,7 +43,6 @@ import javax.inject.Provider;
 import dagger.Lazy;
 import io.reactivex.observers.TestObserver;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
@@ -51,12 +50,12 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 @RunWith(MockitoJUnitRunner.class)
 public class PlantDAOSQLiteImplTest
 {
-
-    @Mock Provider<Lazy<PlantCursorWrapper.Factory>> plantCursorWrapperFactory;
-    @Mock PlantCursorWrapper plantCursorWrapper;
+    @Mock Provider<Lazy<PlantRowCursorWrapper.Factory>> plantCursorWrapperFactory;
+    @Mock PlantRowCursorWrapper plantCursorWrapper;
     @Mock Provider<Lazy<ContentValues>> contentValuesProvider;
     @Mock ContentValues contentValues;
     @Mock SQLiteDatabase database;
+    @Mock ColdSnapDBHelper dbHelper;
 
     @BeforeClass
     public static void setupTests()
@@ -67,30 +66,10 @@ public class PlantDAOSQLiteImplTest
     @Before
     public void setup()
     {
-        when(plantCursorWrapperFactory.get()).thenReturn(new Lazy<PlantCursorWrapper.Factory>()
-        {
-            @Override
-            public PlantCursorWrapper.Factory get()
-            {
-                return new PlantCursorWrapper.Factory()
-                {
-                    @Override
-                    public PlantCursorWrapper create(Cursor cursor)
-                    {
-                        return plantCursorWrapper;
-                    }
-                };
-            }
-        });
-
-        when(contentValuesProvider.get()).thenReturn(new Lazy<ContentValues>()
-        {
-            @Override
-            public ContentValues get()
-            {
-                return contentValues;
-            }
-        });
+        when(dbHelper.getReadableDatabase()).thenReturn(database);
+        when(dbHelper.getWritableDatabase()).thenReturn(database);
+        when(plantCursorWrapperFactory.get()).thenReturn(() -> cursor -> plantCursorWrapper);
+        when(contentValuesProvider.get()).thenReturn(() -> contentValues);
 
         when(plantCursorWrapper.moveToFirst()).thenReturn(true);
         when(plantCursorWrapper.moveToNext()).thenReturn(true);
@@ -99,16 +78,16 @@ public class PlantDAOSQLiteImplTest
     @Test
     public void testGetPlants()
     {
-        Plant plantOne = PlantMockFactory.getFreezeTolerantPlant();
-        Plant plantTwo = PlantMockFactory.getFreezeTenderPlant();
+        PlantRow plantOne = PlantMockFactory.getFreezeTolerantPlantRow();
+        PlantRow plantTwo = PlantMockFactory.getFreezeTenderPlantRow();
 
         // Return two plants
         when(plantCursorWrapper.isAfterLast()).thenReturn(false).thenReturn(false).thenReturn(true);
         when(plantCursorWrapper.getPlant()).thenReturn(plantOne).thenReturn(plantTwo);
 
-        PlantDAO plantDAO = new PlantDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory);
+        PlantRowDAO plantDAO = new PlantRowDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory, dbHelper);
 
-        TestObserver<Plant> plantList = plantDAO.getPlants(database).test();
+        TestObserver<PlantRow> plantList = plantDAO.getPlantRows().test();
 
         plantList.assertResult(plantOne, plantTwo);
     }
@@ -116,16 +95,16 @@ public class PlantDAOSQLiteImplTest
     @Test
     public void testGetPlant()
     {
-        Plant plantOne = PlantMockFactory.getFreezeTolerantPlant();
-        Plant plantTwo = PlantMockFactory.getFreezeTenderPlant();
+        PlantRow plantOne = PlantMockFactory.getFreezeTolerantPlantRow();
+        PlantRow plantTwo = PlantMockFactory.getFreezeTenderPlantRow();
 
         // Return two plants
         when(plantCursorWrapper.isAfterLast()).thenReturn(false).thenReturn(false).thenReturn(true);
         when(plantCursorWrapper.getPlant()).thenReturn(plantOne).thenReturn(plantTwo);
 
-        PlantDAO plantDAO = new PlantDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory);
-        TestObserver<Plant> newPlantOne = plantDAO.getPlant(database, plantOne.getUuid()).test();
-        TestObserver<Plant> newPlantTwo = plantDAO.getPlant(database, plantTwo.getUuid()).test();
+        PlantRowDAO plantDAO = new PlantRowDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory, dbHelper);
+        TestObserver<PlantRow> newPlantOne = plantDAO.getPlantRow(plantOne.getUuid()).test();
+        TestObserver<PlantRow> newPlantTwo = plantDAO.getPlantRow(plantTwo.getUuid()).test();
 
         newPlantOne.assertResult(plantOne);
         newPlantTwo.assertResult(plantTwo);
@@ -134,8 +113,8 @@ public class PlantDAOSQLiteImplTest
     @Test
     public void testGetPlantNotExists()
     {
-        Plant plantOne = PlantMockFactory.getFreezeTolerantPlant();
-        Plant plantTwo = PlantMockFactory.getFreezeTenderPlant();
+        PlantRow plantOne = PlantMockFactory.getFreezeTolerantPlantRow();
+        PlantRow plantTwo = PlantMockFactory.getFreezeTenderPlantRow();
 
         // Return two plants
         when(plantCursorWrapper.isAfterLast()).thenReturn(false).thenReturn(false).thenReturn(true);
@@ -143,47 +122,54 @@ public class PlantDAOSQLiteImplTest
 
         when(plantCursorWrapper.moveToFirst()).thenReturn(false); // Cursor is empty in this test!
 
-        PlantDAO plantDAO = new PlantDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory);
+        PlantRowDAO plantDAO = new PlantRowDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory, dbHelper);
 
-        TestObserver<Plant> result = plantDAO.getPlant(database, UUID.randomUUID()).test();
+        TestObserver<PlantRow> result = plantDAO.getPlantRow(UUID.randomUUID().toString()).test();
         result.assertError(IllegalArgumentException.class);
     }
 
     @Test
     public void testAddPlant()
     {
-        Plant plant = PlantMockFactory.getFreezeTolerantPlant();
-        PlantDAO plantDAO = new PlantDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory);
+        PlantRow plant = PlantMockFactory.getFreezeTolerantPlantRow();
+        PlantRowDAO plantDAO = new PlantRowDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory, dbHelper);
 
-        TestObserver testObserver = plantDAO.addPlant(database, plant).test();
-        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.UUID, plant.getUuid().toString());
+        TestObserver testObserver = plantDAO.addPlantRow(plant).test();
+        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.UUID, plant.getUuid());
         verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.NAME, plant.getName());
         verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.SCIENTIFIC_NAME, plant.getScientificName());
-        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, plant.getMinimumTolerance().getDegreesKelvin());
+        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, plant.getColdThresholdK());
         testObserver.assertComplete();
     }
 
     @Test
     public void testUpdatePlant()
     {
-        Plant plant = PlantMockFactory.getFreezeTolerantPlant();
-        Temperature newTemperature = new Temperature(273);
-        PlantDAO plantDAO = new PlantDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory);
+        PlantRow plant = PlantMockFactory.getFreezeTolerantPlantRow();
+        PlantRowDAO plantDAO = new PlantRowDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory, dbHelper);
 
-        TestObserver testObserver = plantDAO.updatePlant(database, plant.getUuid(), new Plant("junit", "junitus", newTemperature, plant.getUuid())).test();
-        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.UUID, plant.getUuid().toString());
+        PlantRow newPlantRow = new PlantRow.Builder()
+                .name("junit")
+                .scientificName("junitus")
+                .mainImageUUID(UUID.randomUUID().toString())
+                .uuid(plant.getUuid())
+                .coldThresholdK(270.0)
+                .build();
+
+        TestObserver testObserver = plantDAO.updatePlantRow(plant.getUuid(), newPlantRow).test();
+        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.UUID, plant.getUuid());
         verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.NAME, "junit");
         verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.SCIENTIFIC_NAME, "junitus");
-        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, 273.0);
+        verify(contentValues, times(1)).put(ColdsnapDbSchema.PlantTable.Cols.COLD_THRESHOLD_DEGREES, 270.0);
         testObserver.assertComplete();
     }
 
     @Test
     public void testDeletePlant()
     {
-        Plant plant = PlantMockFactory.getFreezeTolerantPlant();
-        PlantDAO plantDAO = new PlantDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory);
-        TestObserver testObserver = plantDAO.deletePlant(database, plant.getUuid()).test();
+        PlantRow plant = PlantMockFactory.getFreezeTolerantPlantRow();
+        PlantRowDAO plantDAO = new PlantRowDAOSQLiteImpl(contentValuesProvider, plantCursorWrapperFactory, dbHelper);
+        TestObserver testObserver = plantDAO.deletePlantRow(plant.getUuid()).test();
         verify(database, times(1)).delete(ColdsnapDbSchema.PlantTable.NAME, ColdsnapDbSchema.PlantTable.Cols.UUID + " = ?", new String[] { plant.getUuid().toString() });
         testObserver.assertComplete();
     }

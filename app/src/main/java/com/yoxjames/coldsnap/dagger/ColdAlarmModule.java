@@ -20,8 +20,8 @@
 package com.yoxjames.coldsnap.dagger;
 
 import android.content.SharedPreferences;
-import com.yoxjames.coldsnap.androidservice.ColdAlarmPresenter;
-import com.yoxjames.coldsnap.androidservice.ColdAlarmView;
+import com.yoxjames.coldsnap.job.ColdAlarmPresenter;
+import com.yoxjames.coldsnap.job.ColdAlarmView;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.service.plant.PlantService;
 import com.yoxjames.coldsnap.service.weather.WeatherService;

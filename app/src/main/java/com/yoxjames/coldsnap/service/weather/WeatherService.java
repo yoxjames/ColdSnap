@@ -20,20 +20,14 @@
 package com.yoxjames.coldsnap.service.weather;
 
 import com.yoxjames.coldsnap.model.WeatherData;
-import com.yoxjames.coldsnap.model.WeatherDataNotFoundException;
+import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 
-import io.reactivex.Single;
+import io.reactivex.Observable;
 
 /**
  * High level service that obtains {@link WeatherData}.
  */
 public interface WeatherService
 {
-    /**
-     * Gets the current forecast data and returns that information as a {@link WeatherData}
-     *
-     * @return WeatherData representing the current forecast.
-     * @throws WeatherDataNotFoundException If No valid and not Stale WeatherData could be found.
-     */
-    Single<WeatherData> getCurrentForecastData();
+    Observable<WeatherData> getWeatherData(SimpleWeatherLocation location);
 }

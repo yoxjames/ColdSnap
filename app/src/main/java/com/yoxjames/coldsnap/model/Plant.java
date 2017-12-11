@@ -19,31 +19,36 @@
 
 package com.yoxjames.coldsnap.model;
 
+import android.support.annotation.NonNull;
+
 import java.util.UUID;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 import static dagger.internal.Preconditions.checkNotNull;
 
 @Immutable
-public class Plant
+public class Plant implements Comparable<Plant>
 {
     private final String name;
     private final String scientificName;
     private final Temperature minimumTolerance;
     private final UUID uuid;
+    private final UUID mainImageUUID;
 
-    public Plant(String name, String scientificName, Temperature minimumTolerance, UUID uuid)
+    public Plant(String name, String scientificName, Temperature minimumTolerance, UUID uuid, @Nullable UUID mainImageUUID)
     {
         this.name = checkNotNull(name);
         this.scientificName = checkNotNull(scientificName);
         this.minimumTolerance = checkNotNull(minimumTolerance);
         this.uuid = checkNotNull(uuid);
+        this.mainImageUUID = mainImageUUID;
     }
 
     public Plant(String name, String scientificName, Temperature minimumTolerance)
     {
-        this(name, scientificName, minimumTolerance, UUID.randomUUID());
+        this(name, scientificName, minimumTolerance, UUID.randomUUID(), null);
     }
 
     public Plant(String name, String scientificName)
@@ -71,6 +76,12 @@ public class Plant
         return uuid;
     }
 
+    @Nullable
+    public UUID getMainImageUUID()
+    {
+        return mainImageUUID;
+    }
+
     @Override
     public String toString()
     {
@@ -79,6 +90,13 @@ public class Plant
                 ", scientificName='" + scientificName + '\'' +
                 ", minimumTolerance=" + minimumTolerance +
                 ", uuid=" + uuid +
+                ", mainImageUUID=" + mainImageUUID +
         '}';
+    }
+
+    @Override
+    public int compareTo(@NonNull Plant plant)
+    {
+        return this.getName().compareTo(plant.getName());
     }
 }

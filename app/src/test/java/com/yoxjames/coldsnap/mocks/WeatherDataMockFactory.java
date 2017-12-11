@@ -19,129 +19,63 @@
 
 package com.yoxjames.coldsnap.mocks;
 
-import com.yoxjames.coldsnap.model.ForecastDay;
+import com.yoxjames.coldsnap.model.ForecastHour;
 import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 
+import org.threeten.bp.Instant;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Created by yoxjames on 12/10/17.
+ */
+
 public class WeatherDataMockFactory
 {
-    public static WeatherData getBasicWeatherData(WeatherLocation weatherLocation)
+    public static WeatherData getStaleWeatherData(WeatherLocation location)
     {
-        List<ForecastDay> forecastDayList = new ArrayList<>();
+        final List<ForecastHour> forecastHourList = ForecastHourFactory.getStandardTestForecast(location);
+        return new WeatherData(forecastHourList,
+                Instant.now().minusSeconds(60 * 3), // Three minutes ago
+                location,
+                forecastHourList.get(0),
+                forecastHourList.get(10));
 
-        forecastDayList.add(new ForecastDay(
-                "Jun 1 2017",
-                Temperature.newTemperatureFromF(72),
-                Temperature.newTemperatureFromF(31),
-                new Date(),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 2 2017",
-                Temperature.newTemperatureFromF(80),
-                Temperature.newTemperatureFromF(40),
-                new Date(),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 3 2017",
-                Temperature.newTemperatureFromF(60),
-                Temperature.newTemperatureFromF(30),
-                new Date(),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 4 2017",
-                Temperature.newTemperatureFromF(70),
-                Temperature.newTemperatureFromF(35),
-                new Date(),
-                UUID.randomUUID()));
-
-        return new WeatherData(forecastDayList, new Date(), weatherLocation);
     }
 
-    public static WeatherData getBasicWeatherData()
+    public static WeatherData getValidWeatherData(WeatherLocation location)
     {
-        return getBasicWeatherData(new WeatherLocation("64105", "Kansas City, MO", 0f, 0f));
+
+        final List<ForecastHour> forecastHourList = ForecastHourFactory.getStandardTestForecast(location);
+        return new WeatherData(forecastHourList,
+                Instant.now(),
+                location,
+                forecastHourList.get(0),
+                forecastHourList.get(10));
     }
 
-    public static WeatherData getStaleWeatherData(WeatherLocation weatherLocation)
+    public static class ForecastHourFactory
     {
-        List<ForecastDay> forecastDayList = new ArrayList<>();
+        public static List<ForecastHour> getStandardTestForecast(WeatherLocation location)
+        {
+            final List<ForecastHour> forecastHourList = new ArrayList<>();
 
-        forecastDayList.add(new ForecastDay(
-                "Jun 1 2017",
-                Temperature.newTemperatureFromF(72),
-                Temperature.newTemperatureFromF(31),
-                new Date(new Date().getTime() - 2 * 60 * 1000 + 1),
-                UUID.randomUUID()));
+            for (int i = 0; i < 20; i++)
+            {
+                final ForecastHour forecastHour =
+                        new ForecastHour(Instant.now().plusSeconds(i * 60 * 60 * 3),
+                                Temperature.newTemperatureFromC(0),
+                                UUID.randomUUID(),
+                                location.getLat(),
+                                location.getLon());
+                forecastHourList.add(forecastHour);
+            }
 
-        forecastDayList.add(new ForecastDay(
-                "Jun 2 2017",
-                Temperature.newTemperatureFromF(80),
-                Temperature.newTemperatureFromF(40),
-                new Date(new Date().getTime() - 2 * 60 * 1000 + 1),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 3 2017",
-                Temperature.newTemperatureFromF(60),
-                Temperature.newTemperatureFromF(30),
-                new Date(new Date().getTime() - 2 * 60 * 1000 + 1),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 4 2017",
-                Temperature.newTemperatureFromF(70),
-                Temperature.newTemperatureFromF(35),
-                new Date(new Date().getTime() - 2 * 60 * 1000 + 1),
-                UUID.randomUUID()));
-
-        return new WeatherData(forecastDayList, new Date(new Date().getTime() - 3 * 60 * 1000 + 1), weatherLocation);
-    }
-
-    public static WeatherData getStaleWeatherData()
-    {
-        return getStaleWeatherData(new WeatherLocation("64105", "Kansas City, MO", 0f, 0f));
-    }
-
-    public static List<ForecastDay> getForecastDays()
-    {
-        List<ForecastDay> forecastDayList = new ArrayList<>();
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 1 2017",
-                Temperature.newTemperatureFromF(72),
-                Temperature.newTemperatureFromF(32),
-                new Date(),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 2 2017",
-                Temperature.newTemperatureFromF(80),
-                Temperature.newTemperatureFromF(40),
-                new Date(),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 3 2017",
-                Temperature.newTemperatureFromF(60),
-                Temperature.newTemperatureFromF(30),
-                new Date(),
-                UUID.randomUUID()));
-
-        forecastDayList.add(new ForecastDay(
-                "Jun 4 2017",
-                Temperature.newTemperatureFromF(70),
-                Temperature.newTemperatureFromF(35),
-                new Date(),
-                UUID.randomUUID()));
-        return forecastDayList;
+            return forecastHourList;
+        }
     }
 }

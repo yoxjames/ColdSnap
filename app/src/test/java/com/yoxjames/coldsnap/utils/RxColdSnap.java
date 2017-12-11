@@ -19,12 +19,7 @@
 
 package com.yoxjames.coldsnap.utils;
 
-import java.util.concurrent.Callable;
-
-import io.reactivex.Scheduler;
 import io.reactivex.android.plugins.RxAndroidPlugins;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Function;
 import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
@@ -36,22 +31,7 @@ public class RxColdSnap
 {
     public static void forceSynchronous()
     {
-        RxAndroidPlugins.setInitMainThreadSchedulerHandler(new Function<Callable<Scheduler>, Scheduler>()
-        {
-            @Override
-            public Scheduler apply(@NonNull Callable<Scheduler> schedulerCallable) throws Exception
-            {
-                return Schedulers.trampoline();
-            }
-        });
-
-        RxJavaPlugins.setIoSchedulerHandler(new Function<Scheduler, Scheduler>()
-        {
-            @Override
-            public Scheduler apply(@NonNull Scheduler scheduler) throws Exception
-            {
-                return Schedulers.trampoline();
-            }
-        });
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler(schedulerCallable -> Schedulers.trampoline());
+        RxJavaPlugins.setIoSchedulerHandler(scheduler -> Schedulers.trampoline());
     }
 }

@@ -19,6 +19,7 @@
 
 package com.yoxjames.coldsnap.ui.presenter;
 
+import com.yoxjames.coldsnap.model.Plant;
 import com.yoxjames.coldsnap.service.plant.PlantService;
 import com.yoxjames.coldsnap.ui.view.PlantDetailPagerView;
 import com.yoxjames.coldsnap.util.LOG;
@@ -29,9 +30,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 
-import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.observers.DisposableObserver;
 
 public class PlantDetailPagerPresenterImpl implements PlantDetailPagerPresenter
 {
@@ -72,27 +71,10 @@ public class PlantDetailPagerPresenterImpl implements PlantDetailPagerPresenter
 
         disposables = new CompositeDisposable();
 
-        disposables.add(plantService.getPlants().map(plant -> plant.getUuid()).subscribeWith(new DisposableObserver<UUID>()
-        {
-            @Override
-            public void onNext(@NonNull UUID uuid)
-            {
-                plantUUIDs.add(uuid);
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e)
-            {
-                LOG.e(getClass().getName(), "PlantService.getPlants() Observable failure");
-                e.printStackTrace(); // TODO: Something
-            }
-
-            @Override
-            public void onComplete()
-            {
-                view.startUI();
-            }
-        }));
+        disposables.add(plantService.getPlants()
+                .map(Plant::getUuid)
+                .doOnError((e) -> LOG.e(getClass().getName(), "plantService observer failure"))
+                .subscribe(plantUUIDs::add, Throwable::printStackTrace, view::startUI));
     }
 
     @Override

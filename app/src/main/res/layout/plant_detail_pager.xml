@@ -24,7 +24,7 @@
                                                  android:layout_width="match_parent"
                                                  android:layout_height="match_parent"
                                                  android:fitsSystemWindows="true"
-                                                 tools:context=".ui.PlantDetailActivity">
+                                                 tools:context=".ui.plantdetail.PlantDetailActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -52,7 +52,7 @@
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context=".ui.PlantDetailActivity">
+        tools:context=".ui.plantdetail.PlantDetailActivity">
 
         <android.support.v4.view.ViewPager
             xmlns:android="http://schemas.android.com/apk/res/android"

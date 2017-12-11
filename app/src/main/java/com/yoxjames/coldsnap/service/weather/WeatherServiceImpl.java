@@ -19,97 +19,46 @@
 
 package com.yoxjames.coldsnap.service.weather;
 
-import android.database.sqlite.SQLiteDatabase;
-
-import com.yoxjames.coldsnap.db.ColdSnapDBHelper;
 import com.yoxjames.coldsnap.db.WeatherDataDAO;
-import com.yoxjames.coldsnap.http.HTTPWeatherService;
+import com.yoxjames.coldsnap.http.HTTPForecastService;
 import com.yoxjames.coldsnap.model.WeatherData;
-import com.yoxjames.coldsnap.model.WeatherLocation;
-import com.yoxjames.coldsnap.service.location.WeatherLocationService;
+import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-import io.reactivex.Single;
-import io.reactivex.SingleSource;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Function;
+import dagger.Reusable;
+import io.reactivex.Observable;
 
 /**
  * Implementation of WeatherService
  */
-@Singleton
+@Reusable
 public class WeatherServiceImpl implements WeatherService
 {
     private final WeatherDataDAO dbService;
-    private final HTTPWeatherService httpService;
-    private final ColdSnapDBHelper dbHelper;
-    private final WeatherLocationService weatherLocationService;
-    private WeatherLocation currentLocation;
-    private Single<WeatherData> cachedSingle;
+    private final HTTPForecastService httpForecastService;
 
     /**
      * Constructor for WeatherServiceImpl
-     *
      * @param dbService              The WeatherDAO DB Service implementation.
-     * @param httpService            HTTP Service Implementation for fetching WeatherData from the Internet
-     * @param dbHelper               Database helper for ColdSnap
-     * @param weatherLocationService Service for obtaining the currently set WeatherLocation data
      */
     @Inject
-    public WeatherServiceImpl(final WeatherDataDAO dbService, final HTTPWeatherService httpService, ColdSnapDBHelper dbHelper, WeatherLocationService weatherLocationService)
+    public WeatherServiceImpl(final WeatherDataDAO dbService, HTTPForecastService httpForecastService)
     {
         this.dbService = dbService;
-        this.httpService = httpService;
-        this.dbHelper = dbHelper;
-        this.weatherLocationService = weatherLocationService;
-        recacheObservable();
+        this.httpForecastService = httpForecastService;
     }
 
     @Override
-    public Single<WeatherData> getCurrentForecastData()
+    public Observable<WeatherData> getWeatherData(SimpleWeatherLocation location)
     {
-        return cachedSingle;
-    }
-
-    // TODO: Somebody tell me there's a better way....
-    private void recacheObservable()
-    {
-        final SQLiteDatabase database = dbHelper.getWritableDatabase();
-
-        final Single<WeatherData> http = weatherLocationService
-                .readWeatherLocation()
-                .flatMap(new Function<WeatherLocation, SingleSource<WeatherData>>()
-                {
-                    @Override
-                    public SingleSource<WeatherData> apply(@NonNull WeatherLocation weatherLocation) throws Exception
-                    {
-                        return httpService.getWeatherData(weatherLocation);
-                    }
-                }).doOnSuccess(weatherData -> dbService
-                        .deleteWeatherData(database)
-                        .concatWith(dbService.saveWeatherData(database, weatherData))
-                        .blockingAwait());
-
-        final Single<WeatherData> db = weatherLocationService
-                .readWeatherLocation()
-                .flatMap(new Function<WeatherLocation, SingleSource<WeatherData>>()
-                {
-                    @Override
-                    public SingleSource<WeatherData> apply(@NonNull WeatherLocation weatherLocation) throws Exception
-                    {
-                        return dbService
-                                .getWeatherData(database, weatherLocation)
-                                .onErrorResumeNext(http);
-                    }
-                });
-
-        cachedSingle = Single.concat(db, http)
-                .filter(weatherData -> !weatherData.isStale())
-                .share()
+        return dbService.getWeatherData(location)
+                .onErrorResumeNext(httpForecastService.getForecast(location)
+                        .doOnNext(weatherData -> dbService.deleteWeatherData().concatWith(dbService.saveWeatherData(weatherData)).blockingAwait())) // When nothing is in the cache just use HTTP
+                .filter(wd -> !wd.isStale())
+                .concatWith(httpForecastService.getForecast(location)
+                        .doOnNext(weatherData -> dbService.deleteWeatherData().concatWith(dbService.saveWeatherData(weatherData)).blockingAwait()))
                 .firstOrError()
-                .observeOn(AndroidSchedulers.mainThread());
+                .toObservable();
     }
 }

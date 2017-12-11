@@ -19,7 +19,8 @@
 
 package com.yoxjames.coldsnap.service.location;
 
-import com.yoxjames.coldsnap.model.WeatherLocation;
+import android.content.Context;
+import android.location.Location;
 
 import io.reactivex.Observable;
 
@@ -29,7 +30,5 @@ import io.reactivex.Observable;
 
 public interface GPSLocationService
 {
-    Observable<WeatherLocation> getWeatherLocation();
-    void pushWeatherLocation();
-    void cancelRequestLocation();
+    Observable<Location> getLocation(Context context);
 }

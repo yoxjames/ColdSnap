@@ -20,10 +20,15 @@
 package com.yoxjames.coldsnap.dagger;
 
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
+import com.yoxjames.coldsnap.service.image.ImageService;
 import com.yoxjames.coldsnap.service.plant.PlantService;
-import com.yoxjames.coldsnap.ui.presenter.PlantDetailPresenter;
-import com.yoxjames.coldsnap.ui.presenter.PlantDetailPresenterImpl;
-import com.yoxjames.coldsnap.ui.view.PlantDetailView;
+import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailActivityDataProvider;
+import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailActivityDataProviderImpl;
+import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailPresenter;
+import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailView;
+import com.yoxjames.coldsnap.ui.plantimage.PlantImageViewAdapter;
+
+import java.util.UUID;
 
 import dagger.Module;
 import dagger.Provides;
@@ -32,10 +37,12 @@ import dagger.Provides;
 public class PlantDetailFragmentModule
 {
     private final PlantDetailView view;
+    private final UUID plantUUID;
 
-    public PlantDetailFragmentModule(PlantDetailView view)
+    public PlantDetailFragmentModule(PlantDetailView view, UUID plantUUID)
     {
         this.view = view;
+        this.plantUUID = plantUUID;
     }
 
     @Provides
@@ -45,8 +52,26 @@ public class PlantDetailFragmentModule
     }
 
     @Provides
-    static PlantDetailPresenter providePlantDetailPresenter(PlantDetailView view, PlantService plantService, TemperatureValueAdapter temperatureValueAdapter)
+    static PlantDetailPresenter providePlantDetailPresenter(PlantDetailView view, PlantService plantService, TemperatureValueAdapter temperatureValueAdapter, ImageService imageService)
     {
-        return new PlantDetailPresenterImpl(view, plantService, temperatureValueAdapter);
+        return new PlantDetailPresenter(view, plantService, imageService, temperatureValueAdapter);
+    }
+
+    @Provides
+    static PlantImageViewAdapter providePlantImageViewAdapter(PlantDetailPresenter plantDetailPresenter)
+    {
+        return new PlantImageViewAdapter(plantDetailPresenter);
+    }
+
+    @Provides
+    UUID providePlantUUID()
+    {
+        return plantUUID;
+    }
+
+    @Provides
+    static PlantDetailActivityDataProvider providePlantDetailActivityDataProvider(PlantService plantService, ImageService imageService)
+    {
+        return new PlantDetailActivityDataProviderImpl(plantService, imageService);
     }
 }
