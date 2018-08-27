@@ -32,6 +32,8 @@ import io.reactivex.Observable;
 
 public interface ImageService
 {
-    Observable<PlantImage> getPlantImage(UUID plantImageUUID);
+    Observable<PlantImage> getPlantImage(UUID plantUUID);
     Observable<ActionReply> savePlantImage(PlantImage plantImage);
+    Observable<ActionReply> deleteImagesForPlant(UUID plantUUID);
+    Observable<ActionReply> cleanImagesDirectory();
 }

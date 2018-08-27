@@ -23,16 +23,29 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+import com.yoxjames.coldsnap.ColdSnapApplication;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+
 public class ColdService extends Service
 {
+    @Inject CSPreferences csPreferences;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        ColdAlarm.setAlarm(this.getApplicationContext());
+        ((ColdSnapApplication) getApplicationContext())
+            .getInjector()
+            .inject(this);
+
+        ColdAlarm.setAlarm(this.getApplicationContext(), csPreferences);
         return START_STICKY;
     }
 
     @Override
+    @Nullable
     public IBinder onBind(Intent intent)
     {
         return null;

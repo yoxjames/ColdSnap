@@ -19,80 +19,38 @@
 
 package com.yoxjames.coldsnap.ui.weatherpreviewbar;
 
-import javax.annotation.Nullable;
-
-import dagger.internal.Preconditions;
+import com.google.auto.value.AutoValue;
 
 /**
  * Created by yoxjames on 10/15/17.
  */
 
-public class WeatherBarViewModel
+@AutoValue
+public abstract class WeatherBarViewModel
 {
-    private final String locationText;
-    private final String highTemperatureText;
-    private final String lowTemperatureText;
-    private final String lastUpdatedTime;
-    private final boolean isPending;
-    private final Throwable error;
+    public static WeatherBarViewModel EMPTY = create(
+        "",
+        "",
+        "",
+        "",
+        true,
+        "");
 
-    private WeatherBarViewModel(String locationText, String highTemperatureText, String lowTemperatureText, String lastUpdatedTime, boolean isPending, @Nullable Throwable error)
-    {
-        this.locationText = Preconditions.checkNotNull(locationText);
-        this.highTemperatureText = Preconditions.checkNotNull(highTemperatureText);
-        this.lowTemperatureText = Preconditions.checkNotNull(lowTemperatureText);
-        this.lastUpdatedTime = Preconditions.checkNotNull(lastUpdatedTime);
-        this.isPending = Preconditions.checkNotNull(isPending);
-        this.error = error;
-    }
+    public abstract String getLocationText();
+    public abstract String getHighTemperatureText();
+    public abstract String getLowTemperatureText();
+    public abstract String getLastUpdatedTime();
+    public abstract boolean isPending();
+    public abstract String errorMessage();
 
-    public WeatherBarViewModel(String locationText, String highTemperatureText, String lowTemperatureText, String lastUpdatedTime, Throwable error)
+    public static WeatherBarViewModel create(
+            String locationText,
+            String highTemperatureText,
+            String lowTemperatureText,
+            String lastUpdatedTime,
+            boolean isPending,
+            String errorMessage)
     {
-        this(locationText, highTemperatureText, lowTemperatureText, lastUpdatedTime, false, error);
-    }
-
-    public WeatherBarViewModel(String locationText, String highTemperatureText, String lowTemperatureText, String lastUpdatedTime)
-    {
-        this(locationText, highTemperatureText, lowTemperatureText, lastUpdatedTime, false, null);
-    }
-
-    public String getLocationText()
-    {
-        return locationText;
-    }
-
-    public String getHighTemperatureText()
-    {
-        return highTemperatureText;
-    }
-
-    public String getLowTemperatureText()
-    {
-        return lowTemperatureText;
-    }
-
-    public String getLastUpdatedTime()
-    {
-        return lastUpdatedTime;
-    }
-
-    public boolean isPending()
-    {
-        return isPending;
-    }
-
-    public Throwable getError()
-    {
-        return error;
-    }
-
-    static WeatherBarViewModel nullInstance()
-    {
-        return new WeatherBarViewModel("", "", "", "", true, null);
-    }
-
-    static WeatherBarViewModel errorInstance(Throwable error)
-    {
-        return new WeatherBarViewModel("", "", "", "", false, error);
+        return new AutoValue_WeatherBarViewModel(locationText, highTemperatureText, lowTemperatureText, lastUpdatedTime, isPending, errorMessage);
     }
 }

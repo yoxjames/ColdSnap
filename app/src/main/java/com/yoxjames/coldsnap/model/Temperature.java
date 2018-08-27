@@ -19,9 +19,11 @@
 
 package com.yoxjames.coldsnap.model;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
-import javax.annotation.concurrent.Immutable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import dagger.internal.Preconditions;
 
@@ -40,7 +42,6 @@ import static java.lang.Math.round;
  *
  * Created by James Yox on 5/20/17.
  */
-@Immutable
 public class Temperature implements Comparable<Temperature>
 {
     public static final double WATER_FREEZING_KELVIN = 273.15;
@@ -50,6 +51,16 @@ public class Temperature implements Comparable<Temperature>
      * that is not more than this value apart is considered the same in this application.
      */
     private static final double SIGNIFICANCE = 0.5;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ LESSER, MAYBE_LESSER, TRUE_EQUAL, MAYBE_GREATER, GREATER })
+    public @interface TemperatureComparison {}
+
+    public static final int LESSER = -2;
+    public static final int MAYBE_LESSER = -1;
+    public static final int TRUE_EQUAL = 0;
+    public static final int MAYBE_GREATER = 1;
+    public static final int GREATER = 2;
 
     /*
      * Actual value representing degrees kelvin
@@ -62,10 +73,6 @@ public class Temperature implements Comparable<Temperature>
      */
     private final double fuzz;
 
-    public enum COMPARISON
-    {
-        GREATER, MAYBE_GREATER, TRUE_EQUAL, MAYBE_LESSER, LESSER;
-    }
 
     /**
      * Constructs a new Temperature object based on degrees in Celsius. Fuzz will be zero.
@@ -276,21 +283,22 @@ public class Temperature implements Comparable<Temperature>
             return 1;
     }
 
-    public COMPARISON compareSignificanceTo(@NonNull Temperature o)
+    @TemperatureComparison
+    public int compareSignificanceTo(@NonNull Temperature o)
     {
         Preconditions.checkNotNull(o);
 
         if (this.compareTo(o) == 0)
             if (abs(this.degreesKelvin - o.degreesKelvin) < SIGNIFICANCE)
-                return COMPARISON.TRUE_EQUAL;
+                return TRUE_EQUAL;
             else if (this.degreesKelvin > o.degreesKelvin)
-                return COMPARISON.MAYBE_GREATER;
+                return MAYBE_GREATER;
             else
-                return COMPARISON.MAYBE_LESSER;
+                return MAYBE_LESSER;
         else if (this.compareTo(o) == 1)
-            return COMPARISON.GREATER;
+            return GREATER;
         else
-            return COMPARISON.LESSER;
+            return LESSER;
     }
 
     /**

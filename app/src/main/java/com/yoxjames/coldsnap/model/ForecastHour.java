@@ -19,56 +19,28 @@
 
 package com.yoxjames.coldsnap.model;
 
+import com.google.auto.value.AutoValue;
+
 import org.threeten.bp.Instant;
 
 import java.util.UUID;
-
-import cz.msebera.android.httpclient.annotation.Immutable;
 
 /**
  * Created by yoxjames on 10/7/17.
  */
 
-@Immutable
-public class ForecastHour
+@AutoValue
+public abstract class ForecastHour
 {
-    private final Instant hour;
-    private final Temperature temperature;
-    private final UUID uuid;
-    private final double lat;
-    private final double lon;
+    public abstract Instant getHour();
+    public abstract Temperature getTemperature();
+    public abstract UUID getUuid();
+    public abstract double getLat();
+    public abstract double getLon();
+    public abstract Instant getSyncTime();
 
-    public ForecastHour(Instant hour, Temperature temperature, UUID uuid, double lat, double lon)
+    public static ForecastHour create(Instant hour, Temperature temperature, UUID uuid, double lat, double lon, Instant syncTime)
     {
-        this.hour = hour;
-        this.temperature = temperature;
-        this.uuid = uuid;
-        this.lat = lat;
-        this.lon = lon;
-    }
-
-    public Instant getHour()
-    {
-        return hour;
-    }
-
-    public Temperature getTemperature()
-    {
-        return temperature;
-    }
-
-    public UUID getUuid()
-    {
-        return uuid;
-    }
-
-    public double getLat()
-    {
-        return lat;
-    }
-
-    public double getLon()
-    {
-        return lon;
+        return new AutoValue_ForecastHour(hour, temperature, uuid, lat, lon, syncTime);
     }
 }

@@ -19,10 +19,10 @@
   -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <com.yoxjames.coldsnap.ui.controls.preference.TemperaturePickerRelativeDialogPreference
+    <com.yoxjames.coldsnap.ui.prefs.TemperaturePickerDialog
         android:key="com.yoxjames.coldsnap.THRESHOLD"
         android:title="Threshold"/>
-    <com.yoxjames.coldsnap.ui.controls.preference.TemperaturePickerValueDialogPreference
+    <com.yoxjames.coldsnap.ui.prefs.TemperaturePickerDialog
         android:key="com.yoxjames.coldsnap.WEATHER_DATA_FUZZ"
         android:title="Weather Data Fuzz"/>
     <!--suppress AndroidDomInspection -->
@@ -32,12 +32,7 @@
         android:entries="@array/temperature_formats"
         android:entryValues="@array/temperature_formats_values"
         android:defaultValue="F"/>
-    <EditTextPreference
-        android:key="com.yoxjames.coldsnap.LOCATION_STRING"
-        android:title="Location String"
-        android:maxLength="30"
-        android:inputType="textNoSuggestions" />
-    <com.yoxjames.coldsnap.ui.controls.preference.TimePickerDialogPreference
+    <com.yoxjames.coldsnap.ui.prefs.TimePickerDialogPreference
         android:key="com.yoxjames.coldsnap.COLD_ALARM_TIME"
         android:title="Cold Alarm Time" />
 </PreferenceScreen>

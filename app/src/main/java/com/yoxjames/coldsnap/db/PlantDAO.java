@@ -34,7 +34,6 @@ public interface PlantDAO
 {
     Observable<Plant> getPlants();
     Observable<Plant> getPlant(UUID plantUUID);
-    Observable<ActionReply> addPlant(Plant plant);
+    Observable<ActionReply> savePlant(Plant plant);
     Observable<ActionReply> deletePlant(UUID plantUUID);
-    Observable<ActionReply> replacePlant(UUID oldPlantUUID, Plant newPlant);
 }

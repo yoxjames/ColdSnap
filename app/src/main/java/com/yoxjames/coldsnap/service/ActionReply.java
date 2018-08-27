@@ -19,25 +19,21 @@
 
 package com.yoxjames.coldsnap.service;
 
+import com.google.auto.value.AutoValue;
+
 import javax.annotation.Nullable;
 
 /**
  * Created by yoxjames on 12/2/17.
  */
-
-public class ActionReply
+@AutoValue
+public abstract class ActionReply
 {
-    private final boolean success;
-    @Nullable private final Throwable error;
-
-    public ActionReply(boolean success, @Nullable Throwable error)
-    {
-        this.success = success;
-        this.error = error;
-    }
+    public abstract boolean isSuccess();
+    @Nullable public abstract Throwable getError();
 
     public static ActionReply genericSuccess()
     {
-        return new ActionReply(true, null);
+        return new AutoValue_ActionReply(true, null);
     }
 }

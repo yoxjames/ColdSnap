@@ -24,19 +24,15 @@ import android.app.Application;
 import com.jakewharton.threetenabp.AndroidThreeTen;
 import com.yoxjames.coldsnap.dagger.ColdSnapInjector;
 import com.yoxjames.coldsnap.dagger.DaggerColdSnapInjector;
-import com.yoxjames.coldsnap.util.LOG;
+
+import javax.annotation.Nullable;
 
 /**
  * Forecast ColdSnap Application class. Mainly used for Dagger implementation.
  */
 public class ColdSnapApplication extends Application
 {
-    ColdSnapInjector injector;
-
-    public ColdSnapApplication()
-    {
-        LOG.androidLogger();
-    }
+    @Nullable ColdSnapInjector injector;
 
     @Override
     public void onCreate()

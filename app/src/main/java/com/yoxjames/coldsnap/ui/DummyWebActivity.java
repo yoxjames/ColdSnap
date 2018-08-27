@@ -29,6 +29,9 @@ import android.webkit.WebView;
 
 import com.yoxjames.coldsnap.R;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created by yoxjames on 10/1/17.
  */
@@ -36,8 +39,9 @@ import com.yoxjames.coldsnap.R;
 public class DummyWebActivity extends AppCompatActivity
 {
     private static final String HTML_CONTENT = "com.yoxjames.coldsnap.html_content";
-    private WebView view;
 
+    @BindView(R.id.webview) protected WebView view;
+    @BindView(R.id.toolbar) protected Toolbar toolbar;
 
     public static Intent newDummyWebIntent(Context context, Uri htmlContent)
     {
@@ -51,10 +55,9 @@ public class DummyWebActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.dummy_web_activity);
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setContentView(R.layout.activity_web);
+        ButterKnife.bind(this);
         setSupportActionBar(toolbar);
-        view = (WebView) findViewById(R.id.webview);
 
         Uri webContent = getIntent().getParcelableExtra(HTML_CONTENT);
 

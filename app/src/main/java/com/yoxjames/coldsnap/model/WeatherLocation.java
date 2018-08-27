@@ -19,11 +19,7 @@
 
 package com.yoxjames.coldsnap.model;
 
-import android.support.annotation.NonNull;
-
-import javax.annotation.concurrent.Immutable;
-
-import dagger.internal.Preconditions;
+import com.google.auto.value.AutoValue;
 
 /**
  * POJO designed to hold location data for use in resolving Weather Data.
@@ -31,32 +27,32 @@ import dagger.internal.Preconditions;
  * Created by yoxjames on 7/8/17.
  */
 
-@Immutable
-public class WeatherLocation
+@AutoValue
+public abstract class WeatherLocation
 {
-    private final String placeString;
-    private final double lat;
-    private final double lon;
+    public abstract String getPlaceString();
+    public abstract double getLat();
+    public abstract double getLon();
 
-    public WeatherLocation(@NonNull String placeString, double lat, double lon)
+    public abstract Builder toBuilder();
+
+    public WeatherLocation withLocationString(String locationString)
     {
-        this.placeString = Preconditions.checkNotNull(placeString);
-        this.lat = lat;
-        this.lon = lon;
+        return toBuilder().setPlaceString(locationString).build();
     }
 
-    public String getPlaceString()
+    public static Builder builder()
     {
-        return placeString;
+        return new AutoValue_WeatherLocation.Builder();
     }
 
-    public double getLat()
+    @AutoValue.Builder
+    public static abstract class Builder
     {
-        return lat;
-    }
+        public abstract Builder setPlaceString(String placeString);
+        public abstract Builder setLat(double lat);
+        public abstract Builder setLon(double lon);
 
-    public double getLon()
-    {
-        return lon;
+        public abstract WeatherLocation build();
     }
 }

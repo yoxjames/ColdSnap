@@ -19,139 +19,96 @@
 
 package com.yoxjames.coldsnap.db.weather;
 
-import java.util.UUID;
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
+@Entity(tableName = "forecast_hour")
 public class ForecastHourRow
 {
-    private final String forecastUUID;
-    private final long hourInstant;
-    private final long syncInstant;
-    private final double tempK;
-    private final double fuzzK;
-    private final UUID uuid;
-    private final double lat;
-    private final double lon;
+    @NonNull @PrimaryKey private String uuid;
+    @NonNull @ColumnInfo(name = "sync_time") private long syncInstant;
+    @NonNull @ColumnInfo(name = "temp_k") private double tempK;
+    @NonNull @ColumnInfo(name = "forecast_time") private long hourInstant;
+    @NonNull @ColumnInfo(name = "fuzz_k") private double fuzzK;
+    @NonNull @ColumnInfo(name = "lat") private double lat;
+    @NonNull @ColumnInfo(name = "lon") private double lon;
 
-    private ForecastHourRow(String forecastUUID, long hourInstant, long syncInstant, double tempK, double fuzzK, UUID uuid, double lat, double lon)
+    @NonNull
+    public String getUuid()
     {
-        this.forecastUUID = forecastUUID;
-        this.hourInstant = hourInstant;
-        this.syncInstant = syncInstant;
-        this.tempK = tempK;
-        this.fuzzK = fuzzK;
+        return uuid;
+    }
+
+    public void setUuid(@NonNull String uuid)
+    {
         this.uuid = uuid;
-        this.lat = lat;
-        this.lon = lon;
     }
 
-    /**
-     * Gets the forecast UUID.
-     *
-     * @return The Forecast UUID
-     */
-    public String getForecastUUID()
-    {
-        return forecastUUID;
-    }
-
+    @NonNull
     public long getSyncInstant()
     {
         return syncInstant;
     }
 
+    public void setSyncInstant(@NonNull long syncInstant)
+    {
+        this.syncInstant = syncInstant;
+    }
+
+    @NonNull
     public double getTempK()
     {
         return tempK;
     }
 
+    public void setTempK(@NonNull double tempK)
+    {
+        this.tempK = tempK;
+    }
+
+    @NonNull
     public long getHourInstant()
     {
         return hourInstant;
     }
 
+    public void setHourInstant(@NonNull long hourInstant)
+    {
+        this.hourInstant = hourInstant;
+    }
+
+    @NonNull
     public double getFuzzK()
     {
         return fuzzK;
     }
 
-    public UUID getUuid()
+    public void setFuzzK(@NonNull double fuzzK)
     {
-        return uuid;
+        this.fuzzK = fuzzK;
     }
 
+    @NonNull
     public double getLat()
     {
         return lat;
     }
 
+    public void setLat(@NonNull double lat)
+    {
+        this.lat = lat;
+    }
+
+    @NonNull
     public double getLon()
     {
         return lon;
     }
 
-    public static class Builder
+    public void setLon(@NonNull double lon)
     {
-
-        private String forecastUUID;
-        private long syncInstant;
-        private double tempK;
-        private double fuzzK;
-        private UUID uuid;
-        private long hourInstant;
-        private double lat;
-        private double lon;
-
-        public Builder forecastUUID(String forecastUUID)
-        {
-            this.forecastUUID = forecastUUID;
-            return this;
-        }
-
-        public Builder syncInstant(long syncInstant)
-        {
-            this.syncInstant = syncInstant;
-            return this;
-        }
-
-        public Builder tempK(double tempK)
-        {
-            this.tempK = tempK;
-            return this;
-        }
-
-        public Builder fuzzK(double fuzzK)
-        {
-            this.fuzzK = fuzzK;
-            return this;
-        }
-
-        public Builder uuid(UUID uuid)
-        {
-            this.uuid = uuid;
-            return this;
-        }
-
-        public Builder hourInstant(long hourInstant)
-        {
-            this.hourInstant = hourInstant;
-            return this;
-        }
-
-        public Builder lon(double lon)
-        {
-            this.lon = lon;
-            return this;
-        }
-
-        public Builder lat(double lat)
-        {
-            this.lat = lat;
-            return this;
-        }
-
-        public ForecastHourRow build()
-        {
-            return new ForecastHourRow(forecastUUID, hourInstant, syncInstant, tempK, fuzzK, uuid, lat, lon);
-        }
+        this.lon = lon;
     }
 }

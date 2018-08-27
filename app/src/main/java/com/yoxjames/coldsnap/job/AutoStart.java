@@ -23,7 +23,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
-import static com.yoxjames.coldsnap.job.ColdAlarm.*;
+import com.yoxjames.coldsnap.ColdSnapApplication;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+
+import javax.inject.Inject;
+
+import static com.yoxjames.coldsnap.job.ColdAlarm.setAlarm;
 
 /**
  * Class designed to start the ColdAlarm at boot time. This will allow ColdSnap to warn
@@ -31,12 +36,17 @@ import static com.yoxjames.coldsnap.job.ColdAlarm.*;
  */
 public class AutoStart extends BroadcastReceiver
 {
+    @Inject CSPreferences csPreferences;
+
     @Override
     public void onReceive(Context context, Intent intent)
     {
-        if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED))
-        {
-            setAlarm(context);
-        }
+        ((ColdSnapApplication) context)
+            .getInjector()
+            .inject(this);
+
+        String action = (intent.getAction() == null ? "" : intent.getAction());
+        if (action.equals(Intent.ACTION_BOOT_COMPLETED))
+            setAlarm(context, csPreferences);
     }
 }

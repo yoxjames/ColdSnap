@@ -19,110 +19,77 @@
 
 package com.yoxjames.coldsnap.db.plant;
 
-import cz.msebera.android.httpclient.annotation.Immutable;
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by yoxjames on 10/14/17.
  */
-
-@Immutable
+@Entity(tableName = "plant")
 public class PlantRow
 {
-    private final long id;
-    private final String uuid;
-    private final String name;
-    private final String scientificName;
-    private final double coldThresholdK;
-    private final String mainImageUUID;
+    @NonNull @PrimaryKey private String uuid;
+    @NonNull @ColumnInfo(name = "name") private String name;
+    @NonNull @ColumnInfo(name = "scientific_name") private String scientificName;
+    @NonNull @ColumnInfo(name = "cold_threshold_k") private double coldThresholdK;
+    @Nullable @ColumnInfo(name = "main_image_uuid") private String mainImageUUID;
 
-    private PlantRow(long id, String uuid, String name, String scientificName, double coldThresholdK, String mainImageUUID)
-    {
-        this.id = id;
-        this.uuid = uuid;
-        this.name = name;
-        this.scientificName = scientificName;
-        this.coldThresholdK = coldThresholdK;
-        this.mainImageUUID = mainImageUUID;
-    }
-
-    public long getId()
-    {
-        return id;
-    }
-
+    @NonNull
     public String getUuid()
     {
         return uuid;
     }
 
+    public void setUuid(@NonNull String uuid)
+    {
+        this.uuid = uuid;
+    }
+
+    @NonNull
     public String getName()
     {
         return name;
     }
 
+    public void setName(@NonNull String name)
+    {
+        this.name = name;
+    }
+
+    @NonNull
     public String getScientificName()
     {
         return scientificName;
     }
 
+    public void setScientificName(@NonNull String scientificName)
+    {
+        this.scientificName = scientificName;
+    }
+
+    @NonNull
     public double getColdThresholdK()
     {
         return coldThresholdK;
     }
 
+    public void setColdThresholdK(@NonNull double coldThresholdK)
+    {
+        this.coldThresholdK = coldThresholdK;
+    }
+
+    @Nullable
     public String getMainImageUUID()
     {
         return mainImageUUID;
     }
 
-    public static class Builder
+    public void setMainImageUUID(@Nullable String mainImageUUID)
     {
-        private long id;
-        private String uuid;
-        private String name;
-        private String scientificName;
-        private double coldThresholdK;
-        private String mainImageUUID;
-
-        public Builder id(long id)
-        {
-            this.id = id;
-            return this;
-        }
-
-        public Builder uuid(String uuid)
-        {
-            this.uuid = uuid;
-            return this;
-        }
-
-        public Builder name(String name)
-        {
-            this.name = name;
-            return this;
-        }
-
-        public Builder scientificName(String scientificName)
-        {
-            this.scientificName = scientificName;
-            return this;
-        }
-
-        public Builder coldThresholdK(double coldThresholdK)
-        {
-            this.coldThresholdK = coldThresholdK;
-            return this;
-        }
-
-        public Builder mainImageUUID(String mainImageUUID)
-        {
-            this.mainImageUUID = mainImageUUID;
-            return this;
-        }
-
-        public PlantRow build()
-        {
-            return new PlantRow(id, uuid, name, scientificName, coldThresholdK, mainImageUUID);
-        }
+        this.mainImageUUID = mainImageUUID;
     }
 }

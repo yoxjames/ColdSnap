@@ -19,6 +19,8 @@
 
 package com.yoxjames.coldsnap.model;
 
+import com.yoxjames.coldsnap.service.preferences.CSPreferencesService.TemperatureFormat;
+
 /**
  * Implementing classes will have the ability to format {@link Temperature} objects into human
  * readable Strings that are suitable to be shown in the GUI.
@@ -42,4 +44,6 @@ public interface TemperatureFormatter
      * @return A String representing that amount formatted for the user to view
      */
     String formatFuzz(double fuzzKelvins);
+
+    String formatTemperatureScale(@TemperatureFormat int temperatureScale);
 }

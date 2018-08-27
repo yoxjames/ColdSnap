@@ -158,10 +158,10 @@ public class TemperatureTest
     {
         Temperature temperatureA = new Temperature(10, 5);
 
-        assertEquals(Temperature.COMPARISON.LESSER, temperatureA.compareSignificanceTo(new Temperature(16)));
-        assertEquals(Temperature.COMPARISON.GREATER, temperatureA.compareSignificanceTo(new Temperature(4)));
-        assertEquals(Temperature.COMPARISON.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(13)));
-        assertEquals(Temperature.COMPARISON.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(8)));
+        assertEquals(Temperature.LESSER, temperatureA.compareSignificanceTo(new Temperature(16)));
+        assertEquals(Temperature.GREATER, temperatureA.compareSignificanceTo(new Temperature(4)));
+        assertEquals(Temperature.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(13)));
+        assertEquals(Temperature.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(8)));
     }
 
     @Test
@@ -169,9 +169,9 @@ public class TemperatureTest
     {
         Temperature temperatureA = new Temperature(10, 5);
 
-        assertEquals(Temperature.COMPARISON.LESSER, temperatureA.compareSignificanceTo(new Temperature(25, 5)));
-        assertEquals(Temperature.COMPARISON.GREATER, temperatureA.compareSignificanceTo(new Temperature(1, 3)));
-        assertEquals(Temperature.COMPARISON.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(17,4)));
-        assertEquals(Temperature.COMPARISON.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(1,5)));
+        assertEquals(Temperature.LESSER, temperatureA.compareSignificanceTo(new Temperature(25, 5)));
+        assertEquals(Temperature.GREATER, temperatureA.compareSignificanceTo(new Temperature(1, 3)));
+        assertEquals(Temperature.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(17,4)));
+        assertEquals(Temperature.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(1,5)));
     }
 }

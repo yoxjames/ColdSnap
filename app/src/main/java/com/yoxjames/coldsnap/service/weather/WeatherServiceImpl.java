@@ -19,46 +19,67 @@
 
 package com.yoxjames.coldsnap.service.weather;
 
+import com.jakewharton.rx.ReplayingShare;
 import com.yoxjames.coldsnap.db.WeatherDataDAO;
 import com.yoxjames.coldsnap.http.HTTPForecastService;
 import com.yoxjames.coldsnap.model.WeatherData;
-import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 
 import javax.inject.Inject;
 
-import dagger.Reusable;
 import io.reactivex.Observable;
 
 /**
  * Implementation of WeatherService
  */
-@Reusable
 public class WeatherServiceImpl implements WeatherService
 {
     private final WeatherDataDAO dbService;
     private final HTTPForecastService httpForecastService;
+    private final WeatherLocationService weatherLocationService;
+    private final Observable<WeatherData> weatherDataObservable;
+    private final CSPreferences csPreferences;
 
     /**
      * Constructor for WeatherServiceImpl
      * @param dbService              The WeatherDAO DB Service implementation.
+     * @param weatherLocationService
+     * @param csPreferences
      */
     @Inject
-    public WeatherServiceImpl(final WeatherDataDAO dbService, HTTPForecastService httpForecastService)
+    public WeatherServiceImpl(
+        final WeatherDataDAO dbService,
+        final HTTPForecastService httpForecastService,
+        final WeatherLocationService weatherLocationService,
+        final CSPreferences csPreferences)
     {
         this.dbService = dbService;
         this.httpForecastService = httpForecastService;
+        this.weatherLocationService = weatherLocationService;
+        this.csPreferences = csPreferences;
+        weatherDataObservable = weatherLocationService.getWeatherLocation()
+            .concatMap(location -> dbService.getWeatherData(location)
+                .doOnError(Throwable::printStackTrace)
+                .map(weatherData -> weatherData.withWeatherLocation(weatherData.getWeatherLocation().withLocationString(csPreferences.getLocationString())))
+                .onErrorResumeNext(httpForecastService.getForecast(location).doOnNext(this::saveWeatherData)) // When nothing is in the cache just use HTTP
+                .filter(wd -> !wd.isStale())
+                .mergeWith(httpForecastService.getForecast(location).doOnNext(this::saveWeatherData))
+                .doOnError(Throwable::printStackTrace)
+                .firstOrError()
+                .toObservable())
+        .compose(ReplayingShare.instance());
     }
 
     @Override
-    public Observable<WeatherData> getWeatherData(SimpleWeatherLocation location)
+    public Observable<WeatherData> getWeatherData()
     {
-        return dbService.getWeatherData(location)
-                .onErrorResumeNext(httpForecastService.getForecast(location)
-                        .doOnNext(weatherData -> dbService.deleteWeatherData().concatWith(dbService.saveWeatherData(weatherData)).blockingAwait())) // When nothing is in the cache just use HTTP
-                .filter(wd -> !wd.isStale())
-                .concatWith(httpForecastService.getForecast(location)
-                        .doOnNext(weatherData -> dbService.deleteWeatherData().concatWith(dbService.saveWeatherData(weatherData)).blockingAwait()))
-                .firstOrError()
-                .toObservable();
+        return weatherDataObservable;
+    }
+
+    private void saveWeatherData(WeatherData weatherData)
+    {
+        dbService.deleteWeatherData().concatWith(dbService.saveWeatherData(weatherData)).blockingAwait();
+        csPreferences.setLocationString(weatherData.getWeatherLocation().getPlaceString());
     }
 }

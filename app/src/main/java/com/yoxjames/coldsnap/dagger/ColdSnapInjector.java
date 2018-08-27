@@ -21,6 +21,9 @@ package com.yoxjames.coldsnap.dagger;
 
 import android.content.Context;
 
+import com.yoxjames.coldsnap.job.AutoStart;
+import com.yoxjames.coldsnap.job.ColdService;
+
 import javax.inject.Singleton;
 
 import dagger.BindsInstance;
@@ -30,12 +33,13 @@ import dagger.Component;
 @Singleton
 public interface ColdSnapInjector
 {
-    PlantDetailFragmentSubcomponent plantDetailFragmentSubcomponent(PlantDetailFragmentModule plantDetailFragmentModule);
-    MainActivitySubcomponent mainActivitySubcomponent(MainActivityModule module);
-    CSPreferencesFragmentSubcomponent csPreferencesFragmentSubcomponent(CSPreferencesFragmentModule csPreferencesFragmentModule);
+    MainActivitySubcomponent mainActivitySubcomponent(PlantListModule module);
+    CSPreferencesFragmentSubcomponent csPreferencesFragmentSubcomponent(CSPreferencesModule module);
     ColdAlarmSubcomponent coldAlarmSubcomponent(ColdAlarmModule coldAlarmModule);
-    PlantDetailActivitySubcomponent plantDetailActivitySubcomponent(PlantDetailActivityModule plantDetailActivityModule);
-    TemperaturePickerSubcomponent temperaturePickerSubcomponent(TemperaturePickerModule temperaturePickerModule);
+    PlantDetailSubcomponent plantDetailSubcomponent(PlantDetailModule plantDetailModule);
+
+    void inject(AutoStart autoStart);
+    void inject(ColdService coldService);
 
     @Component.Builder
     interface Builder

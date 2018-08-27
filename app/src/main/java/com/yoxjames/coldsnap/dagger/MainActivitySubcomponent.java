@@ -19,7 +19,7 @@
 
 package com.yoxjames.coldsnap.dagger;
 
-import com.yoxjames.coldsnap.ui.MainActivity;
+import com.yoxjames.coldsnap.ui.plantlist.PlantListActivity;
 
 import dagger.Subcomponent;
 
@@ -28,8 +28,8 @@ import dagger.Subcomponent;
  */
 
 @ActivityScope
-@Subcomponent(modules = { MainActivityModule.class })
+@Subcomponent(modules = { PlantListModule.class })
 public interface MainActivitySubcomponent
 {
-    void inject(MainActivity activity);
+    void inject(PlantListActivity activity);
 }

@@ -20,11 +20,12 @@
 package com.yoxjames.coldsnap.dagger;
 
 
-import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.yoxjames.coldsnap.ui.prefs.CSPreferencesFragment;
 
 import dagger.Subcomponent;
 
-@Subcomponent(modules = { CSPreferencesFragmentModule.class })
+@Subcomponent(modules = { CSPreferencesModule.class })
+@ActivityScope
 public interface CSPreferencesFragmentSubcomponent
 {
     void inject(CSPreferencesFragment csPreferencesFragment);

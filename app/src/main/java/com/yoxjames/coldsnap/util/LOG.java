@@ -25,29 +25,35 @@ package com.yoxjames.coldsnap.util;
 
 public class LOG
 {
+    static
+    {
+        logger = defaultLogger();
+    }
+
     static private Logger logger;
+
+    static void setLogger(Logger newLogger)
+    {
+        logger = newLogger;
+    }
 
     public static void e(String tag, String msg)
     {
-        defaultLogger();
         logger.e(tag, msg);
     }
 
     public static void d(String tag, String msg)
     {
-        defaultLogger();
         logger.d(tag, msg);
     }
 
-    static void defaultLogger()
+    private static Logger defaultLogger()
     {
-        if (logger == null)
-            logger = new DefaultLoggerImpl();
+        return new DefaultLoggerImpl();
     }
 
-    public static void androidLogger()
+    static Logger androidLogger()
     {
-        if (logger == null)
-            logger = new AndroidLoggerImpl();
+        return new AndroidLoggerImpl();
     }
 }

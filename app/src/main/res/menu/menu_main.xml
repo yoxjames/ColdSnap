@@ -18,11 +18,9 @@
   -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ui.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/menu_item_settings"
         android:title="@string/action_settings"
         app:showAsAction="never" />
     <item
@@ -34,11 +32,6 @@
         android:id="@+id/menu_item_new_plant"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/new_plant"
-        app:showAsAction="ifRoom|withText" />
-    <item
-        android:id="@+id/menu_item_delete_plant"
-        android:icon="@android:drawable/ic_menu_delete"
-        android:title="@string/delete_plant"
         app:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/menu_about_coldsnap"

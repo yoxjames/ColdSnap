@@ -19,10 +19,7 @@
 
 package com.yoxjames.coldsnap.ui.plantlist;
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Environment;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,18 +28,27 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.jakewharton.rxbinding2.view.RxView;
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailActivity;
+import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.PlantStatus;
 
-import java.io.File;
 import java.util.UUID;
 
-import javax.inject.Inject;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
+import static com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.DEAD;
+import static com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.ERROR;
+import static com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.HAPPY;
+import static com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.NEUTRAL;
+import static com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.PENDING;
+import static com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.SAD;
+import static com.yoxjames.coldsnap.util.CSUtils.EMPTY_UUID;
 
 /**
  * Created by yoxjames on 12/9/17.
@@ -50,115 +56,80 @@ import io.reactivex.disposables.CompositeDisposable;
 
 public class PlantListRecyclerViewAdapter extends RecyclerView.Adapter<PlantListRecyclerViewAdapter.PlantItemHolder>
 {
-    private final PlantListItemViewAdapter plantListRecyclerViewAdapter;
-    private final Context context;
-    private CompositeDisposable disposables;
-    private int plantViewModelCount;
+    private PlantListViewModel viewModel = PlantListViewModel.EMPTY;
 
-    @Inject
-    public PlantListRecyclerViewAdapter(final PlantListItemViewAdapter plantListRecyclerViewAdapter, final Context context)
-    {
-        this.plantListRecyclerViewAdapter = plantListRecyclerViewAdapter;
-        this.context = context;
-        plantViewModelCount = 0;
-    }
-
-    public void load()
-    {
-        if (disposables != null)
-            disposables.dispose();
-        disposables = new CompositeDisposable();
-
-        disposables.add(plantListRecyclerViewAdapter.getCount()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(count ->
-                {
-                    plantViewModelCount = count.intValue() - 1;
-                    PlantListRecyclerViewAdapter.this.notifyDataSetChanged();
-                }));
-    }
-
-    public void unload()
-    {
-        disposables.dispose();
-    }
+    private final Subject<UUID> subject = PublishSubject.create();
 
     @Override
-    public PlantItemHolder onCreateViewHolder(ViewGroup parent, int viewType)
+    public PlantItemHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType)
     {
-        LayoutInflater layoutInflater = LayoutInflater.from(context);
-        View view = layoutInflater.inflate(R.layout.plant_list_item, parent, false);
+        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+        View view = layoutInflater.inflate(R.layout.view_plant_list_item, parent, false);
         return new PlantItemHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(PlantItemHolder holder, int position)
+    public void onBindViewHolder(@NonNull PlantItemHolder holder, int position)
     {
-        holder.load(position);
+        holder.bindView(viewModel.getPlantItemViewModels().get(position));
     }
 
     @Override
     public int getItemCount()
     {
-        return plantViewModelCount;
+        return viewModel.getPlantItemViewModels().size();
     }
 
-    public class PlantItemHolder extends RecyclerView.ViewHolder
+    public void bindAdapter(PlantListViewModel vm)
     {
-        private final TextView plantName;
-        private final TextView scientificName;
-        private final TextView status;
-        private final ProgressBar progress;
-        private final View thisView;
-        private final ImageView plantProfileImage;
-        private UUID plantUUID;
+        viewModel = vm;
+        notifyDataSetChanged();
+    }
 
-        public PlantItemHolder(final View itemView)
+    public Observable<UUID> onPlantClicked()
+    {
+        return subject;
+    }
+
+    public class PlantItemHolder extends RecyclerView.ViewHolder implements BaseColdsnapView<PlantListItemViewModel>
+    {
+        @BindView(R.id.plant_name) TextView plantName;
+        @BindView(R.id.plant_scientific_name) TextView scientificName;
+        @BindView(R.id.plant_status) TextView status;
+        @BindView(R.id.progress) ProgressBar progress;
+        @BindView(R.id.plant_profile_image) ImageView plantProfileImage;
+
+        private UUID plantUUID = EMPTY_UUID;
+
+        PlantItemHolder(final View itemView)
         {
             super(itemView);
-            plantName = itemView.findViewById(R.id.plant_name);
-            scientificName = itemView.findViewById(R.id.plant_scientific_name);
-            status = itemView.findViewById(R.id.plant_status);
-            progress = itemView.findViewById(R.id.progress);
-            plantProfileImage = itemView.findViewById(R.id.plant_profile_image);
-            thisView = itemView;
+            ButterKnife.bind(this, itemView);
         }
 
-        public void load(int position)
+        @Override
+        public void bindView(PlantListItemViewModel vm)
         {
-            disposables.add(plantListRecyclerViewAdapter.getViewModelForListItem(position)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(model ->
-                    {
-                        plantName.setText(model.getPlantName());
-                        scientificName.setText(model.getPlantScientificName());
-                        progress.setVisibility((model.getPlantStatus() == PlantListItemViewModel.Status.PENDING ? View.VISIBLE : View.INVISIBLE));
-                        status.setVisibility((model.getPlantStatus() == PlantListItemViewModel.Status.PENDING ? View.INVISIBLE : View.VISIBLE));
-                        status.setText(statusToText(model.getPlantStatus()));
-                        plantUUID = model.getUUID();
-                    }));
-
-
-            disposables.add(RxView.clicks(thisView)
-                    .subscribe(ignored -> openPlant(plantUUID)));
-
-            disposables.add(plantListRecyclerViewAdapter.getImageFileName(position)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(fileName ->
-                    {
-                        if (fileName != null && !fileName.equals(""))
-                        {
-                            File imageFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
-                            Picasso.with(context)
-                                    .load(imageFile)
-                                    .fit()
-                                    .centerCrop()
-                                    .into(plantProfileImage);
-                        }
-                    }));
+            plantName.setText(vm.getPlantName());
+            scientificName.setText(vm.getPlantScientificName());
+            progress.setVisibility((vm.getPlantStatus() == PENDING ? View.VISIBLE : View.INVISIBLE));
+            status.setVisibility((vm.getPlantStatus() == PENDING ? View.INVISIBLE : View.VISIBLE));
+            status.setText(statusToText(vm.getPlantStatus()));
+            plantUUID = vm.getUUID();
+            if (!vm.getImageFileName().equals(""))
+                Glide.with(itemView).load(vm.getImageFileName()).into(plantProfileImage);
+            else
+                plantProfileImage.setImageBitmap(null);
         }
 
-        private String statusToText(PlantListItemViewModel.Status status)
+        @OnClick(R.id.plant_card)
+        protected void onClickItem()
+        {
+            if (!plantUUID.equals(EMPTY_UUID))
+                subject.onNext(plantUUID);
+        }
+
+        private String statusToText(@PlantStatus int status)
         {
             switch (status)
             {
@@ -170,15 +141,13 @@ public class PlantListRecyclerViewAdapter extends RecyclerView.Adapter<PlantList
                     return "\uD83D\uDE10";
                 case DEAD:
                     return "\uD83D\uDC80";
-                default:
+                case PENDING:
                     return "...";
+                case ERROR:
+                    return "ERR";
+                default:
+                    throw new IllegalStateException("Invalid Plant Status");
             }
-        }
-
-        private void openPlant(@Nullable UUID plantUUID)
-        {
-            Intent intent = PlantDetailActivity.newIntent(context, plantUUID);
-            context.startActivity(intent);
         }
     }
 }

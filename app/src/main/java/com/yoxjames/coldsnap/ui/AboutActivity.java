@@ -28,43 +28,33 @@ import android.widget.RelativeLayout;
 
 import com.yoxjames.coldsnap.R;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created by yoxjames on 9/30/17.
  */
 
 public class AboutActivity extends AppCompatActivity
 {
-    private RelativeLayout coldSnap;
-    private RelativeLayout licence;
-    private RelativeLayout viewSource;
-    private RelativeLayout help;
-    private RelativeLayout reportBug;
-    private RelativeLayout suggestions;
-    private RelativeLayout changelog;
-
-    private RelativeLayout wunderground;
-    private RelativeLayout icons8;
+    @BindView(R.id.toolbar) protected Toolbar toolbar;
+    @BindView(R.id.cold_snap_item) protected RelativeLayout coldSnap;
+    @BindView(R.id.licence_item) protected RelativeLayout licence;
+    @BindView(R.id.view_source_item) protected RelativeLayout viewSource;
+    @BindView(R.id.help_item) protected RelativeLayout help;
+    @BindView(R.id.report_bug_item) protected RelativeLayout reportBug;
+    @BindView(R.id.suggestions_item) protected RelativeLayout suggestions;
+    @BindView(R.id.changelog_item) protected RelativeLayout changelog;
+    @BindView(R.id.wunderground_item) protected RelativeLayout wunderground;
+    @BindView(R.id.icons8_item) protected RelativeLayout icons8;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.about);
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setContentView(R.layout.activity_about);
+        ButterKnife.bind(this);
         setSupportActionBar(toolbar);
-
-        coldSnap = (RelativeLayout) findViewById(R.id.cold_snap_item);
-        licence = (RelativeLayout) findViewById(R.id.licence_item);
-        viewSource = (RelativeLayout) findViewById(R.id.view_source_item);
-        help = (RelativeLayout) findViewById(R.id.help_item);
-        reportBug = (RelativeLayout) findViewById(R.id.report_bug_item);
-        suggestions = (RelativeLayout) findViewById(R.id.suggestions_item);
-        changelog = (RelativeLayout) findViewById(R.id.changelog_item);
-
-        wunderground = (RelativeLayout) findViewById(R.id.wunderground_item);
-        icons8 = (RelativeLayout) findViewById(R.id.icons8_item);
-
-        // ColdSnap
 
         // Licence
         licence.setOnClickListener(view ->

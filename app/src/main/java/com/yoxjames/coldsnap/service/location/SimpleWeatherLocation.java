@@ -19,28 +19,20 @@
 
 package com.yoxjames.coldsnap.service.location;
 
+import com.google.auto.value.AutoValue;
+
 /**
  * Created by yoxjames on 10/21/17.
  */
 
-public class SimpleWeatherLocation
+@AutoValue
+public abstract class SimpleWeatherLocation
 {
-    private final double lat;
-    private final double lon;
+    public abstract double getLat();
+    public abstract double getLon();
 
-    public SimpleWeatherLocation(double lat, double lon)
+    public static SimpleWeatherLocation create(double lat, double lon)
     {
-        this.lat = lat;
-        this.lon = lon;
-    }
-
-    public double getLat()
-    {
-        return lat;
-    }
-
-    public double getLon()
-    {
-        return lon;
+        return new AutoValue_SimpleWeatherLocation(lat, lon);
     }
 }

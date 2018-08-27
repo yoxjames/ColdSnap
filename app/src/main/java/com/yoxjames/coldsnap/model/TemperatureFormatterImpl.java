@@ -19,13 +19,16 @@
 
 package com.yoxjames.coldsnap.model;
 
-import android.content.SharedPreferences;
-
-import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+import com.yoxjames.coldsnap.service.preferences.CSPreferencesService.TemperatureFormat;
 
 import javax.inject.Inject;
 
 import dagger.Reusable;
+
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.KELVIN;
 
 /**
  * Implementation of TemperatureFormatter that uses Android's SharedPreferences to determine
@@ -34,34 +37,59 @@ import dagger.Reusable;
 @Reusable
 public class TemperatureFormatterImpl implements TemperatureFormatter
 {
-    /*
-     * Android preferences.
-     */
-    private final SharedPreferences sharedPreferences;
+    private final CSPreferences csPreferences;
 
     @Inject
-    public TemperatureFormatterImpl(SharedPreferences sharedPreferences)
+    public TemperatureFormatterImpl(CSPreferences csPreferences)
     {
-        this.sharedPreferences = sharedPreferences;
+        this.csPreferences = csPreferences;
     }
 
     @Override
     public String format(Temperature temperature)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
-            return Integer.toString(Temperature.asFahrenheitDegrees(temperature)) + "°F";
-        else
-            return Integer.toString(Temperature.asCelsiusDegrees(temperature)) + "°C";
+        switch (csPreferences.getTemperatureFormat())
+        {
+            case FAHRENHEIT:
+                return Integer.toString(Temperature.asFahrenheitDegrees(temperature)) + "°F";
+            case CELSIUS:
+                return Integer.toString(Temperature.asCelsiusDegrees(temperature)) + "°C";
+            case KELVIN:
+                return Double.toString(temperature.getDegreesKelvin()) + "K";
+            default:
+                throw new IllegalStateException("Invalikd temperature format");
+        }
     }
 
     @Override
     public String formatFuzz(double fuzzKelvins)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
-            return Integer.toString(Temperature.asFahrenheitValue(fuzzKelvins)) + "°F";
-        else if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("C"))
-            return Integer.toString(Temperature.asCelsiusValue(fuzzKelvins)) + "°C";
-        else
-            throw new IllegalStateException("Invalid sharedPreferences");
+        switch (csPreferences.getTemperatureFormat())
+        {
+            case FAHRENHEIT:
+                return Integer.toString(Temperature.asFahrenheitValue(fuzzKelvins)) + "°F";
+            case CELSIUS:
+                return Integer.toString(Temperature.asCelsiusValue(fuzzKelvins)) + "°C";
+            case KELVIN:
+                return Double.toString(fuzzKelvins) + "K";
+            default:
+                throw new IllegalStateException("Invalid temperature format");
+        }
+    }
+
+    @Override
+    public String formatTemperatureScale(@TemperatureFormat int temperatureScale)
+    {
+        switch (temperatureScale)
+        {
+            case KELVIN:
+                return "K";
+            case FAHRENHEIT:
+                return "°F";
+            case CELSIUS:
+                return "°C";
+            default:
+                return "";
+        }
     }
 }

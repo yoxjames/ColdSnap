@@ -19,19 +19,35 @@
 
 package com.yoxjames.coldsnap.db.image;
 
-import com.yoxjames.coldsnap.service.ActionReply;
+import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
+import android.arch.persistence.room.Query;
 
-import io.reactivex.Observable;
+import java.util.List;
 
 /**
  * Created by yoxjames on 10/14/17.
  */
 
+@Dao
 public interface PlantImageRowDAO
 {
-    Observable<PlantImageRow> getImageForPlant(String plantUUID);
-    Observable<PlantImageRow> getImage(String uuid);
-    Observable<ActionReply> replaceImage(String imageUUID, PlantImageRow newPlantImage);
-    Observable<ActionReply> deleteImage(String plantImageUUID);
-    Observable<ActionReply> addImage(PlantImageRow plantImageRow);
+    @Query("SELECT * FROM plant_image WHERE plant_uuid = :plantUUID")
+    PlantImageRow getImageForPlant(String plantUUID);
+
+    @Query("SELECT * FROM plant_image WHERE uuid = :uuid")
+    PlantImageRow getImage(String uuid);
+
+    @Query("SELECT * FROM plant_image")
+    List<PlantImageRow> getPlantImages();
+
+    @Query("DELETE FROM plant_image where uuid = :plantImageUUID")
+    void deleteImage(String plantImageUUID);
+
+    @Query("DELETE FROM plant_image where plant_uuid = :plantUUID")
+    void deleteImagesForPlant(String plantUUID);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void addImage(PlantImageRow plantImageRow);
 }

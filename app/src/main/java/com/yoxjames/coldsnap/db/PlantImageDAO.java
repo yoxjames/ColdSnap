@@ -20,7 +20,9 @@
 package com.yoxjames.coldsnap.db;
 
 import com.yoxjames.coldsnap.model.PlantImage;
+import com.yoxjames.coldsnap.service.ActionReply;
 
+import java.util.List;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -31,5 +33,8 @@ import io.reactivex.Observable;
 
 public interface PlantImageDAO
 {
-    Observable<PlantImage> getPlantImage(UUID plantImageUUID);
+    Observable<PlantImage> getPlantImage(UUID plantUUID);
+    Observable<ActionReply> savePlantImage(PlantImage plantImage);
+    Observable<ActionReply> deletePlantImage(UUID plantUUID);
+    Observable<List<PlantImage>> getAllPlantImages();
 }

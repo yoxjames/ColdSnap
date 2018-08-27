@@ -20,7 +20,6 @@
 package com.yoxjames.coldsnap.service.weather;
 
 import com.yoxjames.coldsnap.model.WeatherData;
-import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 
 import io.reactivex.Observable;
 
@@ -29,5 +28,5 @@ import io.reactivex.Observable;
  */
 public interface WeatherService
 {
-    Observable<WeatherData> getWeatherData(SimpleWeatherLocation location);
+    Observable<WeatherData> getWeatherData();
 }

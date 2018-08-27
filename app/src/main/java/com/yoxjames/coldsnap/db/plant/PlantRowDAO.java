@@ -19,50 +19,30 @@
 
 package com.yoxjames.coldsnap.db.plant;
 
-import com.yoxjames.coldsnap.service.ActionReply;
+import android.arch.persistence.room.Dao;
+import android.arch.persistence.room.Insert;
+import android.arch.persistence.room.OnConflictStrategy;
+import android.arch.persistence.room.Query;
 
-import io.reactivex.Observable;
+import java.util.List;
+
+import io.reactivex.Flowable;
 
 /**
  * Data Access Object for Plants!
  */
+@Dao
 public interface PlantRowDAO
 {
-    /**
-     * Gets a list of all Plants in the database.
-     *
-     * @return A ForecastPeriods<Plant> of plants
-     */
-    Observable<PlantRow> getPlantRows();
+    @Query("SELECT * from plant ORDER BY name")
+    List<PlantRow> getPlantRows();
 
-    /**
-     * Obtains a single plant from the database
-     *
-     * @param plantUUID The UUID of the Plant we want
-     * @return A Single that emits a Plant or an error.
-     */
-    Observable<PlantRow> getPlantRow(String plantUUID);
+    @Query("SELECT * from plant where uuid = :plantUUID")
+    Flowable<PlantRow> getPlantRow(String plantUUID);
 
-    /**
-     * Adds a Plant to database.
-     *
-     * @param plant The Plant to add.
-     */
-    Observable<ActionReply> addPlantRow(PlantRow plant);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void addPlantRow(PlantRow plant);
 
-    /**
-     * Deletes a Plant from database. If the UUID passed in is not in database this does nothing.
-     *
-     * @param plantUUID The UUID of the plant to delete.
-     */
-    Observable<ActionReply> deletePlantRow(String plantUUID);
-
-    /**
-     * Replaces plantUUID with newPlant. plantUUID must have the same UUID as newPlant.
-     *
-     * @param plantUUID The UUID of the plant we wish to replace.
-     * @param newPlant Plant who's data will replace plantUUID. This must have the same UUID as plantUUID.
-     * @throws IllegalArgumentException If plantUUID is not equal to newPlant's UUID.
-     */
-    Observable<ActionReply> updatePlantRow(String plantUUID, PlantRow newPlant);
+    @Query("DELETE from plant where uuid = :plantUUID")
+    void deletePlantRow(String plantUUID);
 }

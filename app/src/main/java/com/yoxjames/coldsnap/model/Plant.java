@@ -21,82 +21,25 @@ package com.yoxjames.coldsnap.model;
 
 import android.support.annotation.NonNull;
 
+import com.google.auto.value.AutoValue;
+
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
-
-import static dagger.internal.Preconditions.checkNotNull;
-
-@Immutable
-public class Plant implements Comparable<Plant>
+@AutoValue
+public abstract class Plant implements Comparable<Plant>
 {
-    private final String name;
-    private final String scientificName;
-    private final Temperature minimumTolerance;
-    private final UUID uuid;
-    private final UUID mainImageUUID;
+    public abstract String getName();
+    public abstract String getScientificName();
+    public abstract Temperature getMinimumTolerance();
+    public abstract UUID getUuid();
 
-    public Plant(String name, String scientificName, Temperature minimumTolerance, UUID uuid, @Nullable UUID mainImageUUID)
+    public static Plant create(String name, String scientificName, Temperature minimumTemperature, UUID uuid)
     {
-        this.name = checkNotNull(name);
-        this.scientificName = checkNotNull(scientificName);
-        this.minimumTolerance = checkNotNull(minimumTolerance);
-        this.uuid = checkNotNull(uuid);
-        this.mainImageUUID = mainImageUUID;
-    }
-
-    public Plant(String name, String scientificName, Temperature minimumTolerance)
-    {
-        this(name, scientificName, minimumTolerance, UUID.randomUUID(), null);
-    }
-
-    public Plant(String name, String scientificName)
-    {
-        this(name, scientificName, Temperature.newTemperatureFromF(32));
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public String getScientificName()
-    {
-        return scientificName;
-    }
-
-    public Temperature getMinimumTolerance()
-    {
-        return minimumTolerance;
-    }
-
-    public UUID getUuid()
-    {
-        return uuid;
-    }
-
-    @Nullable
-    public UUID getMainImageUUID()
-    {
-        return mainImageUUID;
+        return new AutoValue_Plant(name, scientificName, minimumTemperature, uuid);
     }
 
     @Override
-    public String toString()
-    {
-        return "Plant{" +
-                "name='" + name + '\'' +
-                ", scientificName='" + scientificName + '\'' +
-                ", minimumTolerance=" + minimumTolerance +
-                ", uuid=" + uuid +
-                ", mainImageUUID=" + mainImageUUID +
-        '}';
-    }
-
-    @Override
-    public int compareTo(@NonNull Plant plant)
-    {
-        return this.getName().compareTo(plant.getName());
+    public int compareTo(@NonNull Plant plant) {
+        return plant.getName().compareTo(this.getName());
     }
 }

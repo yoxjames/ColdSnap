@@ -20,16 +20,20 @@
 package com.yoxjames.coldsnap.ui.plantlist;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+
+import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by yoxjames on 11/4/17.
  */
 
-public class PlantListRecyclerView extends RecyclerView
+public class PlantListRecyclerView extends RecyclerView implements BaseColdsnapView<PlantListViewModel>
 {
+    @Nullable private PlantListRecyclerViewAdapter adapter;
 
     public PlantListRecyclerView(Context context)
     {
@@ -44,5 +48,18 @@ public class PlantListRecyclerView extends RecyclerView
     public PlantListRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
+    }
+
+    @Override
+    public void bindView(PlantListViewModel plantListViewModel)
+    {
+        if (adapter != null)
+            adapter.bindAdapter(plantListViewModel);
+    }
+
+    public void setAdapter(PlantListRecyclerViewAdapter adapter)
+    {
+        this.adapter = adapter;
+        super.setAdapter(adapter);
     }
 }

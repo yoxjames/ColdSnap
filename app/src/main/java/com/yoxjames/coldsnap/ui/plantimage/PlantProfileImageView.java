@@ -1,55 +1,33 @@
-/*
- * Copyright (c) 2017 James Yox
- *
- * This file is part of ColdSnap.
- *
- * ColdSnap is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * ColdSnap is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with ColdSnap.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package com.yoxjames.coldsnap.ui.plantimage;
 
 import android.content.Context;
-import android.os.Environment;
+import android.support.constraint.ConstraintLayout;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 
+import com.bumptech.glide.Glide;
 import com.jakewharton.rxbinding2.view.RxView;
-import com.squareup.picasso.Picasso;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.ui.plantdetail.PlantDetailSaveRequest;
+import com.yoxjames.coldsnap.ui.BaseColdsnapView;
 
-import org.threeten.bp.Instant;
-
-import java.io.File;
 import java.util.UUID;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.reactivex.Observable;
 
-/**
- * Created by yoxjames on 11/18/17.
- */
+import static android.text.TextUtils.isEmpty;
+import static com.yoxjames.coldsnap.util.CSUtils.EMPTY_UUID;
 
-public class PlantProfileImageView extends RelativeLayout implements  PlantMainImageView
+public class PlantProfileImageView extends ConstraintLayout implements BaseColdsnapView<PlantProfileImageViewModel>
 {
-    private ImageView imageView;
-    private ImageButton cameraButton;
-    private File imageFile;
-    private UUID uuid;
-    private Instant photoInstant;
+    @BindView(R.id.iv_plant_profile) ImageView ivPlantProfile;
+    @BindView(R.id.ib_take_photo) ImageButton ibTakePhoto;
+    @BindView(R.id.ib_delete_photo) ImageButton ibDeletePhoto;
+
+    private UUID plantUUID = EMPTY_UUID;
+    private PlantProfileImageViewModel viewModel= PlantProfileImageViewModel.EMPTY;
 
     public PlantProfileImageView(Context context)
     {
@@ -67,61 +45,34 @@ public class PlantProfileImageView extends RelativeLayout implements  PlantMainI
     }
 
     @Override
-    public void onFinishInflate()
-    {
+    public void onFinishInflate() {
         super.onFinishInflate();
-        imageView = findViewById(R.id.plantImage);
-        cameraButton = findViewById(R.id.cameraButton);
+        ButterKnife.bind(this);
     }
 
     @Override
-    public void bindViewModel(PlantMainImageViewModel viewModel)
+    public void bindView(PlantProfileImageViewModel viewModel)
     {
-        cameraButton.setVisibility(viewModel.isHasImage() ? View.INVISIBLE : View.VISIBLE);
-
-        if (viewModel.getFileName() != null && !viewModel.getFileName().equals(""))
-        {
-            imageFile = new File(getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES), viewModel.getFileName());
-            setImage(imageFile);
-        }
-
-        uuid = viewModel.getUUID();
+        if (!isEmpty(viewModel.getImageURL()))
+            Glide.with(this)
+                .load(viewModel.getImageURL())
+                .into(ivPlantProfile);
+        ibTakePhoto.setClickable(viewModel.isTakeImageAvailable());
+        this.viewModel = viewModel;
     }
 
-    @Override
-    public PlantMainImageViewModel getViewModel()
+    public Observable<UUID> takeProfilePhoto()
     {
-        return new PlantMainImageViewModel(imageFile.getName(), false, true, null, "not implemented", uuid);
+        return RxView.clicks(ibTakePhoto).filter(i -> plantUUID.equals(EMPTY_UUID)).map(i -> plantUUID);
     }
 
-    @Override
-    public PlantDetailSaveRequest.ProfileImage getImageSaveRequest()
+    public Observable<UUID> deleteProfilePhoto()
     {
-        if (uuid != null && imageFile != null)
-            return new PlantDetailSaveRequest.ProfileImage(uuid, imageFile.getName(), Instant.now()); // TODO: Instant is wrong
-        else
-            return new PlantDetailSaveRequest.ProfileImage(null, null, null);
+        return RxView.clicks(ibDeletePhoto).filter(i -> plantUUID.equals(EMPTY_UUID)).map(i -> plantUUID);
     }
 
-    @Override
-    public Observable<Object> takePhoto()
+    public void bindImage(String fileName)
     {
-        return RxView.clicks(cameraButton);
-    }
-
-    @Override
-    public Observable<File> viewPhoto()
-    {
-        return RxView.clicks(imageView).filter(ignored -> cameraButton.getVisibility() == View.INVISIBLE).map(ignored -> imageFile);
-    }
-
-    @Override
-    public void setImage(File imageFile)
-    {
-        Picasso.with(getContext())
-                .load(imageFile)
-                .resize(imageView.getWidth(), imageView.getHeight())
-                .centerCrop()
-                .into(imageView);
+        bindView(viewModel.withImage(fileName));
     }
 }

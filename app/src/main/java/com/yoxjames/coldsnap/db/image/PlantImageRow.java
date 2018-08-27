@@ -19,107 +19,76 @@
 
 package com.yoxjames.coldsnap.db.image;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
+
 /**
  * Created by yoxjames on 10/14/17.
  */
 
+@Entity(tableName = "plant_image")
 public class PlantImageRow
 {
-    private final long id;
-    private final String uuid;
-    private final String plantUUID;
-    private final String title;
-    private final String imageFilename;
-    private final long imageDate;
+    @NonNull @PrimaryKey private String uuid;
+    @NonNull @ColumnInfo(name = "plant_uuid") private String plantUUID;
+    @NonNull @ColumnInfo(name = "title") private String title;
+    @NonNull @ColumnInfo(name = "image_filename") private String imageFilename;
+    @NonNull @ColumnInfo(name = "image_timestamp") private long imageDate;
 
-    private PlantImageRow(long id, String uuid, String plantUUID, String title, String imageFilename, long imageDate)
-    {
-        this.id = id;
-        this.uuid = uuid;
-        this.plantUUID = plantUUID;
-        this.title = title;
-        this.imageFilename = imageFilename;
-        this.imageDate = imageDate;
-    }
-
-    public long getId()
-    {
-        return id;
-    }
-
+    @NonNull
     public String getUuid()
     {
         return uuid;
     }
 
+    public void setUuid(@NonNull String uuid)
+    {
+        this.uuid = uuid;
+    }
+
+    @NonNull
     public String getPlantUUID()
     {
         return plantUUID;
     }
 
+    public void setPlantUUID(@NonNull String plantUUID)
+    {
+        this.plantUUID = plantUUID;
+    }
+
+    @NonNull
     public String getTitle()
     {
         return title;
     }
 
-    public long getImageDate()
+    public void setTitle(@NonNull String title)
     {
-        return imageDate;
+        this.title = title;
     }
 
+    @NonNull
     public String getImageFilename()
     {
         return imageFilename;
     }
 
-    public static class Builder
+    public void setImageFilename(@NonNull String imageFilename)
     {
-        private long id;
-        private String uuid;
-        private String plantUUID;
-        private String title;
-        private long imageDate;
-        private String imageFilename;
+        this.imageFilename = imageFilename;
+    }
 
-        public Builder id(long id)
-        {
-            this.id = id;
-            return this;
-        }
+    @NonNull
+    public long getImageDate()
+    {
+        return imageDate;
+    }
 
-        public Builder uuid(String uuid)
-        {
-            this.uuid = uuid;
-            return this;
-        }
-
-        public Builder plantUUID(String plantUUID)
-        {
-            this.plantUUID = plantUUID;
-            return this;
-        }
-
-        public Builder title(String title)
-        {
-            this.title = title;
-            return this;
-        }
-
-        public Builder imageDate(long imageDate)
-        {
-            this.imageDate = imageDate;
-            return this;
-        }
-
-        public Builder imageFilename(String imageFilename)
-        {
-            this.imageFilename = imageFilename;
-            return this;
-        }
-
-        public PlantImageRow build()
-        {
-            return new PlantImageRow(id, uuid, plantUUID, title, imageFilename, imageDate);
-        }
+    public void setImageDate(@NonNull long imageDate)
+    {
+        this.imageDate = imageDate;
     }
 }

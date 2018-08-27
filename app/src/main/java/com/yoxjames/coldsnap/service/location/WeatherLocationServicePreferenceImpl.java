@@ -19,9 +19,8 @@
 
 package com.yoxjames.coldsnap.service.location;
 
-import android.content.SharedPreferences;
-
-import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+import com.yoxjames.coldsnap.prefs.PreferenceModel;
 
 import javax.inject.Inject;
 
@@ -37,41 +36,29 @@ import io.reactivex.schedulers.Schedulers;
 @Reusable
 public class WeatherLocationServicePreferenceImpl implements WeatherLocationService
 {
-    private final SharedPreferences sharedPreferences;
+    private final CSPreferences csPreferences;
 
     @Inject
-    public WeatherLocationServicePreferenceImpl(SharedPreferences sharedPreferences)
+    public WeatherLocationServicePreferenceImpl(CSPreferences csPreferences)
     {
-        this.sharedPreferences = sharedPreferences;
+        this.csPreferences = csPreferences;
     }
 
     @Override
     public Observable<SimpleWeatherLocation> getWeatherLocation()
     {
-        return Observable.fromCallable(() ->
-        {
-            final double lat = sharedPreferences.getFloat(CSPreferencesFragment.LAT, 39.098579f);
-            final double lon = sharedPreferences.getFloat(CSPreferencesFragment.LON, -94.582596f);
+        return Observable.fromCallable(csPreferences::getCoords).subscribeOn(Schedulers.io());
+    }
 
-            return new SimpleWeatherLocation(lat, lon);
-
-        }).subscribeOn(Schedulers.io());
+    @Override
+    public Observable<SimpleWeatherLocation> weatherLocationChanges()
+    {
+        return csPreferences.getPreferences().map(PreferenceModel::getCoords).subscribeOn(Schedulers.io());
     }
 
     @Override
     public Completable saveWeatherLocation(final SimpleWeatherLocation weatherLocation)
     {
-        return Completable.fromRunnable(() ->
-        {
-            final SharedPreferences.Editor preferenceEditor = sharedPreferences.edit();
-
-            preferenceEditor.putFloat(CSPreferencesFragment.LAT, (float) weatherLocation.getLat());
-            preferenceEditor.putFloat(CSPreferencesFragment.LON, (float) weatherLocation.getLon());
-
-            if (!preferenceEditor.commit())
-                throw new IllegalStateException("Saving preferences failed");
-
-        }).subscribeOn(Schedulers.io());
+        return Completable.fromRunnable(() -> csPreferences.setCoords(weatherLocation)).subscribeOn(Schedulers.io());
     }
-
 }

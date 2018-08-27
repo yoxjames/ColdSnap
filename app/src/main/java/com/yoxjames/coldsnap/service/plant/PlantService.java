@@ -34,7 +34,6 @@ public interface PlantService
 {
     Observable<Plant> getPlants();
     Observable<Plant> getPlant(UUID plantUUID);
-    Observable<ActionReply> addPlant(Plant plant);
-    Observable<ActionReply> updatePlant(UUID oldPlantUUID, Plant newPlant);
+    Observable<ActionReply> savePlant(Plant plant);
     Observable<ActionReply> deletePlant(UUID plantUUID);
 }

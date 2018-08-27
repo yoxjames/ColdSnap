@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_plants"
+        android:title="@string/plants"
+        android:icon="@drawable/material_flower"/>
+
+    <item
+        android:id="@+id/menu_feed"
+        android:title="@string/feed"
+        android:icon="@drawable/material_info" />
+
+    <item
+        android:id="@+id/menu_settings"
+        android:title="@string/settings"
+        android:icon="@drawable/material_settings"/>
+
+</menu>

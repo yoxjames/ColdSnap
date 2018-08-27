@@ -27,16 +27,19 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/cold_snap_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:name=".ColdSnapApplication">
 
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.plantlist.PlantListActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -46,14 +49,14 @@
         </activity>
 
         <activity
-            android:name=".ui.CSPreferencesActivity"
+            android:name=".ui.prefs.CSPreferencesActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
 
-        <activity android:name=".ui.plantdetail.PlantDetailActivity"
-                  android:label="ColdSnap"
-                  android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".ui.detail.PlantDetailActivity"
+                  android:theme="@style/AppTheme.NoActionBar"
+                  android:parentActivityName=".ui.plantlist.PlantListActivity"/>
         <activity android:name=".ui.AboutActivity"
                   android:label="About"
                   android:theme="@style/AppTheme.NoActionBar" />
@@ -67,7 +70,9 @@
             android:process=":cold_service">
         </service>
 
-        <receiver android:name=".job.ColdAlarm" android:process=":cold_alarm" />
+        <receiver
+            android:name=".job.ColdAlarm"
+            android:process=":cold_alarm" />
 
         <receiver android:name=".job.AutoStart">
             <intent-filter>

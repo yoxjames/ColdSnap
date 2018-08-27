@@ -26,15 +26,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
-import android.support.v7.app.NotificationCompat;
-
 
 import com.yoxjames.coldsnap.R;
 import com.yoxjames.coldsnap.dagger.ColdAlarmModule;
-import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
-import com.yoxjames.coldsnap.ui.MainActivity;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+import com.yoxjames.coldsnap.ui.plantlist.PlantListActivity;
 
 import java.util.Calendar;
 
@@ -52,7 +50,6 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
     @Override
     public void onReceive(final Context context, final Intent intent)
     {
-
         ((com.yoxjames.coldsnap.ColdSnapApplication) context.getApplicationContext())
                 .getInjector()
                 .coldAlarmSubcomponent(new ColdAlarmModule(this))
@@ -69,12 +66,12 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
      *
      * @param context Android context for the alarm. Should be the application context generally.
      */
-    public static void setAlarm(Context context)
+    public static void setAlarm(Context context, CSPreferences csPreferences)
     {
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(context, ColdAlarm.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
-        String[] splitTime = PreferenceManager.getDefaultSharedPreferences(context).getString(CSPreferencesFragment.COLD_ALARM_TIME, "7:00").split(":");
+        String[] splitTime = csPreferences.getColdAlarmTime().split(":");
         final int hour = Integer.parseInt(splitTime[0]);
         final int minute = Integer.parseInt(splitTime[1]);
 
@@ -105,8 +102,8 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
         final int mId = 1;
 
         NotificationCompat.Builder mBuilder =
-                (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                        .setSmallIcon(R.drawable.cold_alarm_icon)
+                new NotificationCompat.Builder(context)
+                        //.setSmallIcon(R.drawable.cold_alarm_icon)
                         .setContentTitle("ColdSnap: Cold Warning")
                         .setContentText("Tonight's low "
                                 + tonightFormatted
@@ -114,7 +111,7 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
                                 + thresholdFormatted)
                         .setColor(Color.BLUE);
         // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(context, MainActivity.class);
+        Intent resultIntent = new Intent(context, PlantListActivity.class);
 
         // The stack builder object will contain an artificial back stack for the
         // started Activity.
@@ -122,7 +119,7 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
         // your application to the Home screen.
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         // Adds the back stack for the Intent (but not the Intent itself)
-        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addParentStack(PlantListActivity.class);
         // Adds the Intent that starts the Activity to the top of the stack
         stackBuilder.addNextIntent(resultIntent);
         PendingIntent resultPendingIntent =
@@ -148,13 +145,13 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
         final int mId = 2;
 
         NotificationCompat.Builder mBuilder =
-                (NotificationCompat.Builder) new NotificationCompat.Builder(context)
+                new NotificationCompat.Builder(context)
                         .setSmallIcon(R.drawable.cold_alert)
                         .setContentTitle("ColdSnap: Plant in Danger!")
                         .setContentText(plantName + "is in danger of dying due to cold!")
                         .setColor(Color.BLUE);
         // Creates an explicit intent for an Activity in your app
-        Intent resultIntent = new Intent(context, MainActivity.class);
+        Intent resultIntent = new Intent(context, PlantListActivity.class);
 
         // The stack builder object will contain an artificial back stack for the
         // started Activity.
@@ -162,7 +159,7 @@ public class ColdAlarm extends BroadcastReceiver implements ColdAlarmView
         // your application to the Home screen.
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         // Adds the back stack for the Intent (but not the Intent itself)
-        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addParentStack(PlantListActivity.class);
         // Adds the Intent that starts the Activity to the top of the stack
         stackBuilder.addNextIntent(resultIntent);
         PendingIntent resultPendingIntent =

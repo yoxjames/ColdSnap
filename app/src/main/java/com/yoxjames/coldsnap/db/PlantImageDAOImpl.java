@@ -19,25 +19,26 @@
 
 package com.yoxjames.coldsnap.db;
 
+import com.yoxjames.coldsnap.db.image.PlantImageDBMapper;
 import com.yoxjames.coldsnap.db.image.PlantImageRow;
 import com.yoxjames.coldsnap.db.image.PlantImageRowDAO;
 import com.yoxjames.coldsnap.model.PlantImage;
 import com.yoxjames.coldsnap.service.ActionReply;
-import com.yoxjames.coldsnap.service.image.ImageService;
 
-import org.threeten.bp.Instant;
-
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by yoxjames on 11/18/17.
  */
 
-public class PlantImageDAOImpl implements PlantImageDAO, ImageService
+public class PlantImageDAOImpl implements PlantImageDAO
 {
     private final PlantImageRowDAO plantImageRowDAO;
 
@@ -48,21 +49,52 @@ public class PlantImageDAOImpl implements PlantImageDAO, ImageService
     }
 
     @Override
-    public Observable<PlantImage> getPlantImage(UUID plantImageUUID)
+    public Observable<PlantImage> getPlantImage(UUID plantUUID)
     {
-        return plantImageRowDAO.getImage(plantImageUUID.toString())
-                .map(plantImageRow -> new PlantImage(Instant.ofEpochSecond(plantImageRow.getImageDate()),
-                        plantImageRow.getImageFilename(),
-                        UUID.fromString(plantImageRow.getUuid())));
+        return Observable.create((ObservableEmitter<PlantImageRow> e) ->
+        {
+            if (plantImageRowDAO.getImageForPlant(plantUUID.toString()) != null)
+                e.onNext(plantImageRowDAO.getImageForPlant(plantUUID.toString()));
+            e.onComplete();
+        })
+            .map(PlantImageDBMapper::mapToPOJO)
+            .subscribeOn(Schedulers.io());
     }
 
     @Override
     public Observable<ActionReply> savePlantImage(PlantImage plantImage)
     {
-        return plantImageRowDAO.addImage(new PlantImageRow.Builder()
-                .imageFilename(plantImage.getFileName())
-                .imageDate(plantImage.getImageDate().getEpochSecond())
-                .uuid(plantImage.getImageUUID().toString())
-                .build());
+        return Observable.create((ObservableEmitter<ActionReply> e) ->
+        {
+            plantImageRowDAO.addImage(PlantImageDBMapper.mapToDB(plantImage));
+            e.onNext(ActionReply.genericSuccess());
+            e.onComplete();
+        }).subscribeOn(Schedulers.io());
+    }
+
+    @Override
+    public Observable<ActionReply> deletePlantImage(UUID plantUUID)
+    {
+        return Observable.create((ObservableEmitter<ActionReply> e) ->
+        {
+            plantImageRowDAO.deleteImagesForPlant(plantUUID.toString());
+            e.onNext(ActionReply.genericSuccess());
+            e.onComplete();
+        }).subscribeOn(Schedulers.io());
+    }
+
+    @Override
+    public Observable<List<PlantImage>> getAllPlantImages()
+    {
+        return Observable.create((ObservableEmitter<List<PlantImageRow>> e) ->
+        {
+            e.onNext(plantImageRowDAO.getPlantImages());
+            e.onComplete();
+        })
+            .subscribeOn(Schedulers.io())
+            .flatMap(Observable::fromIterable)
+            .map(PlantImageDBMapper::mapToPOJO)
+            .toList()
+            .toObservable();
     }
 }

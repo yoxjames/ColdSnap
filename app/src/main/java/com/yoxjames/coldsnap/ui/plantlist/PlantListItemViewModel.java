@@ -19,96 +19,64 @@
 
 package com.yoxjames.coldsnap.ui.plantlist;
 
-import com.yoxjames.coldsnap.model.Plant;
+import android.support.annotation.IntDef;
 
+import com.google.auto.value.AutoValue;
+
+import java.lang.annotation.Retention;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
-import dagger.internal.Preconditions;
+import static com.yoxjames.coldsnap.util.CSUtils.EMPTY_UUID;
+import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 /**
  * Created by yoxjames on 10/15/17.
  */
 
-class PlantListItemViewModel
+@AutoValue
+public abstract class PlantListItemViewModel
 {
-    enum Status
+    @Retention(SOURCE)
+    @IntDef({ ERROR, PENDING, HAPPY, NEUTRAL, SAD, DEAD })
+    public @interface PlantStatus {}
+
+    public static final int ERROR = -1;
+    public static final int PENDING = 0;
+    public static final int HAPPY = 1;
+    public static final int NEUTRAL = 2;
+    public static final int SAD = 3;
+    public static final int DEAD = 4;
+
+    public static PlantListItemViewModel EMPTY = builder().build();
+
+    public abstract String getPlantName();
+    public abstract String getPlantScientificName();
+    @PlantStatus public abstract int getPlantStatus();
+    public abstract UUID getUUID();
+    public abstract String getImageFileName();
+
+    public static Builder builder()
     {
-        HAPPY, NEUTRAL, SAD, DEAD, PENDING, ERROR
+        return new AutoValue_PlantListItemViewModel.Builder()
+            .setPlantName("")
+            .setPlantScientificName("")
+            .setPlantStatus(PENDING)
+            .setUUID(EMPTY_UUID)
+            .setImageFileName("");
     }
 
-    private final String name;
-    private final String scientificName;
-    private final Status status;
-    private final UUID uuid;
-    private final Throwable error;
-    private final UUID imageUUID;
+    public abstract Builder toBuilder();
 
-    private PlantListItemViewModel(String name, String scientificName, Status status, @Nullable UUID uuid, @Nullable Throwable error, UUID imageUUID)
+    @AutoValue.Builder
+    public abstract static class Builder
     {
-        this.name = Preconditions.checkNotNull(name);
-        this.scientificName = Preconditions.checkNotNull(scientificName);
-        this.status = Preconditions.checkNotNull(status);
-        this.uuid = uuid;
-        this.error = error;
-        this.imageUUID = imageUUID;
+        public abstract Builder setPlantName(String plantName);
+        public abstract Builder setPlantScientificName(String scientificName);
+        public abstract Builder setPlantStatus(@PlantStatus int status);
+        public abstract Builder setUUID(UUID uuid);
+        public abstract Builder setImageFileName(String fileName);
+
+        public abstract PlantListItemViewModel build();
     }
 
-    public String getPlantName()
-    {
-        return name;
-    }
-
-    public String getPlantScientificName()
-    {
-        return scientificName;
-    }
-
-    public Status getPlantStatus()
-    {
-        return status;
-    }
-
-    public UUID getUUID()
-    {
-        return uuid;
-    }
-
-    public Throwable getError()
-    {
-        return error;
-    }
-
-    public UUID getImageFileName()
-    {
-        return imageUUID;
-    }
-
-    public static PlantListItemViewModel pendingPlant(Plant plant)
-    {
-        return new PlantListItemViewModel(plant.getName(), plant.getScientificName(), Status.PENDING, plant.getUuid(), null, plant.getMainImageUUID());
-    }
-
-    public static PlantListItemViewModel statusPlant(Plant plant, Status status)
-    {
-        return new PlantListItemViewModel(plant.getName(), plant.getScientificName(), status, plant.getUuid(), null, plant.getMainImageUUID());
-    }
-
-    public static PlantListItemViewModel errorPlant(Plant plant, Throwable e)
-    {
-        return new PlantListItemViewModel(plant.getName(), plant.getScientificName(), Status.ERROR, plant.getUuid(), e, plant.getMainImageUUID());
-    }
-
-    public static PlantListItemViewModel errorPlant(Throwable e)
-    {
-        return new PlantListItemViewModel("", "", Status.ERROR, null, e, null);
-    }
-
-    private static String getFileFromUUID(UUID plantImageUUID)
-    {
-        if (plantImageUUID == null)
-            return null;
-        return "IMG_" + plantImageUUID.toString() + ".jpg";
-    }
 }

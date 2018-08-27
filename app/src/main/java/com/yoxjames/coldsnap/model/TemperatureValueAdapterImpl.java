@@ -19,38 +19,36 @@
 
 package com.yoxjames.coldsnap.model;
 
-import android.content.SharedPreferences;
-
-import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
+
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
 
 /**
  * Created by yoxjames on 8/13/17.
  */
 
-@Singleton
 public class TemperatureValueAdapterImpl implements TemperatureValueAdapter
 {
-    private final SharedPreferences sharedPreferences;
+    private final CSPreferences csPreferences;
 
     @Inject
-    public TemperatureValueAdapterImpl(SharedPreferences sharedPreferences)
+    public TemperatureValueAdapterImpl(CSPreferences csPreferences)
     {
-        this.sharedPreferences = sharedPreferences;
+        this.csPreferences = csPreferences;
     }
 
     @Override
     public int getValue(Temperature temperature)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
+        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
             return Temperature.asFahrenheitDegrees(temperature);
-        else if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("C"))
+        else if (csPreferences.getTemperatureFormat() == CELSIUS)
             return Temperature.asCelsiusDegrees(temperature);
         else
-            throw new IllegalStateException("Invalid Temperature Preference: " +
-                    sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F"));
+            throw new IllegalStateException("Invalid Temperature Preference");
     }
 
     @Override
@@ -62,25 +60,23 @@ public class TemperatureValueAdapterImpl implements TemperatureValueAdapter
     @Override
     public int getAbsoluteValue(double kelvins)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
+        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
             return Temperature.asFahrenheitValue(kelvins);
-        else if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("C"))
+        else if (csPreferences.getTemperatureFormat() == CELSIUS)
             return Temperature.asCelsiusValue(kelvins);
         else
-            throw new IllegalStateException("Invalid Temperature Preference: " +
-                    sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F"));
+            throw new IllegalStateException("Invalid Temperature Preference");
     }
 
     @Override
     public int getAbsoluteValue(Temperature temperature)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
+        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
             return Temperature.asFahrenheitValue(temperature.getDegreesKelvin());
-        else if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("C"))
+        else if (csPreferences.getTemperatureFormat() == CELSIUS)
             return Temperature.asCelsiusValue(temperature.getDegreesKelvin());
         else
-            throw new IllegalStateException("Invalid Temperature Preference: " +
-                    sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F"));
+            throw new IllegalStateException("Invalid Temperature Preference");
     }
 
     @Override
@@ -92,24 +88,22 @@ public class TemperatureValueAdapterImpl implements TemperatureValueAdapter
     @Override
     public double getKelvinAbsoluteTemperature(int value)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
+        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
             return (double) value * 5.0 / 9.0;
-        else if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("C"))
+        else if (csPreferences.getTemperatureFormat() == CELSIUS)
             return (double) value;
         else
-            throw new IllegalStateException("Invalid Temperature Preference: " +
-                    sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F"));
+            throw new IllegalStateException("Invalid Temperature Preference");
     }
 
     @Override
     public Temperature getTemperature(int value)
     {
-        if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("F"))
+        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
             return Temperature.newTemperatureFromF(value);
-        else if (sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F").equals("C"))
+        else if (csPreferences.getTemperatureFormat() == CELSIUS)
             return Temperature.newTemperatureFromC(value);
         else
-            throw new IllegalStateException("Invalid Temperature Preference: " +
-                    sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE, "F"));
+            throw new IllegalStateException("Invalid Temperature Preference");
     }
 }

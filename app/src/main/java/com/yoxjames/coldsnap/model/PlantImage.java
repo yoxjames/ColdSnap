@@ -19,42 +19,51 @@
 
 package com.yoxjames.coldsnap.model;
 
+import com.google.auto.value.AutoValue;
+import com.yoxjames.coldsnap.ui.plantimage.PlantImageSaveRequest;
+
 import org.threeten.bp.Instant;
 
 import java.util.UUID;
-
-import dagger.internal.Preconditions;
 
 /**
  * Created by yoxjames on 10/14/17.
  */
 
-public class PlantImage
+@AutoValue
+public abstract class PlantImage
 {
-    private final Instant imageDate;
-    private final String fileName;
+    public abstract String getTitle();
+    public abstract Instant getImageDate();
+    public abstract String getFileName();
+    public abstract UUID getImageUUID();
+    public abstract UUID getPlantUUID();
 
-    private final UUID imageUUID;
-
-    public PlantImage(Instant imageDate, String fileName, UUID imageUUID)
+    public static Builder builder()
     {
-        this.imageDate = Preconditions.checkNotNull(imageDate);
-        this.fileName = Preconditions.checkNotNull(fileName);
-        this.imageUUID = Preconditions.checkNotNull(imageUUID);
+        return new AutoValue_PlantImage.Builder();
     }
 
-    public Instant getImageDate()
+    public static PlantImage fromPlantImageSaveRequest(PlantImageSaveRequest plantImageSaveRequest)
     {
-        return imageDate;
+        return builder()
+            .setTitle("")
+            .setImageDate(plantImageSaveRequest.getPhotoTime())
+            .setFileName(plantImageSaveRequest.getFileName())
+            .setImageUUID(UUID.randomUUID())
+            .setPlantUUID(plantImageSaveRequest.getPlantUUID())
+            .build();
     }
 
-    public String getFileName()
+    @AutoValue.Builder
+    public abstract static class Builder
     {
-        return fileName;
-    }
+        public abstract Builder setTitle(String title);
+        public abstract Builder setImageDate(Instant imageDate);
+        public abstract Builder setFileName(String fileName);
+        public abstract Builder setImageUUID(UUID imageUUID);
+        public abstract Builder setPlantUUID(UUID plantUUID);
 
-    public UUID getImageUUID()
-    {
-        return imageUUID;
+        public abstract PlantImage build();
     }
 }

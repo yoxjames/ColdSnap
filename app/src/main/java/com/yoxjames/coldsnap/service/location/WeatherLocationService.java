@@ -42,4 +42,6 @@ public interface WeatherLocationService
     Completable saveWeatherLocation(SimpleWeatherLocation weatherLocation);
 
     Observable<SimpleWeatherLocation> getWeatherLocation();
+
+    Observable<SimpleWeatherLocation> weatherLocationChanges();
 }

@@ -19,24 +19,21 @@
 
 package com.yoxjames.coldsnap.dagger;
 
-import android.content.ContentValues;
+import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import com.yoxjames.coldsnap.db.ColdSnapDBHelper;
+import com.yoxjames.coldsnap.db.ColdSnapDatabase;
 import com.yoxjames.coldsnap.db.PlantDAO;
 import com.yoxjames.coldsnap.db.PlantDAOImpl;
+import com.yoxjames.coldsnap.db.PlantImageDAO;
 import com.yoxjames.coldsnap.db.PlantImageDAOImpl;
 import com.yoxjames.coldsnap.db.WeatherDataDAO;
-import com.yoxjames.coldsnap.db.WeatherDataDAOSQLiteImpl;
-import com.yoxjames.coldsnap.db.image.PlantImageRowCursorWrapper;
+import com.yoxjames.coldsnap.db.WeatherDataDAOImpl;
 import com.yoxjames.coldsnap.db.image.PlantImageRowDAO;
-import com.yoxjames.coldsnap.db.image.PlantImageRowDAOSQLiteImpl;
-import com.yoxjames.coldsnap.db.plant.PlantRowCursorWrapper;
 import com.yoxjames.coldsnap.db.plant.PlantRowDAO;
-import com.yoxjames.coldsnap.db.plant.PlantRowDAOSQLiteImpl;
-import com.yoxjames.coldsnap.db.weather.ForecastDayRowCursorWrapper;
+import com.yoxjames.coldsnap.db.weather.ForecastHourRowDAO;
 import com.yoxjames.coldsnap.http.HTTPForecastService;
 import com.yoxjames.coldsnap.http.openweathermap.HTTPForecastServiceOWMImpl;
 import com.yoxjames.coldsnap.http.openweathermap.OpenWeatherMapHTTPService;
@@ -44,9 +41,12 @@ import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.TemperatureFormatterImpl;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapterImpl;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
+import com.yoxjames.coldsnap.prefs.CSSharedPreferencesImpl;
 import com.yoxjames.coldsnap.service.image.ImageService;
-import com.yoxjames.coldsnap.service.location.GPSLocationService;
-import com.yoxjames.coldsnap.service.location.GPSLocationServiceImpl;
+import com.yoxjames.coldsnap.service.image.ImageServiceImpl;
+import com.yoxjames.coldsnap.service.image.file.ImageFileService;
+import com.yoxjames.coldsnap.service.image.file.ImageFileServiceImpl;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 import com.yoxjames.coldsnap.service.location.WeatherLocationServicePreferenceImpl;
 import com.yoxjames.coldsnap.service.plant.PlantService;
@@ -54,12 +54,11 @@ import com.yoxjames.coldsnap.service.plant.PlantServiceImpl;
 import com.yoxjames.coldsnap.service.weather.WeatherService;
 import com.yoxjames.coldsnap.service.weather.WeatherServiceImpl;
 
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import dagger.Lazy;
 import dagger.Module;
 import dagger.Provides;
+import dagger.Reusable;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -69,9 +68,48 @@ import retrofit2.converter.gson.GsonConverterFactory;
 class ColdSnapApplicationModule
 {
     @Provides
-    static WeatherLocationService provideWeatherLocationService(SharedPreferences sharedPreferences)
+    @Singleton
+    static ColdSnapDatabase provideColdSnapDatabase(Context context)
     {
-        return new WeatherLocationServicePreferenceImpl(sharedPreferences);
+        return Room.databaseBuilder(context, ColdSnapDatabase.class, "coldsnap-db")
+                .fallbackToDestructiveMigration()
+                .build();
+    }
+
+    @Provides
+    static PlantRowDAO providePlantRowDAO(ColdSnapDatabase database)
+    {
+        return database.plantRowDAO();
+    }
+
+    @Provides
+    static PlantImageRowDAO providePlantImageRowDAO(ColdSnapDatabase database)
+    {
+        return database.plantImageRowDAO();
+    }
+
+    @Provides
+    static ForecastHourRowDAO provideForecastHourRowDAO(ColdSnapDatabase database)
+    {
+        return database.forecastHourRowDAO();
+    }
+
+    @Provides
+    static WeatherDataDAO provideWeatherDataDAO(ForecastHourRowDAO forecastHourRowDAO)
+    {
+        return new WeatherDataDAOImpl(forecastHourRowDAO);
+    }
+
+    @Provides
+    static PlantImageDAO providePlantImageDAO(PlantImageRowDAO plantImageRowDAO)
+    {
+        return new PlantImageDAOImpl(plantImageRowDAO);
+    }
+
+    @Provides
+    static WeatherLocationService provideWeatherLocationService(CSPreferences csPreferences)
+    {
+        return new WeatherLocationServicePreferenceImpl(csPreferences);
     }
 
     @Provides
@@ -81,69 +119,22 @@ class ColdSnapApplicationModule
     }
 
     @Provides
-    static WeatherDataDAO provideWeatherDataDAO(Provider<Lazy<ContentValues>> lazyProvider, SharedPreferences sharedPreferences, Provider<Lazy<ForecastDayRowCursorWrapper.Factory>> cursorWrapperFactory, ColdSnapDBHelper coldSnapDBHelper)
-    {
-        return new WeatherDataDAOSQLiteImpl(lazyProvider, cursorWrapperFactory, sharedPreferences, coldSnapDBHelper);
-    }
-
-    @Provides
-    static PlantRowDAO providePlantRowDAO(Provider<Lazy<ContentValues>> lazyProvider, Provider<Lazy<PlantRowCursorWrapper.Factory>> plantCursorWrapperFactory, ColdSnapDBHelper dbHelper)
-    {
-        return new PlantRowDAOSQLiteImpl(lazyProvider, plantCursorWrapperFactory, dbHelper);
-    }
-
-    @Provides
     static PlantDAO providePlantDAO(PlantRowDAO plantRowDAO)
     {
         return new PlantDAOImpl(plantRowDAO);
     }
 
     @Provides
-    static PlantImageRowCursorWrapper.Factory providePlantImageRowCursorWrapperFactory()
+    static TemperatureFormatter provideTemperatureFormatter(CSPreferences csPreferences)
     {
-        return PlantImageRowCursorWrapper::new;
+        return new TemperatureFormatterImpl(csPreferences);
     }
 
     @Provides
-    static PlantImageRowDAO providePlantImageRowDAO(Provider<Lazy<ContentValues>> lazyProvider, Provider<Lazy<PlantImageRowCursorWrapper.Factory>> factory, ColdSnapDBHelper dbHelper)
+    @Reusable
+    static TemperatureValueAdapter provideTemperatureValueAdapter(CSPreferences csPreferences)
     {
-        return new PlantImageRowDAOSQLiteImpl(lazyProvider, factory, dbHelper);
-    }
-
-    @Provides
-    static PlantRowCursorWrapper.Factory provideplantCursorWrapperFactory()
-    {
-        return PlantRowCursorWrapper::new;
-    }
-
-    @Provides
-    static ColdSnapDBHelper provideConditionsDBHelper(Context context)
-    {
-        return new ColdSnapDBHelper(context);
-    }
-
-    @Provides
-    static ContentValues provideContentValues()
-    {
-        return new ContentValues();
-    }
-
-    @Provides
-    static ForecastDayRowCursorWrapper.Factory provideForecastDayCursorWrapperFactory()
-    {
-        return ForecastDayRowCursorWrapper::new;
-    }
-
-    @Provides
-    static TemperatureFormatter provideTemperatureFormatter(SharedPreferences sharedPreferences)
-    {
-        return new TemperatureFormatterImpl(sharedPreferences);
-    }
-
-    @Provides
-    static TemperatureValueAdapter provideTemperatureValueAdapter(SharedPreferences sharedPreferences)
-    {
-        return new TemperatureValueAdapterImpl(sharedPreferences);
+        return new TemperatureValueAdapterImpl(csPreferences);
     }
 
     @Provides
@@ -153,22 +144,20 @@ class ColdSnapApplicationModule
     }
 
     @Provides
-    static GPSLocationService provideGPSLocationService()
+    static WeatherService provideWeatherService(
+        WeatherDataDAO weatherDataDAO,
+        HTTPForecastService httpForecastService,
+        WeatherLocationService weatherLocationService,
+        CSPreferences csPreferences)
     {
-        return new GPSLocationServiceImpl();
-    }
-
-    @Provides
-    static WeatherService provideWeatherService(WeatherDataDAO weatherDataDAO, HTTPForecastService httpForecastService)
-    {
-        return new WeatherServiceImpl(weatherDataDAO, httpForecastService);
+        return new WeatherServiceImpl(weatherDataDAO, httpForecastService, weatherLocationService, csPreferences);
     }
 
     @Provides
     @Singleton
-    static HTTPForecastService provideHTTPForecastService(OpenWeatherMapHTTPService owmService, SharedPreferences sharedPreferences)
+    static HTTPForecastService provideHTTPForecastService(OpenWeatherMapHTTPService owmService, CSPreferences csPreferences)
     {
-        return new HTTPForecastServiceOWMImpl(owmService, sharedPreferences);
+        return new HTTPForecastServiceOWMImpl(owmService, csPreferences);
     }
 
     @Provides
@@ -189,9 +178,22 @@ class ColdSnapApplicationModule
 
     @Provides
     @Singleton
-    static ImageService provideImageService(PlantImageRowDAO plantImageRowDAO)
+    static ImageService provideImageService(PlantImageDAO plantImageDAO, ImageFileService imageFileService, Context context)
     {
-        return new PlantImageDAOImpl(plantImageRowDAO);
+        return new ImageServiceImpl(plantImageDAO, imageFileService, context);
+    }
+
+    @Provides
+    @Singleton
+    static CSPreferences provideCSPreferences(SharedPreferences sharedPreferences)
+    {
+        return new CSSharedPreferencesImpl(sharedPreferences);
+    }
+
+    @Provides
+    static ImageFileService provideImageFileService(Context context)
+    {
+        return new ImageFileServiceImpl(context);
     }
 }
 

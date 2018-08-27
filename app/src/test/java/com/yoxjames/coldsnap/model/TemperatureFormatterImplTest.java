@@ -19,28 +19,29 @@
 
 package com.yoxjames.coldsnap.model;
 
-import android.content.SharedPreferences;
-
-import com.yoxjames.coldsnap.ui.CSPreferencesFragment;
+import com.yoxjames.coldsnap.prefs.CSPreferences;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TemperatureFormatterImplTest
 {
-    private @Mock SharedPreferences sharedPreferences;
+    private @Mock CSPreferences csPreferences;
 
     @Test
     public void testFahrenheitSame()
     {
         Temperature temperature = Temperature.newTemperatureFromF(32);
-        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(sharedPreferences);
-        when(sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE,"F")).thenReturn("F");
+        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
+        when(csPreferences.getTemperatureFormat()).thenReturn(FAHRENHEIT);
         assertEquals(temperatureFormatter.format(temperature), "32°F");
     }
 
@@ -48,8 +49,8 @@ public class TemperatureFormatterImplTest
     public void testFahrenheitTempAsC()
     {
         Temperature temperature = Temperature.newTemperatureFromF(32);
-        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(sharedPreferences);
-        when(sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE,"F")).thenReturn("C");
+        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
+        when(csPreferences.getTemperatureFormat()).thenReturn(CELSIUS);
         assertEquals(temperatureFormatter.format(temperature), "0°C");
     }
 
@@ -57,8 +58,8 @@ public class TemperatureFormatterImplTest
     public void testCelsiusSame()
     {
         Temperature temperature = Temperature.newTemperatureFromC(0);
-        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(sharedPreferences);
-        when(sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE,"F")).thenReturn("C");
+        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
+        when(csPreferences.getTemperatureFormat()).thenReturn(CELSIUS);
         assertEquals(temperatureFormatter.format(temperature), "0°C");
     }
 
@@ -66,8 +67,8 @@ public class TemperatureFormatterImplTest
     public void testCelsiusAsF()
     {
         Temperature temperature = Temperature.newTemperatureFromC(0);
-        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(sharedPreferences);
-        when(sharedPreferences.getString(CSPreferencesFragment.TEMPERATURE_SCALE,"F")).thenReturn("F");
+        TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
+        when(csPreferences.getTemperatureFormat()).thenReturn(FAHRENHEIT);
         assertEquals(temperatureFormatter.format(temperature), "32°F");
     }
 }

@@ -58,15 +58,9 @@ public class PlantServiceImpl implements PlantService
     }
 
     @Override
-    public Observable<ActionReply> addPlant(Plant plant)
+    public Observable<ActionReply> savePlant(Plant plant)
     {
-        return plantDAO.addPlant(plant);
-    }
-
-    @Override
-    public Observable<ActionReply> updatePlant(UUID oldPlantUUID, Plant newPlant)
-    {
-        return plantDAO.replacePlant(oldPlantUUID, newPlant);
+        return plantDAO.savePlant(plant);
     }
 
     @Override

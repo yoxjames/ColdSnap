@@ -19,10 +19,9 @@
 
 package com.yoxjames.coldsnap.db;
 
-import com.yoxjames.coldsnap.db.plant.PlantRow;
+import com.yoxjames.coldsnap.db.plant.PlantDBMapper;
 import com.yoxjames.coldsnap.db.plant.PlantRowDAO;
 import com.yoxjames.coldsnap.model.Plant;
-import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.service.ActionReply;
 
 import java.util.UUID;
@@ -31,6 +30,8 @@ import javax.inject.Inject;
 
 import dagger.Reusable;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by yoxjames on 10/14/17.
@@ -49,52 +50,37 @@ public class PlantDAOImpl implements PlantDAO
     @Override
     public Observable<Plant> getPlants()
     {
-        return plantRowDAO.getPlantRows().map(this::plantFromRow);
+        return Observable.fromCallable(plantRowDAO::getPlantRows)
+            .concatMap(Observable::fromIterable)
+            .map(PlantDBMapper::mapToPOJO)
+            .subscribeOn(Schedulers.io());
     }
 
     @Override
     public Observable<Plant> getPlant(UUID plantUUID)
     {
-        return plantRowDAO.getPlantRow(plantUUID.toString()).map(this::plantFromRow);
+        return plantRowDAO.getPlantRow(plantUUID.toString()).toObservable().map(PlantDBMapper::mapToPOJO);
     }
 
     @Override
-    public Observable<ActionReply> addPlant(Plant plant)
+    public Observable<ActionReply> savePlant(Plant plant)
     {
-        return plantRowDAO.addPlantRow(new PlantRow.Builder()
-                .uuid(plant.getUuid().toString())
-                .name(plant.getName())
-                .scientificName(plant.getScientificName())
-                .coldThresholdK(plant.getMinimumTolerance().getDegreesKelvin())
-                .build());
-
+        return Observable.create((ObservableEmitter<ActionReply> e) ->
+        {
+            plantRowDAO.addPlantRow(PlantDBMapper.mapToDB(plant));
+            e.onNext(ActionReply.genericSuccess());
+            e.onComplete();
+        }).subscribeOn(Schedulers.io());
     }
 
     @Override
     public Observable<ActionReply> deletePlant(UUID plantUUID)
     {
-        return plantRowDAO.deletePlantRow(plantUUID.toString());
-    }
-
-    @Override
-    public Observable<ActionReply> replacePlant(UUID oldPlantUUID, Plant newPlant)
-    {
-        return plantRowDAO.updatePlantRow(oldPlantUUID.toString(), new PlantRow.Builder()
-                        .uuid(newPlant.getUuid().toString())
-                        .name(newPlant.getName())
-                        .scientificName(newPlant.getScientificName())
-                        .coldThresholdK(newPlant.getMinimumTolerance().getDegreesKelvin())
-                        .mainImageUUID((newPlant.getMainImageUUID() != null) ? newPlant.getMainImageUUID().toString() : null)
-                        .build());
-    }
-
-    private Plant plantFromRow(PlantRow plantRow)
-    {
-        return new Plant(plantRow.getName(),
-                plantRow.getScientificName(),
-                new Temperature(plantRow.getColdThresholdK(), 0.0),
-                UUID.fromString(plantRow.getUuid()),
-                (plantRow.getMainImageUUID() == null) ? null : UUID.fromString(plantRow.getMainImageUUID()));
-
+        return Observable.create((ObservableEmitter<ActionReply> e) ->
+        {
+            plantRowDAO.deletePlantRow(plantUUID.toString());
+            e.onNext(ActionReply.genericSuccess());
+            e.onComplete();
+        }).subscribeOn(Schedulers.io());
     }
 }

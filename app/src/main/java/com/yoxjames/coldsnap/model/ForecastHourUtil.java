@@ -30,43 +30,37 @@ import java.util.List;
 
 public class ForecastHourUtil
 {
-    public static class HighLowPair
-    {
-        final ForecastHour dailyHigh;
-        final ForecastHour dailyLow;
-
-        HighLowPair(ForecastHour dailyHigh, ForecastHour dailyLow)
-        {
-            this.dailyHigh = dailyHigh;
-            this.dailyLow = dailyLow;
-        }
-
-        public ForecastHour getDailyHigh()
-        {
-            return dailyHigh;
-        }
-
-        public ForecastHour getDailyLow()
-        {
-            return dailyLow;
-        }
-    }
-
-    public static HighLowPair getDailyHighLow(List<ForecastHour> forecastHours)
+    public static ForecastHour getDailyHigh(List<ForecastHour> forecastHours)
     {
         final Instant threshold = Instant.now().plus(Duration.ofDays(1));
 
         ForecastHour currentDailyHigh = null;
+
+        for (ForecastHour hour : forecastHours)
+            if (hour.getHour().isBefore(threshold))
+                if (currentDailyHigh == null || hour.getTemperature().getDegreesKelvin() > currentDailyHigh.getTemperature().getDegreesKelvin())
+                    currentDailyHigh = hour;
+
+        if (currentDailyHigh == null)
+            throw new IllegalStateException("Could not determine daily high from forecastHours");
+
+        return currentDailyHigh;
+    }
+
+    public static ForecastHour getDailyLow(List<ForecastHour> forecastHours)
+    {
+        final Instant threshold = Instant.now().plus(Duration.ofDays(1));
+
         ForecastHour currentDailyLow = null;
 
         for (ForecastHour hour : forecastHours)
             if (hour.getHour().isBefore(threshold))
-            {
-                if (currentDailyHigh == null || hour.getTemperature().getDegreesKelvin() > currentDailyHigh.getTemperature().getDegreesKelvin())
-                    currentDailyHigh = hour;
                 if (currentDailyLow == null || hour.getTemperature().getDegreesKelvin() < currentDailyLow.getTemperature().getDegreesKelvin())
                     currentDailyLow = hour;
-            }
-        return new HighLowPair(currentDailyHigh, currentDailyLow);
+
+        if (currentDailyLow == null)
+            throw new IllegalStateException("Could not determine daily low from forecastHours");
+
+        return currentDailyLow;
     }
 }

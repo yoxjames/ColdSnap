@@ -30,22 +30,30 @@ import android.widget.TextView;
 
 import com.jakewharton.rxbinding2.view.RxView;
 import com.yoxjames.coldsnap.R;
+import com.yoxjames.coldsnap.ui.BaseColdsnapView;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import io.reactivex.Observable;
 
 /**
  * Created by yoxjames on 11/5/17.
  */
 
-public class WeatherPreviewBarView extends RelativeLayout
+public class WeatherPreviewBarView extends RelativeLayout implements BaseColdsnapView<WeatherBarViewModel>
 {
-    private TextView locationText;
-    private TextView highField;
-    private TextView lowField;
-    private TextView lastUpdatedField;
-    private LinearLayout content;
-    private ProgressBar progress;
-    private ImageView failedImage;
+    @BindView(R.id.location_text) protected TextView locationText;
+    @BindView(R.id.high_field) protected TextView highField;
+    @BindView(R.id.low_field) protected TextView lowField;
+    @BindView(R.id.last_updated_field) protected TextView lastUpdatedField;
+    @BindView(R.id.preview_bar_content) protected LinearLayout content;
+    @BindView(R.id.preview_bar_progress) protected ProgressBar progress;
+    @BindView(R.id.failed_icon) protected ImageView failedImage;
+
+    public WeatherPreviewBarView(Context context)
+    {
+        super(context);
+    }
 
     public WeatherPreviewBarView(Context context, AttributeSet attrs)
     {
@@ -57,35 +65,30 @@ public class WeatherPreviewBarView extends RelativeLayout
         super(context, attrs, defStyleAttr);
     }
 
-    public WeatherPreviewBarView(Context context)
+    public WeatherPreviewBarView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes)
     {
-        super(context);
+        super(context, attrs, defStyleAttr, defStyleRes);
     }
 
     @Override
     public void onFinishInflate()
     {
         super.onFinishInflate();
-        locationText = findViewById(R.id.location_text);
-        highField = findViewById(R.id.high_field);
-        lowField = findViewById(R.id.low_field);
-        lastUpdatedField = findViewById(R.id.last_updated_field);
-        content = findViewById(R.id.preview_bar_content);
-        progress = findViewById(R.id.preview_bar_progress);
-        failedImage = findViewById(R.id.failed_icon);
+        ButterKnife.bind(this);
     }
 
-    public void bindViewModel(WeatherBarViewModel viewModel)
+    @Override
+    public void bindView(WeatherBarViewModel viewModel)
     {
         content.setVisibility((viewModel.isPending()) ?
                 View.INVISIBLE :
-                (viewModel.getError() == null) ?
+                (viewModel.errorMessage().equals("")) ?
                         View.VISIBLE :
                         View.INVISIBLE);
 
         progress.setVisibility((viewModel.isPending()) ? View.VISIBLE : View.INVISIBLE);
-        failedImage.setVisibility((viewModel.getError() == null) ? View.INVISIBLE : View.VISIBLE);
-        locationText.setText((viewModel.getError() == null) ? viewModel.getLocationText() : getContext().getString(R.string.connection_failure));
+        failedImage.setVisibility((viewModel.errorMessage().equals("")) ? View.INVISIBLE : View.VISIBLE);
+        locationText.setText(viewModel.errorMessage().equals("") ? viewModel.getLocationText() : getContext().getString(R.string.connection_failure));
         highField.setText(viewModel.getHighTemperatureText());
         lowField.setText(viewModel.getLowTemperatureText());
         lastUpdatedField.setText(viewModel.getLastUpdatedTime());
