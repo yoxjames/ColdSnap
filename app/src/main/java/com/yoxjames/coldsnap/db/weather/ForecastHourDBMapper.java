@@ -14,9 +14,9 @@ public class ForecastHourDBMapper
         ForecastHourRow row = new ForecastHourRow();
         row.setUuid(forecastHour.getUuid().toString());
         row.setSyncInstant(syncInstant.getEpochSecond());
-        row.setTempK(forecastHour.getTemperature().getDegreesKelvin());
+        row.setTempK(forecastHour.getTemperature().getKelvin());
         row.setHourInstant(forecastHour.getHour().getEpochSecond());
-        row.setFuzzK(forecastHour.getTemperature().getFuzz());
+        row.setFuzzK(0);
         row.setLat(forecastHour.getLat());
         row.setLon(forecastHour.getLon());
 
@@ -27,7 +27,7 @@ public class ForecastHourDBMapper
     {
         return ForecastHour.create(
                 Instant.ofEpochSecond(forecastHourRow.getHourInstant()),
-                new Temperature(forecastHourRow.getTempK(), forecastHourRow.getFuzzK()),
+                Temperature.fromKelvin(forecastHourRow.getTempK()),
                 UUID.fromString(forecastHourRow.getUuid()),
                 forecastHourRow.getLat(),
                 forecastHourRow.getLon(),

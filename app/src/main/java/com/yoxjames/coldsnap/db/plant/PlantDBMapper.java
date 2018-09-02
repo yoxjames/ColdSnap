@@ -13,7 +13,7 @@ public class PlantDBMapper
         row.setUuid(plant.getUuid().toString());
         row.setName(plant.getName());
         row.setScientificName(plant.getScientificName());
-        row.setColdThresholdK(plant.getMinimumTolerance().getDegreesKelvin());
+        row.setColdThresholdK(plant.getMinimumTolerance().getKelvin());
 
         return row;
     }
@@ -21,9 +21,9 @@ public class PlantDBMapper
     public static Plant mapToPOJO(PlantRow plantRow)
     {
         return Plant.create(
-                plantRow.getName(),
-                plantRow.getScientificName(),
-                new Temperature(plantRow.getColdThresholdK()),
-                UUID.fromString(plantRow.getUuid()));
+            plantRow.getName(),
+            plantRow.getScientificName(),
+            Temperature.fromKelvin(plantRow.getColdThresholdK()),
+            UUID.fromString(plantRow.getUuid()));
     }
 }

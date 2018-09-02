@@ -1,6 +1,7 @@
 package com.yoxjames.coldsnap.ui.detail;
 
 import com.yoxjames.coldsnap.ui.MvpView;
+import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageViewModel;
 
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ public interface PlantDetailMvpView extends MvpView
 
     void bindView(PlantDetailViewModel vm);
     void takePhoto(String fileName);
-    void deletePhoto(String fileName);
+    void bindView(PlantProfileImageViewModel vm);
     void enableSave();
     void finish();
 

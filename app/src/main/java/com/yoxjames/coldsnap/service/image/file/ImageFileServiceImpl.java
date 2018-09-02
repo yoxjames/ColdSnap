@@ -33,6 +33,8 @@ public class ImageFileServiceImpl implements ImageFileService
                 "com.yoxjames.coldsnap.provider",
                 image);
             context.getContentResolver().delete(photoURI, null, null);
+            e.onNext(ActionReply.genericSuccess());
+            e.onComplete();
         })
             .subscribeOn(Schedulers.io());
     }

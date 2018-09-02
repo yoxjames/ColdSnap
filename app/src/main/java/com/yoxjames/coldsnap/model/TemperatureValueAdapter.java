@@ -26,10 +26,5 @@ package com.yoxjames.coldsnap.model;
 public interface TemperatureValueAdapter
 {
     int getValue(Temperature temperature);
-    int getAbsoluteValue(Temperature temperature);
-    int getValue(double kelvins);
-    int getAbsoluteValue(double kelvins);
-    double getKelvinTemperature(int value);
-    double getKelvinAbsoluteTemperature(int value);
     Temperature getTemperature(int value);
 }

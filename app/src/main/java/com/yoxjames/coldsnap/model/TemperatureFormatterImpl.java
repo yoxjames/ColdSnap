@@ -26,13 +26,18 @@ import javax.inject.Inject;
 
 import dagger.Reusable;
 
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToCelsius;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToCelsiusAbsVal;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToFahrenheit;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToFahrenheitAbsVal;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.roundToInt;
 import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
 import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
 import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.KELVIN;
 
 /**
  * Implementation of TemperatureFormatter that uses Android's SharedPreferences to determine
- * whether to show {@link Temperature} objects in either F or C.
+ * whether to show {@link LegacyTemperature} objects in either F or C.
  */
 @Reusable
 public class TemperatureFormatterImpl implements TemperatureFormatter
@@ -51,11 +56,11 @@ public class TemperatureFormatterImpl implements TemperatureFormatter
         switch (csPreferences.getTemperatureFormat())
         {
             case FAHRENHEIT:
-                return Integer.toString(Temperature.asFahrenheitDegrees(temperature)) + "°F";
+                return Integer.toString(roundToInt(kelvinToFahrenheit(temperature.getKelvin()))) + "°F";
             case CELSIUS:
-                return Integer.toString(Temperature.asCelsiusDegrees(temperature)) + "°C";
+                return Integer.toString(roundToInt(kelvinToCelsius(temperature.getKelvin()))) + "°C";
             case KELVIN:
-                return Double.toString(temperature.getDegreesKelvin()) + "K";
+                return Double.toString(temperature.getKelvin()) + "K";
             default:
                 throw new IllegalStateException("Invalikd temperature format");
         }
@@ -67,9 +72,9 @@ public class TemperatureFormatterImpl implements TemperatureFormatter
         switch (csPreferences.getTemperatureFormat())
         {
             case FAHRENHEIT:
-                return Integer.toString(Temperature.asFahrenheitValue(fuzzKelvins)) + "°F";
+                return Integer.toString(roundToInt(kelvinToFahrenheitAbsVal(fuzzKelvins))) + "°F";
             case CELSIUS:
-                return Integer.toString(Temperature.asCelsiusValue(fuzzKelvins)) + "°C";
+                return Integer.toString(roundToInt(kelvinToCelsiusAbsVal(fuzzKelvins))) + "°C";
             case KELVIN:
                 return Double.toString(fuzzKelvins) + "K";
             default:

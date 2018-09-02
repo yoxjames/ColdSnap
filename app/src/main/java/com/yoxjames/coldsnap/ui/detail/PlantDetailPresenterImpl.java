@@ -68,12 +68,10 @@ public class PlantDetailPresenterImpl extends AbstractBaseColdsnapPresenter impl
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(view::bindView));
         else
-        {
             view.bindView(PlantDetailViewModel.EMPTY
                 .toBuilder()
                 .setTemperaturePickerViewModel(plantDetailTemperaturePickerReducer.reduce())
                 .build());
-        }
 
         disposables.add(view.takeProfileImageRequests()
             .observeOn(Schedulers.io())
@@ -98,7 +96,8 @@ public class PlantDetailPresenterImpl extends AbstractBaseColdsnapPresenter impl
 
         disposables.add(view.imageDeleteRequests()
             .flatMap(imageService::deleteImagesForPlant)
-            .subscribe());
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(i -> view.bindView(PlantProfileImageViewModel.EMPTY)));
     }
 
     @Override

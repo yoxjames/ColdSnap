@@ -42,11 +42,6 @@ public class AboutActivity extends AppCompatActivity
     @BindView(R.id.licence_item) protected RelativeLayout licence;
     @BindView(R.id.view_source_item) protected RelativeLayout viewSource;
     @BindView(R.id.help_item) protected RelativeLayout help;
-    @BindView(R.id.report_bug_item) protected RelativeLayout reportBug;
-    @BindView(R.id.suggestions_item) protected RelativeLayout suggestions;
-    @BindView(R.id.changelog_item) protected RelativeLayout changelog;
-    @BindView(R.id.wunderground_item) protected RelativeLayout wunderground;
-    @BindView(R.id.icons8_item) protected RelativeLayout icons8;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -75,29 +70,6 @@ public class AboutActivity extends AppCompatActivity
         help.setOnClickListener(view ->
         {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/yoxjames/ColdSnap/wiki"));
-            startActivity(browserIntent);
-        });
-
-        // Report Bug
-        // TODO: Something for this
-
-        // Suggestions
-        // TODO: Something for this
-
-        // Changelog
-        // TODO: Create this
-
-        // Wunderground
-        wunderground.setOnClickListener(view ->
-        {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.wunderground.com"));
-            startActivity(browserIntent);
-        });
-
-        // Icons8
-        icons8.setOnClickListener(view ->
-        {
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.icons8.com"));
             startActivity(browserIntent);
         });
     }

@@ -36,14 +36,8 @@ public interface PlantImageRowDAO
     @Query("SELECT * FROM plant_image WHERE plant_uuid = :plantUUID")
     PlantImageRow getImageForPlant(String plantUUID);
 
-    @Query("SELECT * FROM plant_image WHERE uuid = :uuid")
-    PlantImageRow getImage(String uuid);
-
-    @Query("SELECT * FROM plant_image")
+    @Query("SELECT * FROM plant_image pi JOIN plant p WHERE p.uuid = pi.plant_uuid")
     List<PlantImageRow> getPlantImages();
-
-    @Query("DELETE FROM plant_image where uuid = :plantImageUUID")
-    void deleteImage(String plantImageUUID);
 
     @Query("DELETE FROM plant_image where plant_uuid = :plantUUID")
     void deleteImagesForPlant(String plantUUID);

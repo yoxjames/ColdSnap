@@ -33,37 +33,37 @@ public class TemperatureTest
     @Test
     public void testAttributesF()
     {
-        Temperature temperature = Temperature.newTemperatureFromF(32);
+        LegacyTemperature temperature = LegacyTemperature.newTemperatureFromF(32);
         assertEquals(temperature.getDegreesKelvin(), 273.15, .001);
-        assertEquals(Temperature.asFahrenheitDegrees(temperature), 32);
-        assertEquals(Temperature.asCelsiusDegrees(temperature), 0);
+        assertEquals(LegacyTemperature.asFahrenheitDegrees(temperature), 32);
+        assertEquals(LegacyTemperature.asCelsiusDegrees(temperature), 0);
     }
 
     @Test
     public void testAttributesC()
     {
-        Temperature temperature = Temperature.newTemperatureFromC(0);
+        LegacyTemperature temperature = LegacyTemperature.newTemperatureFromC(0);
         assertEquals(temperature.getDegreesKelvin(), 273.15, .001);
-        assertEquals(Temperature.asFahrenheitDegrees(temperature), 32);
-        assertEquals(Temperature.asCelsiusDegrees(temperature), 0);
+        assertEquals(LegacyTemperature.asFahrenheitDegrees(temperature), 32);
+        assertEquals(LegacyTemperature.asCelsiusDegrees(temperature), 0);
     }
 
     @Test
     public void assertFromKelvin()
     {
-        Temperature temperature = new Temperature(300.0);
-        assertEquals(80, Temperature.asFahrenheitDegrees(temperature));
-        assertEquals(27, Temperature.asCelsiusDegrees(temperature));
+        LegacyTemperature temperature = new LegacyTemperature(300.0);
+        assertEquals(80, LegacyTemperature.asFahrenheitDegrees(temperature));
+        assertEquals(27, LegacyTemperature.asCelsiusDegrees(temperature));
     }
 
     @Test
     public void testEqualTempsSameScale()
     {
-        Temperature a = Temperature.newTemperatureFromF(32);
-        Temperature b = Temperature.newTemperatureFromF(32);
+        LegacyTemperature a = LegacyTemperature.newTemperatureFromF(32);
+        LegacyTemperature b = LegacyTemperature.newTemperatureFromF(32);
 
-        Temperature c = Temperature.newTemperatureFromC(0);
-        Temperature d = Temperature.newTemperatureFromC(0);
+        LegacyTemperature c = LegacyTemperature.newTemperatureFromC(0);
+        LegacyTemperature d = LegacyTemperature.newTemperatureFromC(0);
 
         assertEquals(a.compareTo(b), 0);
         assertEquals(c.compareTo(d), 0);
@@ -75,11 +75,11 @@ public class TemperatureTest
     @Test
     public void testSameScaleComparison()
     {
-        Temperature a = Temperature.newTemperatureFromF(32);
-        Temperature b = Temperature.newTemperatureFromF(40);
+        LegacyTemperature a = LegacyTemperature.newTemperatureFromF(32);
+        LegacyTemperature b = LegacyTemperature.newTemperatureFromF(40);
 
-        Temperature c = Temperature.newTemperatureFromC(0);
-        Temperature d = Temperature.newTemperatureFromC(10);
+        LegacyTemperature c = LegacyTemperature.newTemperatureFromC(0);
+        LegacyTemperature d = LegacyTemperature.newTemperatureFromC(10);
 
         assertEquals(a.compareTo(b), -1);
         assertEquals(c.compareTo(d), -1);
@@ -91,11 +91,11 @@ public class TemperatureTest
     @Test
     public void testDifferentScaleEquality()
     {
-        Temperature a = Temperature.newTemperatureFromF(32);
-        Temperature b = Temperature.newTemperatureFromC(0);
+        LegacyTemperature a = LegacyTemperature.newTemperatureFromF(32);
+        LegacyTemperature b = LegacyTemperature.newTemperatureFromC(0);
 
-        Temperature c = Temperature.newTemperatureFromF(99);
-        Temperature d = Temperature.newTemperatureFromC(37);
+        LegacyTemperature c = LegacyTemperature.newTemperatureFromF(99);
+        LegacyTemperature d = LegacyTemperature.newTemperatureFromC(37);
 
         assertEquals(a.compareTo(b), 0);
         assertEquals(b.compareTo(a), 0);
@@ -107,11 +107,11 @@ public class TemperatureTest
     @Test
     public void testDifferentScaleComparison()
     {
-        Temperature a = Temperature.newTemperatureFromF(32);
-        Temperature b = Temperature.newTemperatureFromC(1);
+        LegacyTemperature a = LegacyTemperature.newTemperatureFromF(32);
+        LegacyTemperature b = LegacyTemperature.newTemperatureFromC(1);
 
-        Temperature c = Temperature.newTemperatureFromF(100);
-        Temperature d = Temperature.newTemperatureFromC(37);
+        LegacyTemperature c = LegacyTemperature.newTemperatureFromF(100);
+        LegacyTemperature d = LegacyTemperature.newTemperatureFromC(37);
 
         assertEquals(a.compareTo(b), -1);
         assertEquals(b.compareTo(a), 1);
@@ -123,8 +123,8 @@ public class TemperatureTest
     @Test
     public void testAnotherTempScaleComparison()
     {
-        Temperature a = Temperature.newTemperatureFromC(8);
-        Temperature b = Temperature.newTemperatureFromF(59);
+        LegacyTemperature a = LegacyTemperature.newTemperatureFromC(8);
+        LegacyTemperature b = LegacyTemperature.newTemperatureFromF(59);
 
         assertEquals(a.compareTo(b), -1);
     }
@@ -134,7 +134,7 @@ public class TemperatureTest
     {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("Temperatures below absolute zero are not physically possible");
-        new Temperature(-1.0);
+        new LegacyTemperature(-1.0);
     }
 
     @Test
@@ -142,7 +142,7 @@ public class TemperatureTest
     {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("Temperatures below absolute zero are not physically possible");
-        Temperature.newTemperatureFromC(-274);
+        LegacyTemperature.newTemperatureFromC(-274);
     }
 
     @Test
@@ -150,28 +150,28 @@ public class TemperatureTest
     {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("Temperatures below absolute zero are not physically possible");
-        Temperature.newTemperatureFromF(-460);
+        LegacyTemperature.newTemperatureFromF(-460);
     }
 
     @Test
     public void testExtraCompareTo()
     {
-        Temperature temperatureA = new Temperature(10, 5);
+        LegacyTemperature temperatureA = new LegacyTemperature(10, 5);
 
-        assertEquals(Temperature.LESSER, temperatureA.compareSignificanceTo(new Temperature(16)));
-        assertEquals(Temperature.GREATER, temperatureA.compareSignificanceTo(new Temperature(4)));
-        assertEquals(Temperature.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(13)));
-        assertEquals(Temperature.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(8)));
+        assertEquals(LegacyTemperature.LESSER, temperatureA.compareSignificanceTo(new LegacyTemperature(16)));
+        assertEquals(LegacyTemperature.GREATER, temperatureA.compareSignificanceTo(new LegacyTemperature(4)));
+        assertEquals(LegacyTemperature.MAYBE_LESSER, temperatureA.compareSignificanceTo(new LegacyTemperature(13)));
+        assertEquals(LegacyTemperature.MAYBE_GREATER, temperatureA.compareSignificanceTo(new LegacyTemperature(8)));
     }
 
     @Test
     public void testExtraCompareToDualFuzz()
     {
-        Temperature temperatureA = new Temperature(10, 5);
+        LegacyTemperature temperatureA = new LegacyTemperature(10, 5);
 
-        assertEquals(Temperature.LESSER, temperatureA.compareSignificanceTo(new Temperature(25, 5)));
-        assertEquals(Temperature.GREATER, temperatureA.compareSignificanceTo(new Temperature(1, 3)));
-        assertEquals(Temperature.MAYBE_LESSER, temperatureA.compareSignificanceTo(new Temperature(17,4)));
-        assertEquals(Temperature.MAYBE_GREATER, temperatureA.compareSignificanceTo(new Temperature(1,5)));
+        assertEquals(LegacyTemperature.LESSER, temperatureA.compareSignificanceTo(new LegacyTemperature(25, 5)));
+        assertEquals(LegacyTemperature.GREATER, temperatureA.compareSignificanceTo(new LegacyTemperature(1, 3)));
+        assertEquals(LegacyTemperature.MAYBE_LESSER, temperatureA.compareSignificanceTo(new LegacyTemperature(17,4)));
+        assertEquals(LegacyTemperature.MAYBE_GREATER, temperatureA.compareSignificanceTo(new LegacyTemperature(1,5)));
     }
 }

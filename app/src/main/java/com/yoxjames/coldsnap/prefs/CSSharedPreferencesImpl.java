@@ -66,13 +66,13 @@ public class CSSharedPreferencesImpl implements CSPreferences
     @Override
     public Temperature getThreshold()
     {
-        return new Temperature(sharedPreferences.getFloat(THRESHOLD, 273f));
+        return Temperature.fromKelvin(sharedPreferences.getFloat(THRESHOLD, 273f));
     }
 
     @Override
     public @TemperatureFormat int getTemperatureFormat()
     {
-        String stringVal = sharedPreferences.getString(TEMPERATURE_SCALE, "K");
+        String stringVal = sharedPreferences.getString(TEMPERATURE_SCALE, "F");
         switch (stringVal) {
             case "F":
                 return FAHRENHEIT;
@@ -142,7 +142,7 @@ public class CSSharedPreferencesImpl implements CSPreferences
 
         editor.putFloat(LAT, (float) preferenceModel.getCoords().getLat());
         editor.putFloat(LON, (float) preferenceModel.getCoords().getLon());
-        editor.putFloat(THRESHOLD, (float) preferenceModel.getThreshold().getDegreesKelvin());
+        editor.putFloat(THRESHOLD, (float) preferenceModel.getThreshold().getKelvin());
         editor.putFloat(WEATHER_DATA_FUZZ, preferenceModel.getWeatherDataFuzz());
         editor.putString(COLD_ALARM_TIME, preferenceModel.getColdAlarmTime());
         editor.putString(LOCATION_STRING, preferenceModel.getLocationString());

@@ -38,7 +38,7 @@ public class ForecastHourUtil
 
         for (ForecastHour hour : forecastHours)
             if (hour.getHour().isBefore(threshold))
-                if (currentDailyHigh == null || hour.getTemperature().getDegreesKelvin() > currentDailyHigh.getTemperature().getDegreesKelvin())
+                if (currentDailyHigh == null || hour.getTemperature().getKelvin() > currentDailyHigh.getTemperature().getKelvin())
                     currentDailyHigh = hour;
 
         if (currentDailyHigh == null)
@@ -55,7 +55,7 @@ public class ForecastHourUtil
 
         for (ForecastHour hour : forecastHours)
             if (hour.getHour().isBefore(threshold))
-                if (currentDailyLow == null || hour.getTemperature().getDegreesKelvin() < currentDailyLow.getTemperature().getDegreesKelvin())
+                if (currentDailyLow == null || hour.getTemperature().getKelvin() < currentDailyLow.getTemperature().getKelvin())
                     currentDailyLow = hour;
 
         if (currentDailyLow == null)

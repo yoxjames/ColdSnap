@@ -96,7 +96,7 @@ public class HTTPForecastServiceOWMImpl implements HTTPForecastService
             if (period.forecast != null && period.forecast.temp != null)
                 forecastHourList.add(ForecastHour.create(
                     Instant.ofEpochSecond(period.dt),
-                    new Temperature(period.forecast.temp, fuzzK),
+                    Temperature.fromKelvin(period.forecast.temp),
                     UUID.randomUUID(),
                     simpleWeatherLocation.getLat(),
                     simpleWeatherLocation.getLon(),

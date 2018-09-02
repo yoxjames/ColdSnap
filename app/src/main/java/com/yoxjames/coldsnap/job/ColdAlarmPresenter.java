@@ -52,7 +52,7 @@ public class ColdAlarmPresenter
     public void load()
     {
         /*
-        final Temperature coldThresholdPref = new Temperature(sharedPreferences.getFloat(CSPreferencesFragment.THRESHOLD, 273f));
+        final LegacyTemperature coldThresholdPref = new LegacyTemperature(sharedPreferences.getFloat(CSPreferencesFragment.THRESHOLD, 273f));
 
         weatherService.getWeatherData()
                 .subscribe(weatherData ->

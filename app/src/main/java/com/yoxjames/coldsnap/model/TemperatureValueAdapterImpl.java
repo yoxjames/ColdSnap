@@ -23,6 +23,8 @@ import com.yoxjames.coldsnap.prefs.CSPreferences;
 
 import javax.inject.Inject;
 
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToCelsius;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToFahrenheit;
 import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
 import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
 
@@ -44,66 +46,21 @@ public class TemperatureValueAdapterImpl implements TemperatureValueAdapter
     public int getValue(Temperature temperature)
     {
         if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
-            return Temperature.asFahrenheitDegrees(temperature);
+            return (int) kelvinToFahrenheit(temperature.getKelvin());
         else if (csPreferences.getTemperatureFormat() == CELSIUS)
-            return Temperature.asCelsiusDegrees(temperature);
+            return (int) kelvinToCelsius(temperature.getKelvin());
         else
-            throw new IllegalStateException("Invalid Temperature Preference");
-    }
-
-    @Override
-    public int getValue(double kelvins)
-    {
-        return getValue(new Temperature(kelvins));
-    }
-
-    @Override
-    public int getAbsoluteValue(double kelvins)
-    {
-        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
-            return Temperature.asFahrenheitValue(kelvins);
-        else if (csPreferences.getTemperatureFormat() == CELSIUS)
-            return Temperature.asCelsiusValue(kelvins);
-        else
-            throw new IllegalStateException("Invalid Temperature Preference");
-    }
-
-    @Override
-    public int getAbsoluteValue(Temperature temperature)
-    {
-        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
-            return Temperature.asFahrenheitValue(temperature.getDegreesKelvin());
-        else if (csPreferences.getTemperatureFormat() == CELSIUS)
-            return Temperature.asCelsiusValue(temperature.getDegreesKelvin());
-        else
-            throw new IllegalStateException("Invalid Temperature Preference");
-    }
-
-    @Override
-    public double getKelvinTemperature(int value)
-    {
-        return getTemperature(value).getDegreesKelvin();
-    }
-
-    @Override
-    public double getKelvinAbsoluteTemperature(int value)
-    {
-        if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
-            return (double) value * 5.0 / 9.0;
-        else if (csPreferences.getTemperatureFormat() == CELSIUS)
-            return (double) value;
-        else
-            throw new IllegalStateException("Invalid Temperature Preference");
+            throw new IllegalStateException("Invalid LegacyTemperature Preference");
     }
 
     @Override
     public Temperature getTemperature(int value)
     {
         if (csPreferences.getTemperatureFormat() == FAHRENHEIT)
-            return Temperature.newTemperatureFromF(value);
+            return Temperature.fromFahrenheit(value);
         else if (csPreferences.getTemperatureFormat() == CELSIUS)
-            return Temperature.newTemperatureFromC(value);
+            return Temperature.fromCelsius(value);
         else
-            throw new IllegalStateException("Invalid Temperature Preference");
+            throw new IllegalStateException("Invalid LegacyTemperature Preference");
     }
 }

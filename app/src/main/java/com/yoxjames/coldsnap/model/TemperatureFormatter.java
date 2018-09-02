@@ -28,10 +28,10 @@ import com.yoxjames.coldsnap.service.preferences.CSPreferencesService.Temperatur
 public interface TemperatureFormatter
 {
     /**
-     * Returns a human readable string representing the inputted Temperature. This string
+     * Returns a human readable string representing the inputted LegacyTemperature. This string
      * is intended to be used directly in the GUI.
      *
-     * @param temperature The Temperature to format
+     * @param temperature The LegacyTemperature to format
      * @return A String representing the formatted temperature
      */
     String format(Temperature temperature);

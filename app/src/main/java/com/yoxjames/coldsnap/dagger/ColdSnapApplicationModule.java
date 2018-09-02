@@ -37,6 +37,8 @@ import com.yoxjames.coldsnap.db.weather.ForecastHourRowDAO;
 import com.yoxjames.coldsnap.http.HTTPForecastService;
 import com.yoxjames.coldsnap.http.openweathermap.HTTPForecastServiceOWMImpl;
 import com.yoxjames.coldsnap.http.openweathermap.OpenWeatherMapHTTPService;
+import com.yoxjames.coldsnap.model.TemperatureComparator;
+import com.yoxjames.coldsnap.model.TemperatureComparatorImpl;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.TemperatureFormatterImpl;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
@@ -194,6 +196,12 @@ class ColdSnapApplicationModule
     static ImageFileService provideImageFileService(Context context)
     {
         return new ImageFileServiceImpl(context);
+    }
+
+    @Provides
+    static TemperatureComparator provideTemperatureComparator(CSPreferences csPreferences)
+    {
+        return new TemperatureComparatorImpl(csPreferences);
     }
 }
 

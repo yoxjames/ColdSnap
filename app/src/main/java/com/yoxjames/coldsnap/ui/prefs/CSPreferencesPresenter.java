@@ -4,10 +4,17 @@ import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
 import com.yoxjames.coldsnap.prefs.CSPreferences;
 import com.yoxjames.coldsnap.prefs.PreferenceModel;
+import com.yoxjames.coldsnap.service.preferences.CSPreferencesService;
 import com.yoxjames.coldsnap.ui.AbstractBaseColdsnapPresenter;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerViewModel;
 
 import io.reactivex.schedulers.Schedulers;
+
+import static com.yoxjames.coldsnap.model.TemperatureUtil.celsiusToKelvinAbsVal;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.fahrenheitToKelvinAbsVal;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToCelsiusAbsVal;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToFahrenheitAbsVal;
+import static com.yoxjames.coldsnap.model.TemperatureUtil.roundToInt;
 
 public class CSPreferencesPresenter extends AbstractBaseColdsnapPresenter<CSPreferencesView>
 {
@@ -57,7 +64,7 @@ public class CSPreferencesPresenter extends AbstractBaseColdsnapPresenter<CSPref
     {
         disposables.add(view.fuzzChanges()
             .observeOn(Schedulers.io())
-            .map(temperatureValueAdapter::getKelvinAbsoluteTemperature)
+            .map(this::getKelvinsFromValue)
             .map(Double::floatValue)
             .subscribe(csPreferences::setFuzz));
     }
@@ -75,11 +82,31 @@ public class CSPreferencesPresenter extends AbstractBaseColdsnapPresenter<CSPref
     private TemperaturePickerViewModel getFuzzVM(PreferenceModel preferenceModel)
     {
         return TemperaturePickerViewModel.builder()
-            .setValue(temperatureValueAdapter.getAbsoluteValue(preferenceModel.getWeatherDataFuzz()))
+            .setValue(getValueFromKelvins(csPreferences.getWeatherDataFuzz()))
             .setMinValue(0)
             .setMaxValue(10)
             .setFormat(csPreferences.getTemperatureFormat())
             .build();
+    }
+
+    private double getKelvinsFromValue(int value)
+    {
+        if (csPreferences.getTemperatureFormat() == CSPreferencesService.FAHRENHEIT)
+            return fahrenheitToKelvinAbsVal(value);
+        else if (csPreferences.getTemperatureFormat() == CSPreferencesService.CELSIUS)
+            return celsiusToKelvinAbsVal(value);
+        else
+            throw new IllegalStateException("Invalid temp format");
+    }
+
+    private int getValueFromKelvins(double kelvin)
+    {
+        if (csPreferences.getTemperatureFormat() == CSPreferencesService.FAHRENHEIT)
+            return roundToInt(kelvinToFahrenheitAbsVal(kelvin));
+        else if (csPreferences.getTemperatureFormat() == CSPreferencesService.CELSIUS)
+            return roundToInt(kelvinToCelsiusAbsVal(kelvin));
+        else
+            throw new IllegalStateException("Invalid temp format");
     }
 
 }

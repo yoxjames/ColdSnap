@@ -41,11 +41,11 @@ public class AutoStart extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent)
     {
-        ((ColdSnapApplication) context)
+        ((ColdSnapApplication) context.getApplicationContext())
             .getInjector()
             .inject(this);
 
-        String action = (intent.getAction() == null ? "" : intent.getAction());
+        final String action = (intent.getAction() == null ? "" : intent.getAction());
         if (action.equals(Intent.ACTION_BOOT_COMPLETED))
             setAlarm(context, csPreferences);
     }

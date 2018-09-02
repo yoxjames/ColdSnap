@@ -39,7 +39,7 @@ public class TemperatureFormatterImplTest
     @Test
     public void testFahrenheitSame()
     {
-        Temperature temperature = Temperature.newTemperatureFromF(32);
+        LegacyTemperature temperature = LegacyTemperature.newTemperatureFromF(32);
         TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
         when(csPreferences.getTemperatureFormat()).thenReturn(FAHRENHEIT);
         assertEquals(temperatureFormatter.format(temperature), "32°F");
@@ -48,7 +48,7 @@ public class TemperatureFormatterImplTest
     @Test
     public void testFahrenheitTempAsC()
     {
-        Temperature temperature = Temperature.newTemperatureFromF(32);
+        LegacyTemperature temperature = LegacyTemperature.newTemperatureFromF(32);
         TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
         when(csPreferences.getTemperatureFormat()).thenReturn(CELSIUS);
         assertEquals(temperatureFormatter.format(temperature), "0°C");
@@ -57,7 +57,7 @@ public class TemperatureFormatterImplTest
     @Test
     public void testCelsiusSame()
     {
-        Temperature temperature = Temperature.newTemperatureFromC(0);
+        LegacyTemperature temperature = LegacyTemperature.newTemperatureFromC(0);
         TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
         when(csPreferences.getTemperatureFormat()).thenReturn(CELSIUS);
         assertEquals(temperatureFormatter.format(temperature), "0°C");
@@ -66,7 +66,7 @@ public class TemperatureFormatterImplTest
     @Test
     public void testCelsiusAsF()
     {
-        Temperature temperature = Temperature.newTemperatureFromC(0);
+        LegacyTemperature temperature = LegacyTemperature.newTemperatureFromC(0);
         TemperatureFormatter temperatureFormatter = new TemperatureFormatterImpl(csPreferences);
         when(csPreferences.getTemperatureFormat()).thenReturn(FAHRENHEIT);
         assertEquals(temperatureFormatter.format(temperature), "32°F");

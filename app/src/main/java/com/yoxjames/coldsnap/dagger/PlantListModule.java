@@ -20,7 +20,10 @@
 package com.yoxjames.coldsnap.dagger;
 
 
+import com.yoxjames.coldsnap.model.TemperatureComparator;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
+import com.yoxjames.coldsnap.reducer.PlantListItemReducer;
+import com.yoxjames.coldsnap.reducer.WeatherBarReducer;
 import com.yoxjames.coldsnap.service.image.ImageService;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 import com.yoxjames.coldsnap.service.plant.PlantService;
@@ -54,9 +57,22 @@ public class PlantListModule
         WeatherService weatherService,
         PlantService plantService,
         WeatherLocationService weatherLocationService,
-        TemperatureFormatter temperatureFormatter,
-        ImageService imageService)
+        ImageService imageService,
+        PlantListItemReducer plantListItemReducer,
+        WeatherBarReducer weatherBarReducer)
     {
-        return new PlantListPresenterImpl(view, plantService, imageService, weatherService, weatherLocationService, temperatureFormatter);
+        return new PlantListPresenterImpl(view, plantService, imageService, weatherService, weatherLocationService, plantListItemReducer, weatherBarReducer);
+    }
+
+    @Provides
+    static PlantListItemReducer providePlantListItemReducer(TemperatureComparator temperatureComparator)
+    {
+        return new PlantListItemReducer(temperatureComparator);
+    }
+
+    @Provides
+    static WeatherBarReducer provideWeatherBarReducer(TemperatureFormatter temperatureFormatter)
+    {
+        return new WeatherBarReducer(temperatureFormatter);
     }
 }

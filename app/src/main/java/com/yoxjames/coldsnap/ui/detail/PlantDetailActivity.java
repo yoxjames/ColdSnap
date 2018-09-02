@@ -20,6 +20,7 @@ import com.yoxjames.coldsnap.R;
 import com.yoxjames.coldsnap.dagger.PlantDetailModule;
 import com.yoxjames.coldsnap.ui.BaseColdsnapActivity;
 import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageView;
+import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageViewModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -200,13 +201,9 @@ public class PlantDetailActivity extends BaseColdsnapActivity<PlantDetailPresent
     }
 
     @Override
-    public void deletePhoto(String fileName)
+    public void bindView(PlantProfileImageViewModel vm)
     {
-        File image = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
-        Uri photoURI = FileProvider.getUriForFile(this,
-            "com.yoxjames.coldsnap.provider",
-            image);
-        this.getContentResolver().delete(photoURI, null, null);
+        ppivPlantProfileImageView.bindView(vm);
     }
 
     @Override

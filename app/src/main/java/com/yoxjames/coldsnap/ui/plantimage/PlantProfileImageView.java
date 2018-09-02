@@ -27,7 +27,7 @@ public class PlantProfileImageView extends ConstraintLayout implements BaseColds
     @BindView(R.id.ib_delete_photo) ImageButton ibDeletePhoto;
 
     private UUID plantUUID = EMPTY_UUID;
-    private PlantProfileImageViewModel viewModel= PlantProfileImageViewModel.EMPTY;
+    private PlantProfileImageViewModel viewModel = PlantProfileImageViewModel.EMPTY;
 
     public PlantProfileImageView(Context context)
     {
@@ -57,7 +57,11 @@ public class PlantProfileImageView extends ConstraintLayout implements BaseColds
             Glide.with(this)
                 .load(viewModel.getImageURL())
                 .into(ivPlantProfile);
+        else
+            ivPlantProfile.setImageBitmap(null);
+
         ibTakePhoto.setClickable(viewModel.isTakeImageAvailable());
+        plantUUID = viewModel.getPlantUUID();
         this.viewModel = viewModel;
     }
 
@@ -68,7 +72,7 @@ public class PlantProfileImageView extends ConstraintLayout implements BaseColds
 
     public Observable<UUID> deleteProfilePhoto()
     {
-        return RxView.clicks(ibDeletePhoto).filter(i -> plantUUID.equals(EMPTY_UUID)).map(i -> plantUUID);
+        return RxView.clicks(ibDeletePhoto).filter(i -> !plantUUID.equals(EMPTY_UUID)).map(i -> plantUUID);
     }
 
     public void bindImage(String fileName)
