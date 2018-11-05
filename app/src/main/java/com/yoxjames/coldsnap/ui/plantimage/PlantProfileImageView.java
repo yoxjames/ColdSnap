@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.jakewharton.rxbinding2.view.RxView;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.core.view.BaseColdsnapView;
 
 import java.util.UUID;
 

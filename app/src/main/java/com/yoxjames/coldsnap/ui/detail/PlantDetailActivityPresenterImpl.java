@@ -1,12 +1,12 @@
 package com.yoxjames.coldsnap.ui.detail;
 
+import com.yoxjames.coldsnap.core.BaseColdsnapActivityPresenter;
 import com.yoxjames.coldsnap.model.Plant;
 import com.yoxjames.coldsnap.model.PlantImage;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
-import com.yoxjames.coldsnap.reducer.PlantDetailTemperaturePickerReducer;
+import com.yoxjames.coldsnap.reducer.PlantDetailReducer;
 import com.yoxjames.coldsnap.service.image.ImageService;
 import com.yoxjames.coldsnap.service.plant.PlantService;
-import com.yoxjames.coldsnap.ui.AbstractBaseColdsnapPresenter;
 import com.yoxjames.coldsnap.ui.plantimage.PlantImageSaveRequest;
 import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageViewModel;
 
@@ -22,30 +22,30 @@ import io.reactivex.schedulers.Schedulers;
 
 import static com.yoxjames.coldsnap.util.CSUtils.EMPTY_UUID;
 
-public class PlantDetailPresenterImpl extends AbstractBaseColdsnapPresenter implements PlantDetailPresenter
+public class PlantDetailActivityPresenterImpl extends BaseColdsnapActivityPresenter implements PlantDetailPresenter
 {
     private final PlantDetailMvpView view;
     private final PlantService plantService;
     private final TemperatureValueAdapter temperatureValueAdapter;
     private final ImageService imageService;
-    private final PlantDetailTemperaturePickerReducer plantDetailTemperaturePickerReducer;
+    private final PlantDetailReducer plantDetailReducer;
 
     private UUID plantUUID = EMPTY_UUID;
 
     @Inject
-    public PlantDetailPresenterImpl(
+    public PlantDetailActivityPresenterImpl(
         PlantDetailMvpView view,
         PlantService plantService,
         TemperatureValueAdapter temperatureValueAdapter,
         ImageService imageService,
-        PlantDetailTemperaturePickerReducer plantDetailTemperaturePickerReducer)
+        PlantDetailReducer plantDetailReducer)
     {
         super(view);
         this.view = view;
         this.plantService = plantService;
         this.temperatureValueAdapter = temperatureValueAdapter;
         this.imageService = imageService;
-        this.plantDetailTemperaturePickerReducer = plantDetailTemperaturePickerReducer;
+        this.plantDetailReducer = plantDetailReducer;
     }
 
     @Override
@@ -55,23 +55,16 @@ public class PlantDetailPresenterImpl extends AbstractBaseColdsnapPresenter impl
 
         plantUUID = view.getPlantUUID();
 
-        Observable<Plant> cachedPlant = plantService.getPlant(plantUUID).cache();
-
         if (!view.isNewPlant())
             disposables.add(
-                cachedPlant
-                .map(this::mapToVM)
-                .flatMap(vm -> imageService.getPlantImage(plantUUID)
-                    .map(plantImage -> composeImageToVM(vm, plantImage))
-                    .first(vm)
-                    .toObservable())
+                Observable.zip(
+                    plantService.getPlant(plantUUID),
+                    imageService.getPlantImage(plantUUID),
+                    plantDetailReducer::reduce)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(view::bindView));
         else
-            view.bindView(PlantDetailViewModel.EMPTY
-                .toBuilder()
-                .setTemperaturePickerViewModel(plantDetailTemperaturePickerReducer.reduce())
-                .build());
+            view.bindView(PlantDetailViewModel.EMPTY);
 
         disposables.add(view.takeProfileImageRequests()
             .observeOn(Schedulers.io())
@@ -113,28 +106,13 @@ public class PlantDetailPresenterImpl extends AbstractBaseColdsnapPresenter impl
 
         menuDisposables.add(view.plantDetailSaves()
             .observeOn(Schedulers.io())
-            .map(request ->
-                Plant.create(request.getName(), request.getScientificName(), temperatureValueAdapter.getTemperature(request.getTempVal()), plantUUID))
+            .map(request -> Plant.builder()
+                .name(request.getName())
+                .scientificName(request.getScientificName())
+                .minimumTolerance(temperatureValueAdapter.getTemperature(request.getTempVal()))
+                .uuid(plantUUID)
+                .build())
             .flatMap(plantService::savePlant)
             .subscribe(i -> view.finish()));
-    }
-
-    private PlantDetailViewModel mapToVM(Plant plant)
-    {
-        return PlantDetailViewModel.builder()
-            .setName(plant.getName())
-            .setScientificName(plant.getScientificName())
-            .setTemperaturePickerViewModel(plantDetailTemperaturePickerReducer.reduce(plant))
-            .setPlantProfileImageViewModel(PlantProfileImageViewModel.EMPTY)
-            .build();
-    }
-
-    private PlantDetailViewModel composeImageToVM(PlantDetailViewModel vm, PlantImage plantImage)
-    {
-        return vm.withPlantProfileImageViewModel(PlantProfileImageViewModel.builder()
-            .setImageURL(plantImage.getFileName())
-            .setPlantUUID(plantImage.getPlantUUID())
-            .setTakeImageAvailable(true)
-            .build());
     }
 }

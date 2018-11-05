@@ -22,19 +22,22 @@ package com.yoxjames.coldsnap.http.openweathermap;
 import com.yoxjames.coldsnap.BuildConfig;
 import com.yoxjames.coldsnap.http.HTTPForecastService;
 import com.yoxjames.coldsnap.model.ForecastHour;
-import com.yoxjames.coldsnap.model.ForecastHourUtil;
 import com.yoxjames.coldsnap.model.Temperature;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
+import com.yoxjames.coldsnap.model.Windspeed;
 import com.yoxjames.coldsnap.prefs.CSPreferences;
 import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 import com.yoxjames.coldsnap.util.LOG;
 
 import org.threeten.bp.Instant;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -84,30 +87,26 @@ public class HTTPForecastServiceOWMImpl implements HTTPForecastService
     @Nullable
     private WeatherData mapToPOJO(OpenWeatherMapForecast owmForecast, SimpleWeatherLocation simpleWeatherLocation)
     {
-        final double fuzzK = csPreferences.getWeatherDataFuzz();
-
-        final List<ForecastHour> forecastHourList = new ArrayList<>();
-
-        if (owmForecast.list == null)
-            return null;
-
-        for (OpenWeatherMapForecast.ForecastPeriods period : owmForecast.list)
-        {
-            if (period.forecast != null && period.forecast.temp != null)
-                forecastHourList.add(ForecastHour.create(
-                    Instant.ofEpochSecond(period.dt),
-                    Temperature.fromKelvin(period.forecast.temp),
-                    UUID.randomUUID(),
-                    simpleWeatherLocation.getLat(),
-                    simpleWeatherLocation.getLon(),
-                    Instant.now()));
-        }
-
-        ForecastHour dailyHigh = ForecastHourUtil.getDailyHigh(forecastHourList);
-        ForecastHour dailyLow = ForecastHourUtil.getDailyLow(forecastHourList);
-
-        if (dailyHigh == null || dailyLow == null)
-            return null;
+        final List<ForecastHour> forecastHourList = Optional.ofNullable(owmForecast.list)
+            .orElse(Collections.emptyList())
+            .stream()
+            .flatMap(period ->
+            {
+                if (period.dt == null
+                        || period.forecast == null
+                        || period.forecast.temp == null
+                        || period.wind == null
+                        || period.wind.speed == null)
+                    return Stream.empty();
+                else
+                    return Stream.of(ForecastHour.builder()
+                        .hour(Instant.ofEpochSecond(period.dt))
+                        .windspeed(Windspeed.fromMetersPerSecond(period.wind.speed))
+                        .uuid(UUID.randomUUID())
+                        .temperature(Temperature.fromKelvin(period.forecast.temp))
+                        .build());
+            })
+            .collect(Collectors.toList());
 
         String name = "";
 
@@ -117,8 +116,6 @@ public class HTTPForecastServiceOWMImpl implements HTTPForecastService
         return WeatherData.builder()
             .forecastHours(forecastHourList)
             .syncInstant(Instant.now())
-            .todayHigh(dailyHigh)
-            .todayLow(dailyLow)
             .weatherLocation(WeatherLocation.builder()
                 .setPlaceString(name)
                 .setLat(simpleWeatherLocation.getLat())
@@ -126,4 +123,5 @@ public class HTTPForecastServiceOWMImpl implements HTTPForecastService
                 .build())
             .build();
     }
+
 }

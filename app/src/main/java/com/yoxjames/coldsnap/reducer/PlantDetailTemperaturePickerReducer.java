@@ -8,8 +8,6 @@ import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerView
 
 import javax.inject.Inject;
 
-import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
-
 public class PlantDetailTemperaturePickerReducer
 {
     private final CSPreferences csPreferences;
@@ -25,31 +23,15 @@ public class PlantDetailTemperaturePickerReducer
     public TemperaturePickerViewModel reduce(Plant plant)
     {
         return TemperaturePickerViewModel.builder()
-            .setFormat(getVMTemperatureFormat())
+            .setFormat(getTemperatureFormat())
             .setMinValue(-100)
             .setMaxValue(100)
             .setValue(temperatureValueAdapter.getValue(plant.getMinimumTolerance()))
             .build();
     }
 
-    public TemperaturePickerViewModel reduce()
-    {
-        return TemperaturePickerViewModel.builder()
-            .setFormat(getVMTemperatureFormat())
-            .setMinValue(-100)
-            .setMaxValue(100) // TODO: These should vary with the temp format
-            .setValue(getTemperatureFormat() == FAHRENHEIT ? 32 : 0) // TODO: Handle this better
-            .build();
-    }
-
     private @TemperatureFormat int getTemperatureFormat()
     {
         return csPreferences.getTemperatureFormat();
-    }
-
-    private @TemperaturePickerViewModel.Format int getVMTemperatureFormat()
-    {
-        return csPreferences.getTemperatureFormat() == FAHRENHEIT ?
-            TemperaturePickerViewModel.FAHRENHEIT : TemperaturePickerViewModel.CELSIUS;
     }
 }

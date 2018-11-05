@@ -1,23 +1,13 @@
 package com.yoxjames.coldsnap.ui.controls.temperaturepicker;
 
-import android.support.annotation.IntDef;
-
 import com.google.auto.value.AutoValue;
+import com.yoxjames.coldsnap.service.preferences.CSPreferencesService.TemperatureFormat;
 
-import java.lang.annotation.Retention;
-
-import static java.lang.annotation.RetentionPolicy.SOURCE;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
 
 @AutoValue
 public abstract class TemperaturePickerViewModel
 {
-    @Retention(SOURCE)
-    @IntDef({ FAHRENHEIT, CELSIUS })
-    public @interface Format {}
-
-    public static final int FAHRENHEIT = 2;
-    public static final int CELSIUS = 1;
-
     public static TemperaturePickerViewModel EMPTY = builder()
         .setFormat(CELSIUS)
         .setMaxValue(100)
@@ -28,7 +18,7 @@ public abstract class TemperaturePickerViewModel
     public abstract int getValue();
     public abstract int getMinValue();
     public abstract int getMaxValue();
-    @Format public abstract int getFormat();
+    @TemperatureFormat public abstract int getFormat();
 
     public static Builder builder()
     {
@@ -48,7 +38,7 @@ public abstract class TemperaturePickerViewModel
         public abstract Builder setValue(int value);
         public abstract Builder setMinValue(int minValue);
         public abstract Builder setMaxValue(int maxValue);
-        public abstract Builder setFormat(@Format int format);
+        public abstract Builder setFormat(@TemperatureFormat int format);
 
         public abstract TemperaturePickerViewModel build();
     }

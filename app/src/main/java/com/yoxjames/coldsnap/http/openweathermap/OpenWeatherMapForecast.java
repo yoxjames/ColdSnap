@@ -53,7 +53,7 @@ class OpenWeatherMapForecast
 
     class ForecastPeriods
     {
-        @SerializedName("dt") @Expose long dt;
+        @SerializedName("dt") @Expose @Nullable Long dt;
         @SerializedName("main") @Expose @Nullable Forecast forecast;
 
         class Forecast
@@ -63,6 +63,14 @@ class OpenWeatherMapForecast
             @SerializedName("temp_max") @Expose @Nullable Double tempMax;
             @SerializedName("pressure") @Expose @Nullable Double pressure;
             @SerializedName("humidity") @Expose @Nullable Integer humidity;
+        }
+
+        @SerializedName("wind") @Expose @Nullable Wind wind;
+
+        class Wind
+        {
+            @SerializedName("speed") @Expose @Nullable Double speed;
+            @SerializedName("deg") @Expose @Nullable Double degrees;
         }
     }
 }

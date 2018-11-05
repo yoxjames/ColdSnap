@@ -20,10 +20,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/menu_item_settings"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/menu_item_set_location"
         android:icon="@android:drawable/ic_menu_mylocation"
         android:title="@string/set_location"
@@ -32,9 +28,5 @@
         android:id="@+id/menu_item_new_plant"
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/new_plant"
-        app:showAsAction="ifRoom|withText" />
-    <item
-        android:id="@+id/menu_about_coldsnap"
-        android:title="@string/about"
-        app:showAsAction="never" />
+        app:showAsAction="always" />
 </menu>

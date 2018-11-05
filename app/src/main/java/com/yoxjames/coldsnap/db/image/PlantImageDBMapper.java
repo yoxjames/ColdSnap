@@ -24,11 +24,11 @@ public class PlantImageDBMapper
     public static PlantImage mapToPOJO(PlantImageRow plantImageRow)
     {
         return PlantImage.builder()
-                .setTitle(plantImageRow.getTitle())
-                .setImageDate(Instant.ofEpochSecond(plantImageRow.getImageDate()))
-                .setFileName(plantImageRow.getImageFilename())
-                .setImageUUID(UUID.fromString(plantImageRow.getUuid()))
-                .setPlantUUID(UUID.fromString(plantImageRow.getPlantUUID()))
-                .build();
+            .setTitle(plantImageRow.getTitle())
+            .setImageDate(Instant.ofEpochSecond(plantImageRow.getImageDate()))
+            .setFileName(plantImageRow.getImageFilename())
+            .setImageUUID(UUID.fromString(plantImageRow.getUuid()))
+            .setPlantUUID(UUID.fromString(plantImageRow.getPlantUUID()))
+            .build();
     }
 }

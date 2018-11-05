@@ -30,6 +30,7 @@ public class ForecastHourRow
     @NonNull @PrimaryKey private String uuid;
     @NonNull @ColumnInfo(name = "sync_time") private long syncInstant;
     @NonNull @ColumnInfo(name = "temp_k") private double tempK;
+    @NonNull @ColumnInfo(name = "windspeed_mps") private double windSpeedMps;
     @NonNull @ColumnInfo(name = "forecast_time") private long hourInstant;
     @NonNull @ColumnInfo(name = "fuzz_k") private double fuzzK;
     @NonNull @ColumnInfo(name = "lat") private double lat;
@@ -110,5 +111,16 @@ public class ForecastHourRow
     public void setLon(@NonNull double lon)
     {
         this.lon = lon;
+    }
+
+    @NonNull
+    public double getWindSpeedMps()
+    {
+        return windSpeedMps;
+    }
+
+    public void setWindSpeedMps(@NonNull double windSpeedMps)
+    {
+        this.windSpeedMps = windSpeedMps;
     }
 }

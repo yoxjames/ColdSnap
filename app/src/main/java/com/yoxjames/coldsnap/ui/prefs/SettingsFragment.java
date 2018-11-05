@@ -26,7 +26,7 @@ import android.preference.PreferenceFragment;
 
 import com.yoxjames.coldsnap.ColdSnapApplication;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.dagger.CSPreferencesModule;
+import com.yoxjames.coldsnap.dagger.SettingsFragmentModule;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.prefs.CSPreferences;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerViewModel;
@@ -35,7 +35,7 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 
-public class CSPreferencesFragment extends PreferenceFragment implements CSPreferencesView
+public class SettingsFragment extends PreferenceFragment implements CSPreferencesView
 {
     private static final String THRESHOLD = "com.yoxjames.coldsnap.THRESHOLD";
     private static final String TEMPERATURE_SCALE = "com.yoxjames.coldsnap.TEMPFORMAT";
@@ -60,7 +60,7 @@ public class CSPreferencesFragment extends PreferenceFragment implements CSPrefe
 
         ((ColdSnapApplication) getActivity().getApplicationContext())
             .getInjector()
-            .csPreferencesFragmentSubcomponent(new CSPreferencesModule(this))
+            .settingsFragmentSubcomponent(new SettingsFragmentModule(this))
             .inject(this);
 
         super.onCreate(savedInstanceState);

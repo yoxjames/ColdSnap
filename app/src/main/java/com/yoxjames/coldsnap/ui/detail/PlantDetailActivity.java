@@ -18,7 +18,7 @@ import com.jakewharton.rxbinding2.view.RxMenuItem;
 import com.yoxjames.coldsnap.ColdSnapApplication;
 import com.yoxjames.coldsnap.R;
 import com.yoxjames.coldsnap.dagger.PlantDetailModule;
-import com.yoxjames.coldsnap.ui.BaseColdsnapActivity;
+import com.yoxjames.coldsnap.core.BaseColdsnapActivity;
 import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageView;
 import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageViewModel;
 
@@ -72,6 +72,12 @@ public class PlantDetailActivity extends BaseColdsnapActivity<PlantDetailPresent
     protected Toolbar getToolbar()
     {
         return toolbar;
+    }
+
+    @Override
+    protected int getNavigationId()
+    {
+        return R.id.menu_plants;
     }
 
     @Override

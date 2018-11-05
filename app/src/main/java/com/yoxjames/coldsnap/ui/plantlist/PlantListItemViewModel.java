@@ -47,34 +47,33 @@ public abstract class PlantListItemViewModel
     public static final int SAD = 3;
     public static final int DEAD = 4;
 
-    public static PlantListItemViewModel EMPTY = builder().build();
+    public static PlantListItemViewModel EMPTY = builder()
+        .plantName("")
+        .plantScientificName("")
+        .plantStatus(PENDING)
+        .uuid(EMPTY_UUID)
+        .imageFileName("")
+        .build();
 
     public abstract String getPlantName();
     public abstract String getPlantScientificName();
     @PlantStatus public abstract int getPlantStatus();
-    public abstract UUID getUUID();
+    public abstract UUID getUuid();
     public abstract String getImageFileName();
 
     public static Builder builder()
     {
-        return new AutoValue_PlantListItemViewModel.Builder()
-            .setPlantName("")
-            .setPlantScientificName("")
-            .setPlantStatus(PENDING)
-            .setUUID(EMPTY_UUID)
-            .setImageFileName("");
+        return new AutoValue_PlantListItemViewModel.Builder();
     }
-
-    public abstract Builder toBuilder();
 
     @AutoValue.Builder
     public abstract static class Builder
     {
-        public abstract Builder setPlantName(String plantName);
-        public abstract Builder setPlantScientificName(String scientificName);
-        public abstract Builder setPlantStatus(@PlantStatus int status);
-        public abstract Builder setUUID(UUID uuid);
-        public abstract Builder setImageFileName(String fileName);
+        public abstract Builder plantName(String plantName);
+        public abstract Builder plantScientificName(String scientificName);
+        public abstract Builder plantStatus(@PlantStatus int status);
+        public abstract Builder uuid(UUID uuid);
+        public abstract Builder imageFileName(String fileName);
 
         public abstract PlantListItemViewModel build();
     }

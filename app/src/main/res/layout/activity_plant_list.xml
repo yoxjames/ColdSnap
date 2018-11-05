@@ -30,24 +30,7 @@
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:fitsSystemWindows="true"
         android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.design.widget.CollapsingToolbarLayout
-            android:id="@+id/collapsing_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:contentScrim="?attr/colorPrimary">
-
-        <include layout="@layout/view_weather_preview"
-                 android:id="@+id/weather_preview_bar_view"
-                 android:layout_height="wrap_content"
-                 app:layout_collapseMode="parallax"
-                 app:layout_collapseParallaxMultiplier="0.83"
-                 android:layout_width="match_parent" />
-
-        </android.support.design.widget.CollapsingToolbarLayout>
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -68,6 +51,8 @@
         android:layout_height="match_parent"
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="?attr/actionBarSize"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:context=".ui.plantlist.PlantListActivity">
 
@@ -77,7 +62,8 @@
             android:layout_width="match_parent"/>
     </android.support.v4.widget.NestedScrollView>
 
-<!--    <android.support.design.widget.BottomNavigationView
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/bnv_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -86,6 +72,6 @@
         app:itemTextColor="@color/white"
         app:menu="@menu/menu_bottom_nav">
 
-    </android.support.design.widget.BottomNavigationView>-->
+    </android.support.design.widget.BottomNavigationView>
 
 </android.support.design.widget.CoordinatorLayout>

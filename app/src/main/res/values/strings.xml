@@ -18,11 +18,24 @@
   -->
 
 <resources>
+
+    <!-- Settings -->
+    <string name="temperature_scale">Temperature Scale</string>
+    <string name="minimum_temp_label">Minimum Temperature</string>
+    <string name="fahrenheit">Fahrenheit</string>
+    <string name="celsius">Celsius</string>
+    <string name="kelvin">Kelvin</string>
+    <string-array name="temperature_scales">
+        <item>@string/fahrenheit</item>
+        <item>@string/celsius</item>
+        <item>@string/kelvin</item>
+    </string-array>
+
+
     <string name="app_name">ColdSnap</string>
     <string name="action_settings">Settings</string>
     <string name="plant_name_label">Plant Name</string>
     <string name="plant_scientific_name_label">Scientific Name</string>
-    <string name="minimum_temp_label">Minimum Temperature</string>
     <string name="new_plant">New Plant</string>
     <string name="delete_plant">Delete Plant</string>
     <string name="last_weather_update">Last Updated:</string>
@@ -78,4 +91,9 @@
     <string name="settings">Settings</string>
     <string name="plants">Plants</string>
     <string name="feed">Feed</string>
+
+    <!-- Temperature Graph -->
+    <string name="temperature_graph_title">Temperature</string>
+    <string name="freezing">Freezing</string>
+    <string name="cold_threshold">User Threshold</string>
 </resources>

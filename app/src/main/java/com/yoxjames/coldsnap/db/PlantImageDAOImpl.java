@@ -34,6 +34,8 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.schedulers.Schedulers;
 
+import static com.yoxjames.coldsnap.model.PlantImage.NO_IMAGE;
+
 /**
  * Created by yoxjames on 11/18/17.
  */
@@ -51,13 +53,15 @@ public class PlantImageDAOImpl implements PlantImageDAO
     @Override
     public Observable<PlantImage> getPlantImage(UUID plantUUID)
     {
-        return Observable.create((ObservableEmitter<PlantImageRow> e) ->
+        return Observable.create((ObservableEmitter<PlantImage> e) ->
         {
-            if (plantImageRowDAO.getImageForPlant(plantUUID.toString()) != null)
-                e.onNext(plantImageRowDAO.getImageForPlant(plantUUID.toString()));
+            PlantImageRow plantImageRow = plantImageRowDAO.getImageForPlant(plantUUID.toString());
+            if (plantImageRow != null)
+                e.onNext(PlantImageDBMapper.mapToPOJO(plantImageRow));
+            else
+                e.onNext(NO_IMAGE);
             e.onComplete();
         })
-            .map(PlantImageDBMapper::mapToPOJO)
             .subscribeOn(Schedulers.io());
     }
 

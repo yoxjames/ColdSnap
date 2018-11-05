@@ -1,6 +1,6 @@
 package com.yoxjames.coldsnap.ui.prefs;
 
-import com.yoxjames.coldsnap.ui.MvpView;
+import com.yoxjames.coldsnap.core.MvpView;
 
 import io.reactivex.Observable;
 

@@ -34,13 +34,22 @@ public abstract class ForecastHour
 {
     public abstract Instant getHour();
     public abstract Temperature getTemperature();
+    public abstract Windspeed getWindspeed();
     public abstract UUID getUuid();
-    public abstract double getLat();
-    public abstract double getLon();
-    public abstract Instant getSyncTime();
 
-    public static ForecastHour create(Instant hour, Temperature temperature, UUID uuid, double lat, double lon, Instant syncTime)
+    public static Builder builder()
     {
-        return new AutoValue_ForecastHour(hour, temperature, uuid, lat, lon, syncTime);
+        return new AutoValue_ForecastHour.Builder();
+    }
+
+    @AutoValue.Builder
+    public static abstract class Builder
+    {
+        public abstract Builder hour(Instant hour);
+        public abstract Builder temperature(Temperature temperature);
+        public abstract Builder windspeed(Windspeed windspeed);
+        public abstract Builder uuid(UUID uuid);
+
+        public abstract ForecastHour build();
     }
 }

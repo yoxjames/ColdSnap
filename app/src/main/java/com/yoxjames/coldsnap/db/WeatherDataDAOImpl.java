@@ -1,16 +1,14 @@
 package com.yoxjames.coldsnap.db;
 
 import com.yoxjames.coldsnap.db.weather.ForecastHourDBMapper;
-import com.yoxjames.coldsnap.db.weather.ForecastHourRow;
 import com.yoxjames.coldsnap.db.weather.ForecastHourRowDAO;
-import com.yoxjames.coldsnap.model.ForecastHour;
-import com.yoxjames.coldsnap.model.ForecastHourUtil;
 import com.yoxjames.coldsnap.model.WeatherData;
 import com.yoxjames.coldsnap.model.WeatherLocation;
 import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.threeten.bp.Instant;
+
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -33,12 +31,10 @@ public class WeatherDataDAOImpl implements WeatherDataDAO
     {
         return Completable.create(e ->
         {
-            List<ForecastHourRow> forecastHourRowList = new ArrayList<>();
-
-            for (ForecastHour forecastHour : weatherData.getForecastHours())
-                forecastHourRowList.add(ForecastHourDBMapper.mapToDB(weatherData.getSyncInstant(), forecastHour));
-
-            forecastHourRowDAO.addForecastHours(forecastHourRowList);
+            forecastHourRowDAO.addForecastHours(
+                weatherData.getForecastHours().stream()
+                    .map(forecastHour -> ForecastHourDBMapper.mapToDB(weatherData, forecastHour))
+                    .collect(Collectors.toList()));
             e.onComplete();
         })
             .subscribeOn(Schedulers.io());
@@ -47,22 +43,18 @@ public class WeatherDataDAOImpl implements WeatherDataDAO
     @Override
     public Observable<WeatherData> getWeatherData(SimpleWeatherLocation weatherLocation) {
         return Observable.fromCallable(() -> forecastHourRowDAO.getForecastHours(weatherLocation.getLat(), weatherLocation.getLon()))
-                .concatMap(Observable::fromIterable)
-                .map(ForecastHourDBMapper::mapToPOJO)
-                .toList()
                 .filter(list -> !list.isEmpty())
                 .map(forecastHours -> WeatherData.builder()
-                    .syncInstant(forecastHours.get(0).getSyncTime())
-                    .forecastHours(forecastHours)
-                    .todayHigh(ForecastHourUtil.getDailyHigh(forecastHours))
-                    .todayLow(ForecastHourUtil.getDailyLow(forecastHours))
+                    .syncInstant(Instant.ofEpochSecond(forecastHours.get(0).getSyncInstant()))
+                    .forecastHours(forecastHours.stream()
+                        .map(ForecastHourDBMapper::mapToPOJO)
+                        .collect(Collectors.toList()))
                     .weatherLocation(WeatherLocation.builder()
                         .setPlaceString("")
                         .setLat(forecastHours.get(0).getLat())
                         .setLon(forecastHours.get(0).getLon())
                         .build())
                 .build())
-                .toObservable()
                 .subscribeOn(Schedulers.io());
     }
 

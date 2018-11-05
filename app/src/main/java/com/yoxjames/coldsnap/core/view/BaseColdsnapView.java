@@ -1,4 +1,4 @@
-package com.yoxjames.coldsnap.ui;
+package com.yoxjames.coldsnap.core.view;
 
 public interface BaseColdsnapView<VM>
 {

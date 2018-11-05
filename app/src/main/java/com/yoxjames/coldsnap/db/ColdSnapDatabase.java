@@ -12,7 +12,7 @@ import com.yoxjames.coldsnap.db.weather.ForecastHourRowDAO;
 
 @Database(
         entities = { PlantRow.class, ForecastHourRow.class, PlantImageRow.class },
-        version = 2,
+        version = 3,
         exportSchema = false) // TODO: Maybe we should export the schema?
 public abstract class ColdSnapDatabase extends RoomDatabase
 {

@@ -26,7 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.core.view.BaseColdsnapView;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerView;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerViewModel;
 

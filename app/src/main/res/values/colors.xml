@@ -19,8 +19,8 @@
   -->
 
 <resources>
-    <color name="colorPrimary">#3e2723</color>
-    <color name="colorPrimaryDark">#303f9f</color>
+    <color name="colorPrimary">#1b5e20</color>
+    <color name="colorPrimaryDark">#003300</color>
     <color name="colorAccent">#1b5e20</color>
     <color name="colorSkyBlue">#00bcd4</color>
     <color name="photo_background">#aaa</color>

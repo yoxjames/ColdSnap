@@ -1,13 +1,13 @@
 package com.yoxjames.coldsnap.ui.detail;
 
-import com.yoxjames.coldsnap.ui.MvpView;
+import com.yoxjames.coldsnap.core.ActivityView;
 import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageViewModel;
 
 import java.util.UUID;
 
 import io.reactivex.Observable;
 
-public interface PlantDetailMvpView extends MvpView
+public interface PlantDetailMvpView extends ActivityView
 {
     Observable<PlantDetailViewUpdate> plantDetailSaves();
     Observable<UUID> takeProfileImageRequests();

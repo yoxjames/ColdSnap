@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.yoxjames.coldsnap.ui.cards.temperature.TemperatureCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="250dp"
+    android:background="@color/ap_black"
+    android:layout_marginTop="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/ap_black">
+
+        <com.androidplot.xy.XYPlot
+            style="@style/CSGraph.CSDark"
+            android:id="@+id/xyp_temperature"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:title="@string/temperature_graph_title"
+            app:lineLabels="left|bottom"
+            app:graphMarginBottom="8dp"
+            app:marginTop="8dp"
+            app:lineLabelTextSizeBottom="14sp"
+            app:lineLabelInsetBottom="4dp"
+            app:lineLabelRotationBottom="0"
+            app:legendTextSize="8sp"
+            app:lineLabelAlignBottom="center"
+            app:legendVisible="false" />
+
+    </android.support.constraint.ConstraintLayout>
+
+</com.yoxjames.coldsnap.ui.cards.temperature.TemperatureCardView>

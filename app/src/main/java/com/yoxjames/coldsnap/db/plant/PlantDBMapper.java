@@ -20,10 +20,11 @@ public class PlantDBMapper
 
     public static Plant mapToPOJO(PlantRow plantRow)
     {
-        return Plant.create(
-            plantRow.getName(),
-            plantRow.getScientificName(),
-            Temperature.fromKelvin(plantRow.getColdThresholdK()),
-            UUID.fromString(plantRow.getUuid()));
+        return Plant.builder()
+            .name(plantRow.getName())
+            .scientificName(plantRow.getScientificName())
+            .minimumTolerance(Temperature.fromKelvin(plantRow.getColdThresholdK()))
+            .uuid(UUID.fromString(plantRow.getUuid()))
+            .build();
     }
 }

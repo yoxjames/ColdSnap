@@ -30,7 +30,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,14 +38,11 @@ import android.view.MenuInflater;
 import com.jakewharton.rxbinding2.view.RxMenuItem;
 import com.yoxjames.coldsnap.ColdSnapApplication;
 import com.yoxjames.coldsnap.R;
+import com.yoxjames.coldsnap.core.BaseColdsnapActivity;
 import com.yoxjames.coldsnap.dagger.PlantListModule;
 import com.yoxjames.coldsnap.service.location.SimpleWeatherLocation;
 import com.yoxjames.coldsnap.ui.AboutActivity;
-import com.yoxjames.coldsnap.ui.BaseColdsnapActivity;
 import com.yoxjames.coldsnap.ui.detail.PlantDetailActivity;
-import com.yoxjames.coldsnap.ui.prefs.CSPreferencesActivity;
-import com.yoxjames.coldsnap.ui.weatherpreviewbar.WeatherBarViewModel;
-import com.yoxjames.coldsnap.ui.weatherpreviewbar.WeatherPreviewBarView;
 
 import java.security.NoSuchProviderException;
 import java.util.UUID;
@@ -64,7 +61,6 @@ public class PlantListActivity extends BaseColdsnapActivity<PlantListPresenter> 
 
     @BindView(R.id.toolbar) protected Toolbar toolbar;
     @BindView(R.id.plant_list_view) protected PlantListRecyclerView plantListView;
-    @BindView(R.id.weather_preview_bar_view) protected WeatherPreviewBarView weatherPreviewBarView;
 
     private final Subject<SimpleWeatherLocation> weatherLocationSubject = PublishSubject.create();
 
@@ -87,8 +83,9 @@ public class PlantListActivity extends BaseColdsnapActivity<PlantListPresenter> 
 
         super.onCreate(savedInstanceState);
 
+        bnvNavigation.setSelectedItemId(getNavigationId());
         plantListView.setNestedScrollingEnabled(false);
-        plantListView.setLayoutManager(new LinearLayoutManager(this));
+        plantListView.setLayoutManager(new GridLayoutManager(this, 2));
         plantListRecyclerViewAdapter = new PlantListRecyclerViewAdapter();
         plantListView.setAdapter(plantListRecyclerViewAdapter);
     }
@@ -107,6 +104,12 @@ public class PlantListActivity extends BaseColdsnapActivity<PlantListPresenter> 
     protected Toolbar getToolbar()
     {
         return toolbar;
+    }
+
+    @Override
+    protected int getNavigationId()
+    {
+        return R.id.menu_plants;
     }
 
     @Override
@@ -168,21 +171,9 @@ public class PlantListActivity extends BaseColdsnapActivity<PlantListPresenter> 
     }
 
     @Override
-    public Observable<Object> retryConnection()
-    {
-        return weatherPreviewBarView.retryClickEvent();
-    }
-
-    @Override
     public void bindView(PlantListViewModel vm)
     {
         plantListView.bindView(vm);
-    }
-
-    @Override
-    public void bindView(WeatherBarViewModel vm)
-    {
-        weatherPreviewBarView.bindView(vm);
     }
 
     @Override
@@ -215,27 +206,10 @@ public class PlantListActivity extends BaseColdsnapActivity<PlantListPresenter> 
         startActivity(PlantDetailActivity.newIntent(this, plantUUID, false));
     }
 
-    @Override
-    public void openSettings()
-    {
-        startActivity(new Intent(this, CSPreferencesActivity.class));
-    }
 
     @Override
     public void openAbout()
     {
         startActivity(new Intent(this, AboutActivity.class));
-    }
-
-    @Override
-    public Observable<Object> settingsRequests()
-    {
-        return RxMenuItem.clicks(toolbar.getMenu().findItem(R.id.menu_item_settings));
-    }
-
-    @Override
-    public Observable<Object> aboutRequests()
-    {
-        return RxMenuItem.clicks(toolbar.getMenu().findItem(R.id.menu_about_coldsnap));
     }
 }

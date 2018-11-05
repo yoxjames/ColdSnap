@@ -17,14 +17,6 @@ import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.KEL
 
 public class CSSharedPreferencesImpl implements CSPreferences
 {
-    private static final String THRESHOLD = "com.yoxjames.coldsnap.THRESHOLD";
-    private static final String TEMPERATURE_SCALE = "com.yoxjames.coldsnap.TEMPFORMAT";
-    private static final String WEATHER_DATA_FUZZ = "com.yoxjames.coldsnap.WEATHER_DATA_FUZZ";
-    private static final String COLD_ALARM_TIME = "com.yoxjames.coldsnap.COLD_ALARM_TIME";
-    private static final String LOCATION_STRING = "com.yoxjames.coldsnap.LOCATION_STRING";
-    private static final String LAT = "com.yoxjames.coldsnap.LAT";
-    private static final String LON = "com.yoxjames.coldsnap.LON";
-
     private final SharedPreferences sharedPreferences;
 
     // Must be held here since simple registering it to sharedPrefs holds it with a WeakReference. This ensures it wont be GCed.

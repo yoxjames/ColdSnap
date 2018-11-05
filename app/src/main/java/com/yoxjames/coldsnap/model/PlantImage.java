@@ -26,6 +26,8 @@ import org.threeten.bp.Instant;
 
 import java.util.UUID;
 
+import static com.yoxjames.coldsnap.util.CSUtils.EMPTY_UUID;
+
 /**
  * Created by yoxjames on 10/14/17.
  */
@@ -33,6 +35,14 @@ import java.util.UUID;
 @AutoValue
 public abstract class PlantImage
 {
+    public static PlantImage NO_IMAGE = builder()
+        .setTitle("")
+        .setImageDate(Instant.MIN)
+        .setFileName("")
+        .setImageUUID(EMPTY_UUID)
+        .setPlantUUID(EMPTY_UUID)
+        .build();
+
     public abstract String getTitle();
     public abstract Instant getImageDate();
     public abstract String getFileName();

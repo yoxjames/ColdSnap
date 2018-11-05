@@ -4,15 +4,16 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.NumberPicker;
 
-import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.core.view.BaseColdsnapView;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import io.reactivex.Observable;
 
-import static com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerViewModel.CELSIUS;
-import static com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerViewModel.FAHRENHEIT;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.CELSIUS;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.FAHRENHEIT;
+import static com.yoxjames.coldsnap.service.preferences.CSPreferencesService.KELVIN;
 
 public class TemperaturePickerView extends NumberPicker
     implements BaseColdsnapView<TemperaturePickerViewModel>, NumberPicker.Formatter
@@ -80,6 +81,8 @@ public class TemperaturePickerView extends NumberPicker
                 return formattedValue + "°C";
             case FAHRENHEIT:
                 return formattedValue + "°F";
+            case KELVIN:
+                return formattedValue + "K";
             default:
                 throw new IllegalStateException("Invalid temperature format. This should never happen");
         }

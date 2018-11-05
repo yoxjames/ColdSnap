@@ -34,9 +34,11 @@ import dagger.Component;
 public interface ColdSnapInjector
 {
     MainActivitySubcomponent mainActivitySubcomponent(PlantListModule module);
-    CSPreferencesFragmentSubcomponent csPreferencesFragmentSubcomponent(CSPreferencesModule module);
+    SettingsActivitySubcomponent settingsActivitySubcomponent(SettingsActivityModule module);
+    SettingsFragmentSubcomponent settingsFragmentSubcomponent(SettingsFragmentModule module);
     ColdAlarmSubcomponent coldAlarmSubcomponent(ColdAlarmModule coldAlarmModule);
     PlantDetailSubcomponent plantDetailSubcomponent(PlantDetailModule plantDetailModule);
+    FeedActivitySubcomponent feedActivitySubcomponent(FeedModule feedModule);
 
     void inject(AutoStart autoStart);
     void inject(ColdService coldService);

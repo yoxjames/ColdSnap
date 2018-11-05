@@ -21,16 +21,14 @@ package com.yoxjames.coldsnap.dagger;
 
 
 import com.yoxjames.coldsnap.model.TemperatureComparator;
-import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.reducer.PlantListItemReducer;
-import com.yoxjames.coldsnap.reducer.WeatherBarReducer;
 import com.yoxjames.coldsnap.service.image.ImageService;
 import com.yoxjames.coldsnap.service.location.WeatherLocationService;
 import com.yoxjames.coldsnap.service.plant.PlantService;
 import com.yoxjames.coldsnap.service.weather.WeatherService;
+import com.yoxjames.coldsnap.ui.plantlist.PlantListActivityPresenterImpl;
 import com.yoxjames.coldsnap.ui.plantlist.PlantListMvpView;
 import com.yoxjames.coldsnap.ui.plantlist.PlantListPresenter;
-import com.yoxjames.coldsnap.ui.plantlist.PlantListPresenterImpl;
 
 import dagger.Module;
 import dagger.Provides;
@@ -58,21 +56,14 @@ public class PlantListModule
         PlantService plantService,
         WeatherLocationService weatherLocationService,
         ImageService imageService,
-        PlantListItemReducer plantListItemReducer,
-        WeatherBarReducer weatherBarReducer)
+        PlantListItemReducer plantListItemReducer)
     {
-        return new PlantListPresenterImpl(view, plantService, imageService, weatherService, weatherLocationService, plantListItemReducer, weatherBarReducer);
+        return new PlantListActivityPresenterImpl(view, plantService, imageService, weatherService, weatherLocationService, plantListItemReducer);
     }
 
     @Provides
     static PlantListItemReducer providePlantListItemReducer(TemperatureComparator temperatureComparator)
     {
         return new PlantListItemReducer(temperatureComparator);
-    }
-
-    @Provides
-    static WeatherBarReducer provideWeatherBarReducer(TemperatureFormatter temperatureFormatter)
-    {
-        return new WeatherBarReducer(temperatureFormatter);
     }
 }

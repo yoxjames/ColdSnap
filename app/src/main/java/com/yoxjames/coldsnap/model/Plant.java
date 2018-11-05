@@ -19,8 +19,6 @@
 
 package com.yoxjames.coldsnap.model;
 
-import android.support.annotation.NonNull;
-
 import com.google.auto.value.AutoValue;
 
 import java.util.UUID;
@@ -33,13 +31,25 @@ public abstract class Plant implements Comparable<Plant>
     public abstract Temperature getMinimumTolerance();
     public abstract UUID getUuid();
 
-    public static Plant create(String name, String scientificName, Temperature minimumTemperature, UUID uuid)
+    public static Builder builder()
     {
-        return new AutoValue_Plant(name, scientificName, minimumTemperature, uuid);
+        return new AutoValue_Plant.Builder();
     }
 
     @Override
-    public int compareTo(@NonNull Plant plant) {
+    public int compareTo(Plant plant)
+    {
         return plant.getName().compareTo(this.getName());
+    }
+
+    @AutoValue.Builder
+    public static abstract class Builder
+    {
+        public abstract Builder name(String name);
+        public abstract Builder scientificName(String scientificName);
+        public abstract Builder minimumTolerance(Temperature minimumTolerance);
+        public abstract Builder uuid(UUID uuid);
+
+        public abstract Plant build();
     }
 }

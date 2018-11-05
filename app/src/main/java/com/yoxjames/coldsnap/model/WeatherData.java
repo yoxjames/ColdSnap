@@ -27,8 +27,6 @@ import java.util.List;
 
 /**
  * Created by James Yox on 4/8/17.
- *
- * Forecast POJO that will contain all weather data.
  */
 @AutoValue
 public abstract class WeatherData
@@ -36,8 +34,6 @@ public abstract class WeatherData
     public abstract Instant getSyncInstant();
     public abstract List<ForecastHour> getForecastHours();
     public abstract WeatherLocation getWeatherLocation();
-    public abstract ForecastHour getTodayLow();
-    public abstract ForecastHour getTodayHigh();
 
     public abstract Builder toBuilder();
 
@@ -52,8 +48,6 @@ public abstract class WeatherData
         public abstract Builder syncInstant(Instant syncInstant);
         public abstract Builder forecastHours(List<ForecastHour> forecastHours);
         public abstract Builder weatherLocation(WeatherLocation weatherLocation);
-        public abstract Builder todayLow(ForecastHour todayLow);
-        public abstract Builder todayHigh(ForecastHour todayHigh);
 
         public abstract WeatherData build();
     }

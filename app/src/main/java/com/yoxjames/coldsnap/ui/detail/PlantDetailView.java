@@ -7,7 +7,7 @@ import android.widget.EditText;
 
 import com.jakewharton.rxbinding2.widget.RxTextView;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.core.view.BaseColdsnapView;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerView;
 import com.yoxjames.coldsnap.ui.plantimage.PlantProfileImageViewModel;
 
@@ -48,21 +48,24 @@ public class PlantDetailView extends ConstraintLayout implements BaseColdsnapVie
     }
 
     @Override
-    public void bindView(PlantDetailViewModel vm)
+    public void bindView(PlantDetailViewModel viewModel)
     {
-        etPlantName.setText(vm.getName());
-        etScientificName.setText(vm.getScientificName());
-        tpvColdTemperature.bindView(vm.getTemperaturePickerViewModel());
-        viewModel = vm;
+        if (!viewModel.equals(this.viewModel))
+        {
+            etPlantName.setText(viewModel.getName());
+            etScientificName.setText(viewModel.getScientificName());
+            tpvColdTemperature.bindView(viewModel.getTemperaturePickerViewModel());
+        }
+        this.viewModel = viewModel;
     }
 
     public PlantDetailViewModel getViewModel()
     {
         return PlantDetailViewModel.builder()
-            .setName(etPlantName.getText().toString())
-            .setScientificName(etScientificName.getText().toString())
-            .setTemperaturePickerViewModel(tpvColdTemperature.getViewModel())
-            .setPlantProfileImageViewModel(PlantProfileImageViewModel.EMPTY)
+            .name(etPlantName.getText().toString())
+            .scientificName(etScientificName.getText().toString())
+            .temperaturePickerViewModel(tpvColdTemperature.getViewModel())
+            .plantProfileImageViewModel(PlantProfileImageViewModel.EMPTY)
             .build();
     }
 

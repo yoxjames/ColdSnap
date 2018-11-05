@@ -1,13 +1,14 @@
 package com.yoxjames.coldsnap.ui.prefs;
 
+import com.yoxjames.coldsnap.core.MvpPresenter;
 import com.yoxjames.coldsnap.model.TemperatureFormatter;
 import com.yoxjames.coldsnap.model.TemperatureValueAdapter;
 import com.yoxjames.coldsnap.prefs.CSPreferences;
 import com.yoxjames.coldsnap.prefs.PreferenceModel;
 import com.yoxjames.coldsnap.service.preferences.CSPreferencesService;
-import com.yoxjames.coldsnap.ui.AbstractBaseColdsnapPresenter;
 import com.yoxjames.coldsnap.ui.controls.temperaturepicker.TemperaturePickerViewModel;
 
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 import static com.yoxjames.coldsnap.model.TemperatureUtil.celsiusToKelvinAbsVal;
@@ -16,15 +17,18 @@ import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToCelsiusAbsVal;
 import static com.yoxjames.coldsnap.model.TemperatureUtil.kelvinToFahrenheitAbsVal;
 import static com.yoxjames.coldsnap.model.TemperatureUtil.roundToInt;
 
-public class CSPreferencesPresenter extends AbstractBaseColdsnapPresenter<CSPreferencesView>
+public class CSPreferencesPresenter implements MvpPresenter
 {
     private final CSPreferences csPreferences;
     private final TemperatureValueAdapter temperatureValueAdapter;
     private final TemperatureFormatter temperatureFormatter;
+    private final CSPreferencesView view;
+
+    private CompositeDisposable disposables = new CompositeDisposable();
 
     public CSPreferencesPresenter(CSPreferencesView view, CSPreferences csPreferences, TemperatureValueAdapter temperatureValueAdapter, TemperatureFormatter temperatureFormatter)
     {
-        super(view);
+        this.view = view;
         this.csPreferences = csPreferences;
         this.temperatureValueAdapter = temperatureValueAdapter;
         this.temperatureFormatter = temperatureFormatter;
@@ -33,7 +37,9 @@ public class CSPreferencesPresenter extends AbstractBaseColdsnapPresenter<CSPref
     @Override
     public void load()
     {
-        super.load();
+        disposables.dispose();
+        disposables = new CompositeDisposable();
+
         disposables.add(csPreferences.getPreferences()
             .map(preferenceModel -> PreferencesViewModel.builder()
                 .setThresholdViewModel(getThresholdVM(preferenceModel))
@@ -47,9 +53,9 @@ public class CSPreferencesPresenter extends AbstractBaseColdsnapPresenter<CSPref
     }
 
     @Override
-    public void loadMenu()
+    public void unload()
     {
-
+        disposables.dispose();
     }
 
     public void onEnterThresholdPrefView()

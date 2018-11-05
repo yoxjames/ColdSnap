@@ -30,7 +30,7 @@ import java.util.List;
 
 public class ForecastHourUtil
 {
-    public static ForecastHour getDailyHigh(List<ForecastHour> forecastHours)
+    public static Temperature getDailyHigh(List<ForecastHour> forecastHours)
     {
         final Instant threshold = Instant.now().plus(Duration.ofDays(1));
 
@@ -44,10 +44,10 @@ public class ForecastHourUtil
         if (currentDailyHigh == null)
             throw new IllegalStateException("Could not determine daily high from forecastHours");
 
-        return currentDailyHigh;
+        return currentDailyHigh.getTemperature();
     }
 
-    public static ForecastHour getDailyLow(List<ForecastHour> forecastHours)
+    public static Temperature getDailyLow(List<ForecastHour> forecastHours)
     {
         final Instant threshold = Instant.now().plus(Duration.ofDays(1));
 
@@ -61,6 +61,6 @@ public class ForecastHourUtil
         if (currentDailyLow == null)
             throw new IllegalStateException("Could not determine daily low from forecastHours");
 
-        return currentDailyLow;
+        return currentDailyLow.getTemperature();
     }
 }

@@ -23,7 +23,7 @@ import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 
-import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.core.view.BaseColdsnapView;
 
 import javax.annotation.Nullable;
 

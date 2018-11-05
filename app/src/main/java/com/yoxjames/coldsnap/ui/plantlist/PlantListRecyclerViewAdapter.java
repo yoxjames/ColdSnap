@@ -30,7 +30,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.yoxjames.coldsnap.R;
-import com.yoxjames.coldsnap.ui.BaseColdsnapView;
+import com.yoxjames.coldsnap.core.view.BaseColdsnapView;
 import com.yoxjames.coldsnap.ui.plantlist.PlantListItemViewModel.PlantStatus;
 
 import java.util.UUID;
@@ -93,11 +93,11 @@ public class PlantListRecyclerViewAdapter extends RecyclerView.Adapter<PlantList
 
     public class PlantItemHolder extends RecyclerView.ViewHolder implements BaseColdsnapView<PlantListItemViewModel>
     {
-        @BindView(R.id.plant_name) TextView plantName;
-        @BindView(R.id.plant_scientific_name) TextView scientificName;
-        @BindView(R.id.plant_status) TextView status;
-        @BindView(R.id.progress) ProgressBar progress;
-        @BindView(R.id.plant_profile_image) ImageView plantProfileImage;
+        @BindView(R.id.tv_name) TextView plantName;
+        @BindView(R.id.tv_scientific_name) TextView scientificName;
+        @BindView(R.id.tv_status) TextView status;
+        @BindView(R.id.pb_loading) ProgressBar progress;
+        @BindView(R.id.iv_profile) ImageView plantProfileImage;
 
         private UUID plantUUID = EMPTY_UUID;
 
@@ -115,7 +115,7 @@ public class PlantListRecyclerViewAdapter extends RecyclerView.Adapter<PlantList
             progress.setVisibility((vm.getPlantStatus() == PENDING ? View.VISIBLE : View.INVISIBLE));
             status.setVisibility((vm.getPlantStatus() == PENDING ? View.INVISIBLE : View.VISIBLE));
             status.setText(statusToText(vm.getPlantStatus()));
-            plantUUID = vm.getUUID();
+            plantUUID = vm.getUuid();
             if (!vm.getImageFileName().equals(""))
                 Glide.with(itemView).load(vm.getImageFileName()).into(plantProfileImage);
             else
